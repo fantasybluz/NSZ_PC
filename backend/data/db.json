@@ -1,0 +1,954 @@
+{
+  "meta": {
+    "createdAt": "2026-02-24T06:04:50.014Z",
+    "updatedAt": "2026-02-24T06:20:37.134Z",
+    "version": 2
+  },
+  "users": [
+    {
+      "id": "1dc261cb-5bd4-42a0-9d7e-fd25e1685c16",
+      "username": "admin",
+      "passwordHash": "3ff0dd0660689ed3cd5558aceea1a252:ad07271782e98cbf191e88afe607f824d2808b1e0e7785469c2db578c3fbbfa458233b5d321c47c08fcacc5e8ca40ca11ae9e4559204fe09546393abe300349e",
+      "role": "admin",
+      "createdAt": "2026-02-12T15:09:36.855Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-gaming-highfps",
+      "title": "電競高幀率主機",
+      "summary": "針對 FPS 與 2K/4K 高更新率遊戲，優先確保幀率穩定與低延遲體感。",
+      "primaryCategory": "遊戲主機",
+      "secondaryCategory": "高幀率",
+      "tags": [
+        "FPS",
+        "2K 高刷",
+        "低延遲",
+        "電競"
+      ],
+      "points": [
+        "幀率穩定性",
+        "溫控與噪音平衡",
+        "可升級顯卡路線"
+      ],
+      "detailIntro": "這個分類的核心是讓你在高幀率場景保持穩定輸出，不只是短時間跑分，還包含散熱曲線與供電餘裕。",
+      "detailHeroImage": "/images/carousel/IMG_6486.JPG",
+      "detailRecommendations": [
+        "先定義主要遊戲與目標解析度，再反推 CPU/GPU 配比。",
+        "顯卡升級時同步檢查電供與機殼風道，避免瓶頸轉移。",
+        "預留至少一級升級空間，降低未來整機重換機率。"
+      ],
+      "detailFaqs": [
+        {
+          "question": "只升級顯示卡就能提升很多嗎？",
+          "answer": "通常可以，但仍要確認 CPU、電供與散熱是否同步跟上。"
+        },
+        {
+          "question": "高幀率主機會很吵嗎？",
+          "answer": "可透過風扇曲線與機殼風道調整，在效能與噪音間取得平衡。"
+        }
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "cat-creator-ai",
+      "title": "創作與 AI 工作站",
+      "summary": "面向剪輯、建模、AI 生成與多工流程，重視長時間輸出穩定性。",
+      "primaryCategory": "創作者主機",
+      "secondaryCategory": "AI 與剪輯",
+      "tags": [
+        "剪輯",
+        "建模",
+        "AI 生成",
+        "多工"
+      ],
+      "points": [
+        "長時輸出穩定",
+        "儲存分層規劃",
+        "記憶體與顯存配置"
+      ],
+      "detailIntro": "這類配置會先依軟體工作流拆解瓶頸，像是時間軸即時預覽、批次輸出與模型推理，再安排硬體權重。",
+      "detailHeroImage": "/images/carousel/IMG_6158.JPG",
+      "detailRecommendations": [
+        "先確認主要軟體與素材格式，避免硬體方向錯配。",
+        "系統碟、素材碟、專案快取建議分開配置。",
+        "需長時間渲染時，散熱與電供穩定度優先於外觀。"
+      ],
+      "detailFaqs": [
+        {
+          "question": "創作主機一定要上到最頂規嗎？",
+          "answer": "不一定，通常依素材規模與交件時程分級就能達到最佳成本效益。"
+        },
+        {
+          "question": "AI 生成與剪輯可以同一台兼顧嗎？",
+          "answer": "可以，會依你使用比例平衡 CPU、GPU、記憶體與儲存策略。"
+        }
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "cat-white-theme",
+      "title": "白色主題與展示機",
+      "summary": "以外觀一致性、整線和燈效同步為核心，同時兼顧風道效率。",
+      "primaryCategory": "主題機殼",
+      "secondaryCategory": "白色主題",
+      "tags": [
+        "白色桌搭",
+        "ARGB",
+        "玻璃側透",
+        "整線"
+      ],
+      "points": [
+        "外觀一致性",
+        "線材與燈效管理",
+        "散熱與美觀平衡"
+      ],
+      "detailIntro": "主題機不是只看外觀，會把視覺完成度、散熱效率與日後維護一起納入設計。",
+      "detailHeroImage": "/images/carousel/IMG_4722.JPG",
+      "detailRecommendations": [
+        "先定義桌面風格與色系，再選機殼與風扇。",
+        "燈效控制平台盡量統一，後續維護最省事。",
+        "外觀件優先確保相容性，避免後期返工。"
+      ],
+      "detailFaqs": [
+        {
+          "question": "白色主題會不會比較容易超預算？",
+          "answer": "通常會有些價差，但可用替代方案控制總價。"
+        },
+        {
+          "question": "玻璃側透會影響散熱嗎？",
+          "answer": "只要風道規劃正確，外觀與散熱可以同時兼顧。"
+        }
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "cat-business-batch",
+      "title": "企業與工作室批量建置",
+      "summary": "同規格批次部署與驗收，強調維運文件化與後續升級一致性。",
+      "primaryCategory": "商用部署",
+      "secondaryCategory": "批量採購",
+      "tags": [
+        "批量部署",
+        "維運",
+        "標準化",
+        "驗收流程"
+      ],
+      "points": [
+        "同規格一致",
+        "資產標籤與文件",
+        "分批交機規劃"
+      ],
+      "detailIntro": "批量案重點不是單台極限效能，而是規格一致、可追蹤維修與穩定交期，降低整體管理成本。",
+      "detailHeroImage": "/images/carousel/IMG_7011.JPG",
+      "detailRecommendations": [
+        "先依部門用途做機型分級，再定義標準規格。",
+        "建立資產編號與零件清單，後續維護更快。",
+        "建議保留少量備援機，降低突發停機風險。"
+      ],
+      "detailFaqs": [
+        {
+          "question": "可以分批交機並先上線急件嗎？",
+          "answer": "可以，通常會先安排優先部門上線。"
+        },
+        {
+          "question": "後續升級可以維持一致規格嗎？",
+          "answer": "可以，在初期就規劃升級路徑可維持管理一致性。"
+        }
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "builds": [
+    {
+      "id": "build-flux-4060",
+      "name": "NSZ Flux 4060",
+      "description": "主流 1080p 遊戲與日常直播配置。",
+      "detailIntro": "以 1080p 高幀率遊戲加日常直播為主，重點在穩定幀率、安靜度與預算效率。",
+      "requirementIntro": "客戶希望在 4 萬內完成遊戲+直播雙用途，並保留未來顯卡升級空間。",
+      "youtubeEmbedUrl": "",
+      "price": 36900,
+      "dealDate": "2026/02/18",
+      "badge": "熱銷",
+      "image": "/images/carousel/IMG_4722.JPG",
+      "cpu": "Ryzen 5 7600",
+      "ram": "DDR5 32GB",
+      "storage": "1TB Gen4 SSD",
+      "gpu": "RTX 4060",
+      "psu": "650W 80+ Gold",
+      "pcCase": "Darkflash DRX White",
+      "specs": [
+        "RTX 4060",
+        "Ryzen 5 7600",
+        "DDR5 32GB"
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "build-apex-4070s",
+      "name": "NSZ Apex 4070 Super",
+      "description": "2K 高刷新遊戲與實況平衡配置。",
+      "detailIntro": "主打 2K 高刷電競與 3A 遊戲體驗，維持長時間遊玩時的溫度與噪音平衡。",
+      "requirementIntro": "客戶需求是 2K 高刷穩定、可偶爾直播，並且希望機殼有白色主題風格。",
+      "youtubeEmbedUrl": "",
+      "price": 53900,
+      "dealDate": "2026/02/17",
+      "badge": "推薦",
+      "image": "/images/carousel/IMG_6486.JPG",
+      "cpu": "Ryzen 7 7800X3D",
+      "ram": "DDR5 32GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 4070 Super",
+      "psu": "750W 80+ Gold",
+      "pcCase": "Darkflash DY470 White",
+      "specs": [
+        "RTX 4070 Super",
+        "Ryzen 7 7800X3D",
+        "2TB Gen4 SSD"
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "build-studio-x",
+      "name": "NSZ Studio X",
+      "description": "剪輯與建模長時間輸出工作站。",
+      "detailIntro": "給影音剪輯與 3D 建模使用，重點放在多工穩定、素材吞吐與散熱續航。",
+      "requirementIntro": "客戶主要用 Premiere + Blender，要求長時間輸出不中斷且素材轉檔要快。",
+      "youtubeEmbedUrl": "",
+      "price": 72900,
+      "dealDate": "2026/02/16",
+      "badge": "創作首選",
+      "image": "/images/carousel/IMG_7623.JPG",
+      "cpu": "Core i7-14700K",
+      "ram": "DDR5 64GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 4080 Super",
+      "psu": "850W 80+ Gold",
+      "pcCase": "Fractal North",
+      "specs": [
+        "RTX 4080 Super",
+        "Core i7-14700K",
+        "DDR5 64GB"
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "build-tiny-creator",
+      "name": "NSZ Tiny Creator",
+      "description": "SFF 小型機殼，桌面友善又保有效能。",
+      "detailIntro": "針對桌面空間有限的使用者，兼顧創作與遊戲效能，維持溫控與噪音表現。",
+      "requirementIntro": "客戶希望小型主機可放桌上、噪音低，並能順跑遊戲與日常剪輯。",
+      "youtubeEmbedUrl": "",
+      "price": 44900,
+      "dealDate": "2026/02/15",
+      "badge": "小鋼炮",
+      "image": "/images/carousel/IMG_7012.JPG",
+      "cpu": "Core i5-14600K",
+      "ram": "DDR5 32GB",
+      "storage": "1TB Gen4 SSD",
+      "gpu": "RTX 4070",
+      "psu": "750W SFX 80+ Gold",
+      "pcCase": "Lian Li A4-H2O",
+      "specs": [
+        "RTX 4070",
+        "Core i5-14600K",
+        "1TB Gen4 SSD"
+      ],
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "order-20260224-01",
+      "date": "2026/02/24",
+      "item": "RTX 5080 高階遊戲主機",
+      "requirementIntro": "客戶主玩 4K 3A 與 FPS，需求是高幀率穩定 + 低噪音，並希望可直接上手直播。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "4K 遊戲",
+        "高幀率",
+        "旗艦效能",
+        "直播用途"
+      ],
+      "location": "新北市",
+      "salePrice": 86900,
+      "status": "delivered",
+      "cpu": "Ryzen 7 9800X3D",
+      "ram": "DDR5 64GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 5080",
+      "psu": "1000W 80+ Gold",
+      "pcCase": "Lian Li O11 Vision White",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260224-02",
+      "date": "2026/02/24",
+      "item": "AI 影像生成工作站",
+      "requirementIntro": "客戶需要本地模型推理與批次影像生成，重點在顯存容量、記憶體與長時穩定度。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "AI 生成",
+        "創作工作站",
+        "高顯存",
+        "長時間運算"
+      ],
+      "location": "台北市",
+      "salePrice": 95800,
+      "status": "shipping",
+      "cpu": "Core Ultra 9 285K",
+      "ram": "DDR5 96GB",
+      "storage": "4TB Gen4 SSD",
+      "gpu": "RTX 5090",
+      "psu": "1200W 80+ Platinum",
+      "pcCase": "Lian Li O11D EVO",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260223-01",
+      "date": "2026/02/23",
+      "item": "白色雙艙直播主機",
+      "requirementIntro": "客戶希望白色展示感外觀，且在遊戲直播時維持安靜與散熱平衡。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "白色主題",
+        "直播用途",
+        "雙艙機殼",
+        "遊戲主機"
+      ],
+      "location": "桃園市",
+      "salePrice": 51800,
+      "status": "delivered",
+      "cpu": "Ryzen 7 7800X3D",
+      "ram": "DDR5 32GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 4070 Ti Super",
+      "psu": "850W 80+ Gold",
+      "pcCase": "Darkflash DY470 White",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260223-02",
+      "date": "2026/02/23",
+      "item": "企業批量設計工作機",
+      "requirementIntro": "工作室一次部署 10 台，需求是規格一致、可追蹤維修，並保留 2 年升級彈性。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "企業部署",
+        "批量建置",
+        "設計工作",
+        "維運友善"
+      ],
+      "location": "新竹市",
+      "salePrice": 47200,
+      "status": "shipping",
+      "cpu": "Core i7-14700",
+      "ram": "DDR5 64GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 4070 Super",
+      "psu": "850W 80+ Gold",
+      "pcCase": "Fractal North",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260222-01",
+      "date": "2026/02/22",
+      "item": "2K 電競高幀率主機",
+      "requirementIntro": "客戶專注 FPS 高幀率，要求低延遲與穩定 240Hz 體驗，不追求過度外觀堆料。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "2K 高刷",
+        "FPS",
+        "電競",
+        "主流效能"
+      ],
+      "location": "台中市",
+      "salePrice": 38800,
+      "status": "delivered",
+      "cpu": "Ryzen 7 7700",
+      "ram": "DDR5 32GB",
+      "storage": "1TB Gen4 SSD + 2TB + 2222",
+      "gpu": "RTX 4070",
+      "psu": "750W 80+ Gold",
+      "pcCase": "Montech Air 903",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:20:37.134Z"
+    },
+    {
+      "id": "order-20260221-01",
+      "date": "2026/02/21",
+      "item": "Intel 創作者剪輯主機",
+      "requirementIntro": "客戶主要做 4K 剪輯與多軌特效，需求是時間軸預覽順與輸出效率高。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "影片剪輯",
+        "創作工作站",
+        "多工",
+        "Intel 平台"
+      ],
+      "location": "台中市",
+      "salePrice": 62900,
+      "status": "delivered",
+      "cpu": "Core i7-14700K",
+      "ram": "DDR5 64GB",
+      "storage": "2TB Gen4 SSD",
+      "gpu": "RTX 4080 Super",
+      "psu": "850W 80+ Gold",
+      "pcCase": "Fractal North",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260220-01",
+      "date": "2026/02/20",
+      "item": "SFF 小型剪輯主機",
+      "requirementIntro": "客戶桌面空間有限，希望 SFF 機殼但仍可流暢剪輯與中高畫質遊戲。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "SFF 小型",
+        "桌面空間友善",
+        "剪輯用途",
+        "遊戲創作兼用"
+      ],
+      "location": "屏東市",
+      "salePrice": 35900,
+      "status": "pending",
+      "cpu": "Core i5-14600K",
+      "ram": "DDR5 32GB",
+      "storage": "1TB Gen4 SSD",
+      "gpu": "RTX 4070",
+      "psu": "750W SFX 80+ Gold",
+      "pcCase": "Lian Li A4-H2O",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "order-20260219-01",
+      "date": "2026/02/19",
+      "item": "4K 剪輯與建模主機",
+      "requirementIntro": "客戶以建模渲染與 4K 交件為主，需求是長時間滿載穩定與高吞吐儲存。",
+      "youtubeEmbedUrl": "",
+      "tags": [
+        "4K 剪輯",
+        "3D 建模",
+        "創作工作站",
+        "高負載輸出"
+      ],
+      "location": "台南市",
+      "salePrice": 74200,
+      "status": "delivered",
+      "cpu": "Core i9-14900K",
+      "ram": "DDR5 96GB",
+      "storage": "4TB Gen4 SSD",
+      "gpu": "RTX 4090",
+      "psu": "1000W 80+ Gold",
+      "pcCase": "Lian Li O11 Dynamic",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "inventories": [
+    {
+      "id": "inv-case-dy470",
+      "category": "case",
+      "brand": "Darkflash",
+      "productName": "DY470 White",
+      "motherboardFormFactor": "",
+      "quantity": 5,
+      "taxIncluded": true,
+      "retailPrice": 3190,
+      "costPrice": 2710,
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-cpu-7800x3d",
+      "category": "cpu",
+      "brand": "AMD",
+      "productName": "Ryzen 7 7800X3D",
+      "motherboardFormFactor": "",
+      "quantity": 10,
+      "taxIncluded": true,
+      "retailPrice": 12990,
+      "costPrice": 11300,
+      "note": "主流電競常用",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-cpu-14700k",
+      "category": "cpu",
+      "brand": "Intel",
+      "productName": "Core i7-14700K",
+      "motherboardFormFactor": "",
+      "quantity": 8,
+      "taxIncluded": true,
+      "retailPrice": 14490,
+      "costPrice": 12600,
+      "note": "創作者常用",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-gpu-4070s",
+      "category": "gpu",
+      "brand": "MSI",
+      "productName": "RTX 4070 SUPER 12G",
+      "motherboardFormFactor": "",
+      "quantity": 9,
+      "taxIncluded": true,
+      "retailPrice": 20990,
+      "costPrice": 19450,
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-mb-b650a",
+      "category": "motherboard",
+      "brand": "ASUS",
+      "productName": "ROG STRIX B650-A GAMING WIFI",
+      "motherboardFormFactor": "ATX",
+      "quantity": 6,
+      "taxIncluded": true,
+      "retailPrice": 7590,
+      "costPrice": 6840,
+      "note": "白色主題常備",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-psu-850",
+      "category": "psu",
+      "brand": "Seasonic",
+      "productName": "FOCUS GX-850",
+      "motherboardFormFactor": "",
+      "quantity": 8,
+      "taxIncluded": true,
+      "retailPrice": 4290,
+      "costPrice": 3710,
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-ram-ddr5-32",
+      "category": "ram",
+      "brand": "Kingston",
+      "productName": "FURY Beast DDR5 32GB (16x2) 6000",
+      "motherboardFormFactor": "",
+      "quantity": 16,
+      "taxIncluded": true,
+      "retailPrice": 3290,
+      "costPrice": 2860,
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "inv-ssd-2tb",
+      "category": "ssd",
+      "brand": "Samsung",
+      "productName": "990 PRO 2TB PCIe 4.0",
+      "motherboardFormFactor": "",
+      "quantity": 12,
+      "taxIncluded": true,
+      "retailPrice": 4790,
+      "costPrice": 4250,
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "procurements": [
+    {
+      "id": "proc-20260224-01",
+      "date": "2026/02/24",
+      "peerName": "高雄同行 A",
+      "supplierName": "原價屋建國店",
+      "source": "門市現貨",
+      "taxIncluded": true,
+      "settledThisWeek": false,
+      "items": [
+        {
+          "productName": "Ryzen 7 7800X3D",
+          "quantity": 2,
+          "unitPrice": 11800,
+          "taxIncluded": true
+        },
+        {
+          "productName": "RTX 4070 SUPER 12G",
+          "quantity": 1,
+          "unitPrice": 19450,
+          "taxIncluded": true
+        }
+      ],
+      "note": "急件先行代墊",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "proc-20260223-01",
+      "date": "2026/02/23",
+      "peerName": "台南同行 B",
+      "supplierName": "欣亞台南店",
+      "source": "門市調貨",
+      "taxIncluded": false,
+      "settledThisWeek": true,
+      "items": [
+        {
+          "productName": "2TB Gen4 SSD",
+          "quantity": 2,
+          "unitPrice": 3490,
+          "taxIncluded": false
+        },
+        {
+          "productName": "850W 80+ Gold 電源供應器",
+          "quantity": 2,
+          "unitPrice": 3480,
+          "taxIncluded": false
+        }
+      ],
+      "note": "",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "personalProcurements": [
+    {
+      "id": "pproc-20260224-01",
+      "date": "2026/02/24",
+      "supplierName": "原價屋建國店",
+      "source": "門市現貨",
+      "taxIncluded": true,
+      "items": [
+        {
+          "productName": "DDR5 32GB (16x2) 6000",
+          "quantity": 2,
+          "unitPrice": 2850,
+          "taxIncluded": true
+        },
+        {
+          "productName": "Darkflash DY470 White",
+          "quantity": 1,
+          "unitPrice": 2710,
+          "taxIncluded": true
+        }
+      ],
+      "note": "展示機補料",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    },
+    {
+      "id": "pproc-20260220-01",
+      "date": "2026/02/20",
+      "supplierName": "代理商倉庫",
+      "source": "代理商直送",
+      "taxIncluded": true,
+      "items": [
+        {
+          "productName": "FOCUS GX-850",
+          "quantity": 2,
+          "unitPrice": 3710,
+          "taxIncluded": true
+        },
+        {
+          "productName": "Samsung 990 PRO 2TB",
+          "quantity": 2,
+          "unitPrice": 4250,
+          "taxIncluded": true
+        }
+      ],
+      "note": "下週配單預備",
+      "createdAt": "2026-02-24T06:04:50.014Z",
+      "updatedAt": "2026-02-24T06:04:50.014Z"
+    }
+  ],
+  "siteContent": {
+    "homeHeroKicker": "Kaohsiung Custom PC Builder",
+    "homeHeroTitle": "你的主機不只要跑得快，還要完全對應你的使用需求。",
+    "homeHeroSubtitle": "NSZPC 先拆解需求再配單，從效能、散熱、噪音到升級路線一次規劃，讓你每一筆預算都花在有效的地方。",
+    "homeCategorySubtitle": "先用分類釐清方向，再看出機紀錄與細節規格，決策會更快。",
+    "homeBuildSubtitle": "每台推薦配單都可延伸成客製化版本，後台可隨時更新內容。",
+    "homeWorkflowSubtitle": "從需求訪談到交機驗收，每個節點都有明確標準。",
+    "homeContactSubtitle": "可直接私訊需求與預算，我們會提供可執行的建議方案。",
+    "homeStats": [
+      {
+        "value": "600+",
+        "label": "累積組裝案例"
+      },
+      {
+        "value": "48h",
+        "label": "平均報價回覆"
+      },
+      {
+        "value": "4.9/5",
+        "label": "在地客戶評分"
+      }
+    ],
+    "categoriesHeroSubtitle": "依照使用情境整理分類，點進去可查看需求重點與建議方向。",
+    "categoriesQuickTags": [
+      "電競高幀率",
+      "直播剪輯",
+      "AI 生成",
+      "白色主題",
+      "批量採購",
+      "SFF 小鋼炮"
+    ],
+    "categoriesPortfolioTitle": "品牌機殼作品集",
+    "categoriesPortfolioSubtitle": "用品牌視角快速比較外觀、風道與可擴充性。",
+    "categoriesBrandPortfolios": [
+      {
+        "id": "darkflash",
+        "name": "Darkflash 作品集",
+        "tagline": "白色主題與玻璃側透高人氣方案",
+        "focus": [
+          "ARGB 燈效整合",
+          "雙艙整線",
+          "白色主題搭配"
+        ],
+        "images": [
+          "/images/carousel/IMG_4722.JPG",
+          "/images/carousel/IMG_6165.JPG",
+          "/images/carousel/IMG_6544.JPG"
+        ],
+        "tags": [
+          "白色主題",
+          "ARGB",
+          "玻璃側透",
+          "整線"
+        ]
+      },
+      {
+        "id": "asus",
+        "name": "ASUS 系列作品集",
+        "tagline": "ROG 生態整合，效能與外觀一致化",
+        "focus": [
+          "主板與顯卡同步調校",
+          "高負載穩定性",
+          "BIOS 曲線優化"
+        ],
+        "images": [
+          "/images/carousel/IMG_4729.JPG",
+          "/images/carousel/IMG_6158.JPG",
+          "/images/carousel/IMG_6477.JPG"
+        ],
+        "tags": [
+          "ROG",
+          "高效能",
+          "電競",
+          "調校"
+        ]
+      },
+      {
+        "id": "lianli",
+        "name": "Lian Li 系列作品集",
+        "tagline": "質感雙艙與模組化風道配置",
+        "focus": [
+          "雙艙視覺比例",
+          "模組化風扇規劃",
+          "水冷預留空間"
+        ],
+        "images": [
+          "/images/carousel/IMG_7011.JPG",
+          "/images/carousel/IMG_7012.JPG",
+          "/images/carousel/IMG_7626.JPG"
+        ],
+        "tags": [
+          "雙艙設計",
+          "模組化",
+          "水冷擴充",
+          "質感機殼"
+        ]
+      }
+    ],
+    "brandHeroTitle": "近期出機",
+    "brandHeroSubtitle": "依近期實際出機案例整理，包含需求重點與配備說明。",
+    "shipmentTagCatalog": [
+      "4K 遊戲",
+      "2K 高刷",
+      "高幀率",
+      "電競",
+      "直播用途",
+      "創作工作站",
+      "AI 生成",
+      "白色主題",
+      "企業部署",
+      "SFF 小型",
+      "旗艦效能",
+      "主流效能",
+      "高顯存",
+      "長時間運算",
+      "批量建置",
+      "維運友善"
+    ],
+    "shippingSteps": [
+      {
+        "title": "需求訪談",
+        "description": "確認用途、預算、軟體環境與外觀方向。"
+      },
+      {
+        "title": "配置提案",
+        "description": "提供主方案與替代方案，清楚列出取捨。"
+      },
+      {
+        "title": "組裝壓測",
+        "description": "整線、溫控與長時間壓測完成後才交機。"
+      },
+      {
+        "title": "交機售後",
+        "description": "提供驗機重點與後續升級建議。"
+      }
+    ],
+    "serviceHighlights": [
+      "每台主機交機前皆進行穩定性檢測",
+      "每筆出機紀錄可追蹤需求與配備",
+      "缺貨情境提供同級替代方案",
+      "高雄在地可預約到店諮詢"
+    ],
+    "testimonials": [
+      {
+        "quote": "需求溝通很完整，最後成品和預期幾乎一致。",
+        "name": "Kai．影音剪輯師",
+        "tag": "Studio Build"
+      },
+      {
+        "quote": "交機前就先看到驗機重點，使用起來很安心。",
+        "name": "Ryan．FPS 玩家",
+        "tag": "Gaming Build"
+      },
+      {
+        "quote": "批量建置時規格與標籤整理非常清楚，維護方便。",
+        "name": "Mia．工作室管理",
+        "tag": "Business Batch"
+      }
+    ],
+    "contactChannels": [
+      {
+        "icon": "fa-brands fa-line",
+        "label": "LINE",
+        "value": "@nightstarzpc",
+        "href": "https://line.me/R/ti/p/@nightstarzpc"
+      },
+      {
+        "icon": "fa-brands fa-facebook-f",
+        "label": "Facebook",
+        "value": "星辰電腦 NSZPC",
+        "href": "https://www.facebook.com/nightstarzpc/"
+      },
+      {
+        "icon": "fa-brands fa-instagram",
+        "label": "Instagram",
+        "value": "@nightstarzpc",
+        "href": "https://www.instagram.com/nightstarzpc/"
+      },
+      {
+        "icon": "fa-brands fa-youtube",
+        "label": "YouTube",
+        "value": "星辰電腦 NSZPC",
+        "href": "https://www.youtube.com/@nszpc8729"
+      }
+    ],
+    "footerAddress": "高雄市前鎮區凱旋三路 217 號",
+    "footerSlogan": "Build with purpose. Tune for longevity.",
+    "contactAddress": "高雄市前鎮區凱旋三路 217 號",
+    "contactPhone": "07-000-0000",
+    "contactLine": "@nightstarzpc",
+    "updatedAt": "2026-02-24T06:04:50.014Z"
+  },
+  "blogPosts": [
+    {
+      "id": "0d77b0b0-6e54-4809-a4bd-b040a7ddf5d9",
+      "slug": "gaming-pc-budget-allocation-guide",
+      "title": "遊戲主機預算怎麼分：先抓顯卡，再回推整體平台",
+      "summary": "整理 3 萬、5 萬、8 萬級距的配單邏輯，避免把預算花在體感差異小的零件。",
+      "coverImage": "/images/carousel/IMG_6486.JPG",
+      "publishedAt": "2026-02-20",
+      "updatedAt": "2026-02-20",
+      "authorName": "NSZPC 技術團隊",
+      "readingMinutes": 6,
+      "tags": [
+        "預算規劃",
+        "遊戲主機",
+        "顯示卡",
+        "升級策略"
+      ],
+      "youtubeEmbedUrl": "",
+      "sections": [
+        {
+          "heading": "先定解析度與更新率，再決定顯示卡等級",
+          "paragraphs": [
+            "目標 1080p 高幀率可抓中高階顯示卡；若是 2K 高刷或 4K，顯示卡預算比例要明顯提高。",
+            "先確定螢幕規格與遊戲類型，再安排 CPU、主板與散熱，避免把預算放錯位置。"
+          ],
+          "bullets": []
+        },
+        {
+          "heading": "主機預算比例建議",
+          "paragraphs": [
+            "可先用顯示卡 35%-45%、CPU 15%-22% 作為起點，再依用途與升級計畫微調。"
+          ],
+          "bullets": [
+            "偏競技遊戲：提高 CPU 與記憶體權重",
+            "偏 3A 單機：優先顯示卡與散熱",
+            "預算有限先保留電源與主板升級空間"
+          ]
+        }
+      ],
+      "createdAt": "2026-02-24T06:54:50.114Z"
+    },
+    {
+      "id": "9088ee88-6c71-469b-8b34-3dda2dd1fc83",
+      "slug": "airflow-and-noise-balance-for-creator-pc",
+      "title": "創作者主機散熱與噪音平衡：風道比堆風扇更重要",
+      "summary": "剪輯與渲染工作站要長時間穩定輸出，重點在風道規劃、曲線設定與灰塵管理。",
+      "coverImage": "/images/carousel/IMG_6158.JPG",
+      "publishedAt": "2026-02-17",
+      "updatedAt": "2026-02-18",
+      "authorName": "NSZPC 技術團隊",
+      "readingMinutes": 7,
+      "tags": [
+        "散熱調校",
+        "創作工作站",
+        "噪音控制",
+        "風道"
+      ],
+      "youtubeEmbedUrl": "",
+      "sections": [
+        {
+          "heading": "正壓或微正壓是長期使用的安全選擇",
+          "paragraphs": [
+            "對多數創作者主機，微正壓可降低灰塵從縫隙倒灌，維持散熱器效率。",
+            "進氣與排氣不需追求極端數值，重點是熱區附近有穩定氣流通過。"
+          ],
+          "bullets": []
+        },
+        {
+          "heading": "風扇曲線先穩後快",
+          "paragraphs": [
+            "曲線不要太激進，避免輕載時頻繁升降轉造成噪音波動。"
+          ],
+          "bullets": [
+            "CPU 70 度內維持平滑曲線",
+            "GPU 75 度後再逐步提高轉速",
+            "機殼與顯卡風扇分開調校"
+          ]
+        }
+      ],
+      "createdAt": "2026-02-24T06:54:50.114Z"
+    }
+  ]
+}
