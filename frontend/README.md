@@ -1,106 +1,92 @@
 # NSZPC Frontend
 
-NSZPC 前台與後台管理介面（React + TypeScript + Vite）。
+前台與後台管理介面（React + TypeScript + Vite）。
 
-主要功能：
+## 功能範圍
 
-- 前台展示：首頁、分類總覽、出貨流程
-- 動態頁面：分類細節頁、推薦配單細節頁
-- 後台登入與控制台：
-  - 推薦配單管理（新增 / 彈窗編輯 / 刪除）
-  - 主要分類管理（新增 / 刪除）
-  - 近期出貨管理（新增 / 彈窗編輯 / 刪除）
+- 首頁：推薦配單、近期出機、出貨流程、客戶回饋、聯絡資訊
+- 分類總覽與分類細節頁
+- 出機標籤總覽與單一出機詳情
+- 技術文章列表與文章詳情（含 SEO）
+- 後台登入與內容管理頁面
+
+## 技術棧
+
+- `React 19`
+- `TypeScript`
+- `Vite`
+- `react-router-dom`
 
 ## 環境需求
 
-- Node.js 18+
+- Node.js 22+（建議）
 - npm
 
-## 快速啟動
+## 啟動方式
 
 ```bash
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
 ```
 
 預設網址：`http://localhost:5173`
 
-## API 連線設定
+## 環境變數
 
-前端會呼叫 backend API。
-
-可透過環境變數設定 API Base URL：
+`frontend/.env`
 
 ```bash
-# frontend/.env
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-若未設定，預設使用 `http://localhost:3000`。
+未設定時預設使用 `http://localhost:3000`。
 
 ## 可用指令
 
-- `npm run dev`：啟動開發伺服器
-- `npm run build`：建置 production
-- `npm run lint`：執行 ESLint
-- `npm run preview`：預覽建置結果
+- `npm run dev`：開發模式
+- `npm run build`：建置正式版
+- `npm run lint`：ESLint 檢查
+- `npm run preview`：本機預覽 build 結果
 
-## 路由
+## 主要路由
 
 - `/`：首頁
 - `/categories`：分類總覽
 - `/categories/item/:id`：分類細節
 - `/builds/item/:id`：推薦配單細節
-- `/brand`：出貨流程
+- `/orders/tags`：出機標籤總覽
+- `/orders/item/:id`：出機詳情
+- `/blog`：技術文章列表
+- `/blog/:slug`：技術文章詳情
 - `/admin/login`：後台登入
-- `/admin`：後台控制台
+- `/admin`：後台管理主頁
+- `/admin/blog`：後台文章管理
 
-## 後台登入流程
+## 與後端整合
 
-1. 先啟動 backend（預設 `http://localhost:3000`）。
-2. 進入 `/admin/login`。
-3. 使用 backend `.env` 裡的管理員帳密登入。
+前端主要讀取以下 API：
 
-登入後 token 會存到瀏覽器 `localStorage`：
+- `GET /api/public/builds`
+- `GET /api/public/categories`
+- `GET /api/public/orders`
+- `GET /api/public/blog-posts`
+- `GET /api/public/site-content`
+
+管理後台流程：
+
+1. 先啟動 backend（預設 `http://localhost:3000`）
+2. 進入 `/admin/login`
+3. 使用 backend `.env` 的管理員帳密登入
+
+登入後會儲存：
 
 - `nszpc_admin_token`
 - `nszpc_admin_user`
 
-## 資料來源說明
-
-前端資料優先讀 backend 公開 API：
-
-- `/api/public/builds`
-- `/api/public/categories`
-- `/api/public/orders`
-- `/api/public/site-content`
-
-若 API 異常，部分頁面會使用前端 fallback 資料以維持可顯示。
-
-## 推薦配單顯示邏輯
-
-- 首頁卡片顯示：名稱、描述、價格、成交日期
-- 進入「查看細節」後才顯示核心配備：
-  - CPU / RAM / 硬碟 / 顯示卡 / 電源供應器 / 機殼
-  - 需求說明（條列）
-
-## 與後端一起開發（建議）
-
-開兩個 terminal：
-
-```bash
-# terminal 1
-cd backend
-npm run dev
-
-# terminal 2
-cd frontend
-npm run dev
-```
-
 ## 常見問題
 
-- 後台登入失敗：確認 backend 有啟動，且 `VITE_API_BASE_URL` 指向正確 API。
-- 畫面無資料：先看 backend `data/db.sqlite` 是否有資料，或檢查 API 回應。
-- CORS 錯誤：到 backend 調整 `CORS_ORIGIN`。
+- 登入失敗：確認 backend 是否已啟動、帳密是否正確。
+- API 無資料：確認 backend DB 已初始化（`npm run db:init`）。
+- CORS 問題：檢查 backend `CORS_ORIGIN` 是否為前端網址。

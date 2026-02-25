@@ -1,12 +1,14 @@
 # NSZPC Backend
 
-NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計，提供：
+NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計。
 
-- 管理員登入與密碼管理
-- 後台 CRUD：推薦配單、主要分類、近期出貨、站點文案
-- 公開 API：給前台載入首頁/分類/配單資料
-- Swagger / OpenAPI 文件
-- SQLite 本地資料庫（`backend/data/db.sqlite`）
+## 功能範圍
+
+- 認證：管理員登入、查看登入者、修改密碼
+- 公開 API：前台資料（配單、分類、出機、文章、站點內容）
+- 後台 API：各資源 CRUD 與站點內容管理
+- 文件：Swagger UI / OpenAPI JSON
+- 資料儲存：SQLite（預設 `backend/data/db.sqlite`）
 
 ## DDD 架構
 
@@ -33,7 +35,7 @@ npm run db:init
 npm run dev
 ```
 
-啟動後預設：
+啟動後預設網址：
 
 - API Base URL：`http://localhost:3000`
 - Swagger UI：`http://localhost:3000/api-docs`
@@ -73,9 +75,9 @@ npm run reset-admin -- change-this-password admin
 ## 可用指令
 
 - `npm run dev`：開發模式（watch）
-- `npm run start`：直接啟動 API
-- `npm run db:init`：初始化本地 SQLite 資料庫（若存在舊 `db.json` 會先匯入）
-- `npm run reset-admin -- <newPassword> [username]`：重設/建立管理員密碼
+- `npm run start`：正式啟動模式
+- `npm run db:init`：初始化 SQLite（若有舊 `db.json` 會自動匯入）
+- `npm run reset-admin -- <newPassword> [username]`：重設或建立管理員密碼
 
 ## API 概覽
 
@@ -85,6 +87,7 @@ npm run reset-admin -- change-this-password admin
 - `GET /api/public/builds`
 - `GET /api/public/categories`
 - `GET /api/public/orders?limit=5`（`1~20`）
+- `GET /api/public/blog-posts`
 - `GET /api/public/site-content`
 
 ### 認證路由
@@ -102,6 +105,7 @@ npm run reset-admin -- change-this-password admin
 CRUD 資源：
 
 - `builds`
+- `blog-posts`
 - `categories`
 - `orders`
 - `inventories`
@@ -118,34 +122,22 @@ CRUD 資源：
 
 完整 schema 與 request/response 請看 Swagger。
 
-## 推薦配單資料欄位
+## 資料庫與初始化
 
-`builds` 目前主要欄位：
-
-- `name`
-- `description`
-- `price`
-- `dealDate`（格式 `YYYY/MM/DD`）
-- `image`
-- `badge`
-- `cpu`
-- `ram`
-- `storage`
-- `gpu`
-- `psu`
-- `pcCase`
-- `specs`（需求說明條列，可空陣列）
-
-## 資料儲存
-
-資料存在：
+目前資料存放於：
 
 - `backend/data/db.sqlite`
 
 首次初始化時若偵測到 `backend/data/db.json`，會自動匯入資料到 SQLite。
 
+## 安全建議（上線前）
+
+- 更換 `AUTH_SECRET`（高強度隨機字串）
+- 更換 `ADMIN_PASSWORD`
+- `CORS_ORIGIN` 設定為正式前端網域（避免 `*`）
+
 ## 常見問題
 
-- `401 Unauthorized`：請先登入取得 token，並帶 `Authorization: Bearer <token>`。
-- 前端呼叫被 CORS 擋住：確認 `CORS_ORIGIN` 與前端網址一致。
-- 登入失敗：檢查 `.env` 的 `ADMIN_USERNAME` / `ADMIN_PASSWORD`，或用 `reset-admin` 重設。
+- `401 Unauthorized`：請先登入，並帶 `Authorization: Bearer <token>`。
+- CORS 錯誤：確認 `CORS_ORIGIN` 與前端實際網址一致。
+- 登入失敗：檢查 `ADMIN_USERNAME` / `ADMIN_PASSWORD`，或使用 `reset-admin`。
