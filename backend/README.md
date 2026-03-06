@@ -1,6 +1,6 @@
 # NSZPC Backend
 
-NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計。
+NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計，使用 PostgreSQL 作為主要資料庫。
 
 ## 功能範圍
 
@@ -8,7 +8,7 @@ NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計。
 - 公開 API：前台資料（配單、分類、出機、文章、站點內容）
 - 後台 API：各資源 CRUD 與站點內容管理
 - 文件：Swagger UI / OpenAPI JSON
-- 資料儲存：SQLite（預設 `backend/data/db.sqlite`）
+- 資料儲存：PostgreSQL（`DATABASE_URL`）
 
 ## DDD 架構
 
@@ -16,7 +16,7 @@ NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計。
 
 - `domain/`：領域介面與核心模型（例如 `AuthRepository`、`ContentRepository`）
 - `application/`：Use Case / Application Service（登入、CRUD、公開查詢、儀表板）
-- `infrastructure/`：資料持久化與安全實作（SQLite Repository、JWT、Password Service）
+- `infrastructure/`：資料持久化與安全實作（PostgreSQL Store、JWT、Password Service）
 - `interfaces/`：介面層與組裝（HTTP service container、server 路由）
 - `lib/`：通用基礎工具（HTTP helper、validation、store、openapi）
 
@@ -24,6 +24,31 @@ NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計。
 
 - Node.js（需支援 `--experimental-strip-types`，建議 Node 22+）
 - npm
+- PostgreSQL 14+（建議）
+
+## 用 Docker 啟動本機 PostgreSQL（建議）
+
+在專案根目錄執行：
+
+```bash
+docker compose up -d
+```
+
+預設：
+
+- PostgreSQL：`127.0.0.1:5432`
+  - database: `nszpc`
+  - username: `postgres`
+  - password: `postgres`
+- pgAdmin：`http://localhost:5050`
+  - email: `admin@nszpc.dev`
+  - password: `change-this-password`
+
+關閉服務：
+
+```bash
+docker compose down
+```
 
 ## 快速啟動
 
@@ -51,11 +76,12 @@ npm run dev
 - `TOKEN_TTL_HOURS`：登入 token 有效時數，預設 `8`
 - `ADMIN_USERNAME`：初始管理員帳號，預設 `admin`
 - `ADMIN_PASSWORD`：初始管理員密碼
-- `DB_PATH`：SQLite 資料庫路徑（相對於 `backend`），預設 `data/db.sqlite`
+- `DATABASE_URL`：PostgreSQL 連線字串
+  - 預設：`postgresql://postgres:postgres@127.0.0.1:5432/nszpc`
 
 ## 管理員帳號
 
-首次啟動會自動初始化資料檔並建立管理員。
+首次初始化會自動建立管理員：
 
 - 帳號：`ADMIN_USERNAME`
 - 密碼：`ADMIN_PASSWORD`
@@ -76,7 +102,7 @@ npm run reset-admin -- change-this-password admin
 
 - `npm run dev`：開發模式（watch）
 - `npm run start`：正式啟動模式
-- `npm run db:init`：初始化 SQLite（若有舊 `db.json` 會自動匯入）
+- `npm run db:init`：初始化 PostgreSQL schema 與初始資料
 - `npm run reset-admin -- <newPassword> [username]`：重設或建立管理員密碼
 
 ## API 概覽
@@ -112,7 +138,7 @@ CRUD 資源：
 - `procurements`
 - `personal-procurements`
 
-對每個資源都支援：
+每個資源都支援：
 
 - `GET /api/admin/<resource>`
 - `POST /api/admin/<resource>`
@@ -122,22 +148,21 @@ CRUD 資源：
 
 完整 schema 與 request/response 請看 Swagger。
 
-## 資料庫與初始化
+## 初始化與資料遷移
 
-目前資料存放於：
-
-- `backend/data/db.sqlite`
-
-首次初始化時若偵測到 `backend/data/db.json`，會自動匯入資料到 SQLite。
+- `npm run db:init` 會建立必要 schema 並初始化資料。
+- 若偵測到 `backend/data/db.json`，首次初始化會自動匯入其資料。
 
 ## 安全建議（上線前）
 
 - 更換 `AUTH_SECRET`（高強度隨機字串）
 - 更換 `ADMIN_PASSWORD`
 - `CORS_ORIGIN` 設定為正式前端網域（避免 `*`）
+- `DATABASE_URL` 使用最小權限帳號
 
 ## 常見問題
 
 - `401 Unauthorized`：請先登入，並帶 `Authorization: Bearer <token>`。
+- DB 連線失敗：確認 PostgreSQL 已啟動，且 `DATABASE_URL` 正確。
 - CORS 錯誤：確認 `CORS_ORIGIN` 與前端實際網址一致。
 - 登入失敗：檢查 `ADMIN_USERNAME` / `ADMIN_PASSWORD`，或使用 `reset-admin`。

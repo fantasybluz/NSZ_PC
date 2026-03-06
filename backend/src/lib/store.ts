@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
+import { Pool, type PoolClient } from 'pg';
 import { fileURLToPath } from 'node:url';
 
 import { hashPassword } from './auth.ts';
@@ -25,10 +25,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIRECTORY = path.resolve(__dirname, '../../data');
 const LEGACY_JSON_FILE = path.resolve(DATA_DIRECTORY, 'db.json');
-const DEFAULT_SQLITE_FILE = path.resolve(DATA_DIRECTORY, 'db.sqlite');
+const DEFAULT_POSTGRES_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/nszpc';
 
 let writeQueue: Promise<void> = Promise.resolve();
-let sqliteDb: DatabaseSync | null = null;
+let pgPool: Pool | null = null;
 
 const now = (): string => new Date().toISOString();
 
@@ -1873,500 +1873,66 @@ const normalizeDbSnapshot = (
   };
 };
 
-const toSqlBoolean = (value: boolean): number => (value ? 1 : 0);
-const fromSqlBoolean = (value: unknown): boolean => Number(value) === 1;
-
-const toJsonText = (value: unknown): string => JSON.stringify(value);
-
-const parseJsonValue = (value: unknown, fallback: unknown): unknown => {
-  if (typeof value !== 'string') {
-    return fallback;
-  }
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-};
-
-const parseJsonArray = (value: unknown): unknown[] => {
-  const parsed = parseJsonValue(value, []);
-  return Array.isArray(parsed) ? parsed : [];
-};
-
-const resolveSqlitePath = (): string => {
-  const configured = asString(process.env.DB_PATH);
+const resolvePostgresConnectionString = (): string => {
+  const configured = asString(process.env.DATABASE_URL);
   if (!configured) {
-    return DEFAULT_SQLITE_FILE;
+    return DEFAULT_POSTGRES_URL;
   }
 
-  if (path.isAbsolute(configured)) {
-    return configured;
-  }
-
-  return path.resolve(__dirname, '../../', configured);
+  return configured;
 };
 
-const runSchemaMigrations = (db: DatabaseSync): void => {
-  db.exec(`
-    PRAGMA journal_mode = WAL;
-    PRAGMA synchronous = NORMAL;
-    CREATE TABLE IF NOT EXISTS meta (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      version INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      role TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS builds (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      detail_intro TEXT NOT NULL,
-      requirement_intro TEXT NOT NULL,
-      youtube_embed_url TEXT NOT NULL,
-      price INTEGER NOT NULL,
-      deal_date TEXT NOT NULL,
-      badge TEXT NOT NULL,
-      image TEXT NOT NULL,
-      cpu TEXT NOT NULL,
-      ram TEXT NOT NULL,
-      storage TEXT NOT NULL,
-      gpu TEXT NOT NULL,
-      psu TEXT NOT NULL,
-      pc_case TEXT NOT NULL,
-      specs_json TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS categories (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      primary_category TEXT NOT NULL,
-      secondary_category TEXT NOT NULL,
-      tags_json TEXT NOT NULL,
-      points_json TEXT NOT NULL,
-      detail_intro TEXT NOT NULL,
-      detail_hero_image TEXT NOT NULL,
-      detail_recommendations_json TEXT NOT NULL,
-      detail_faqs_json TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS orders (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      item TEXT NOT NULL,
-      requirement_intro TEXT NOT NULL,
-      youtube_embed_url TEXT NOT NULL,
-      tags_json TEXT NOT NULL,
-      location TEXT NOT NULL,
-      sale_price INTEGER NOT NULL,
-      status TEXT NOT NULL,
-      cpu TEXT NOT NULL,
-      ram TEXT NOT NULL,
-      storage TEXT NOT NULL,
-      gpu TEXT NOT NULL,
-      psu TEXT NOT NULL,
-      pc_case TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS blog_posts (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      cover_image TEXT NOT NULL,
-      published_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      author_name TEXT NOT NULL,
-      reading_minutes INTEGER NOT NULL,
-      tags_json TEXT NOT NULL,
-      youtube_embed_url TEXT NOT NULL,
-      sections_json TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS inventories (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      category TEXT NOT NULL,
-      brand TEXT NOT NULL,
-      product_name TEXT NOT NULL,
-      motherboard_form_factor TEXT NOT NULL,
-      quantity INTEGER NOT NULL,
-      tax_included INTEGER NOT NULL,
-      retail_price INTEGER NOT NULL,
-      cost_price INTEGER NOT NULL,
-      note TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS procurements (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      peer_name TEXT NOT NULL,
-      supplier_name TEXT NOT NULL,
-      source TEXT NOT NULL,
-      tax_included INTEGER NOT NULL,
-      settled_this_week INTEGER NOT NULL,
-      items_json TEXT NOT NULL,
-      note TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS personal_procurements (
-      sort_order INTEGER NOT NULL,
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      supplier_name TEXT NOT NULL,
-      source TEXT NOT NULL,
-      tax_included INTEGER NOT NULL,
-      items_json TEXT NOT NULL,
-      note TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS site_content (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      home_hero_kicker TEXT NOT NULL,
-      home_hero_title TEXT NOT NULL,
-      home_hero_subtitle TEXT NOT NULL,
-      home_category_subtitle TEXT NOT NULL,
-      home_build_subtitle TEXT NOT NULL,
-      home_workflow_subtitle TEXT NOT NULL,
-      home_contact_subtitle TEXT NOT NULL,
-      home_stats_json TEXT NOT NULL,
-      categories_hero_subtitle TEXT NOT NULL,
-      categories_quick_tags_json TEXT NOT NULL,
-      categories_portfolio_title TEXT NOT NULL,
-      categories_portfolio_subtitle TEXT NOT NULL,
-      categories_brand_portfolios_json TEXT NOT NULL,
-      brand_hero_title TEXT NOT NULL,
-      brand_hero_subtitle TEXT NOT NULL,
-      shipment_tag_catalog_json TEXT NOT NULL,
-      shipping_steps_json TEXT NOT NULL,
-      service_highlights_json TEXT NOT NULL,
-      testimonials_json TEXT NOT NULL,
-      contact_channels_json TEXT NOT NULL,
-      footer_address TEXT NOT NULL,
-      footer_slogan TEXT NOT NULL,
-      contact_address TEXT NOT NULL,
-      contact_phone TEXT NOT NULL,
-      contact_line TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
+const getPostgresPool = (): Pool => {
+  if (pgPool) {
+    return pgPool;
+  }
+
+  pgPool = new Pool({
+    connectionString: resolvePostgresConnectionString(),
+  });
+
+  return pgPool;
+};
+
+const runPostgresMigrations = async (client: PoolClient): Promise<void> => {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS app_state (
+      id SMALLINT PRIMARY KEY CHECK (id = 1),
+      data JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
   `);
 };
 
-const openSqlite = async (): Promise<DatabaseSync> => {
-  if (sqliteDb) {
-    return sqliteDb;
-  }
-
-  const filePath = resolveSqlitePath();
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  sqliteDb = new DatabaseSync(filePath);
-  runSchemaMigrations(sqliteDb);
-  return sqliteDb;
-};
-
-const clearSqliteTables = (db: DatabaseSync): void => {
-  db.exec(`
-    DELETE FROM site_content;
-    DELETE FROM personal_procurements;
-    DELETE FROM procurements;
-    DELETE FROM inventories;
-    DELETE FROM blog_posts;
-    DELETE FROM orders;
-    DELETE FROM categories;
-    DELETE FROM builds;
-    DELETE FROM users;
-    DELETE FROM meta;
-  `);
-};
-
-const writeDbToSqlite = (
-  db: DatabaseSync,
-  nextDb: DbSchema,
-  options: { touchUpdatedAt?: boolean } = {},
-): void => {
-  const touchUpdatedAt = options.touchUpdatedAt !== false;
-  const metaCreatedAt = asString(nextDb.meta?.createdAt) || now();
-  const metaUpdatedAt = touchUpdatedAt ? now() : asString(nextDb.meta?.updatedAt) || metaCreatedAt;
-  const parsedVersion = Number(nextDb.meta?.version);
-  const metaVersion = Number.isInteger(parsedVersion) && parsedVersion > 0 ? parsedVersion : 1;
-
-  nextDb.meta.createdAt = metaCreatedAt;
-  nextDb.meta.updatedAt = metaUpdatedAt;
-  nextDb.meta.version = metaVersion;
-
-  db.exec('BEGIN IMMEDIATE TRANSACTION');
+const withPostgresClient = async <T>(handler: (client: PoolClient) => Promise<T>): Promise<T> => {
+  const pool = getPostgresPool();
+  const client = await pool.connect();
 
   try {
-    clearSqliteTables(db);
-
-    db.prepare(`
-      INSERT INTO meta (id, created_at, updated_at, version)
-      VALUES (1, ?, ?, ?)
-    `).run(metaCreatedAt, metaUpdatedAt, metaVersion);
-
-    const insertUser = db.prepare(`
-      INSERT INTO users (id, username, password_hash, role, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    nextDb.users.forEach((user) => {
-      insertUser.run(user.id, user.username, user.passwordHash, user.role, user.createdAt);
-    });
-
-    const insertBuild = db.prepare(`
-      INSERT INTO builds (
-        sort_order, id, name, description, detail_intro, requirement_intro, youtube_embed_url,
-        price, deal_date, badge, image, cpu, ram, storage, gpu, psu, pc_case, specs_json,
-        created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.builds.forEach((build, index) => {
-      insertBuild.run(
-        index,
-        build.id,
-        build.name,
-        build.description,
-        build.detailIntro,
-        build.requirementIntro,
-        build.youtubeEmbedUrl,
-        build.price,
-        build.dealDate,
-        build.badge || '',
-        build.image,
-        build.cpu,
-        build.ram,
-        build.storage,
-        build.gpu,
-        build.psu,
-        build.pcCase,
-        toJsonText(build.specs),
-        build.createdAt,
-        build.updatedAt,
-      );
-    });
-
-    const insertCategory = db.prepare(`
-      INSERT INTO categories (
-        sort_order, id, title, summary, primary_category, secondary_category,
-        tags_json, points_json, detail_intro, detail_hero_image,
-        detail_recommendations_json, detail_faqs_json, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.categories.forEach((category, index) => {
-      insertCategory.run(
-        index,
-        category.id,
-        category.title,
-        category.summary,
-        category.primaryCategory,
-        category.secondaryCategory,
-        toJsonText(category.tags),
-        toJsonText(category.points),
-        category.detailIntro,
-        category.detailHeroImage,
-        toJsonText(category.detailRecommendations),
-        toJsonText(category.detailFaqs),
-        category.createdAt,
-        category.updatedAt,
-      );
-    });
-
-    const insertOrder = db.prepare(`
-      INSERT INTO orders (
-        sort_order, id, date, item, requirement_intro, youtube_embed_url, tags_json,
-        location, sale_price, status, cpu, ram, storage, gpu, psu, pc_case, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.orders.forEach((order, index) => {
-      insertOrder.run(
-        index,
-        order.id,
-        order.date,
-        order.item,
-        order.requirementIntro,
-        order.youtubeEmbedUrl,
-        toJsonText(order.tags),
-        order.location,
-        order.salePrice,
-        order.status,
-        order.cpu,
-        order.ram,
-        order.storage,
-        order.gpu,
-        order.psu,
-        order.pcCase,
-        order.createdAt,
-        order.updatedAt,
-      );
-    });
-
-    const insertBlogPost = db.prepare(`
-      INSERT INTO blog_posts (
-        sort_order, id, slug, title, summary, cover_image, published_at, updated_at,
-        author_name, reading_minutes, tags_json, youtube_embed_url, sections_json, created_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.blogPosts.forEach((post, index) => {
-      insertBlogPost.run(
-        index,
-        post.id,
-        post.slug,
-        post.title,
-        post.summary,
-        post.coverImage,
-        post.publishedAt,
-        post.updatedAt,
-        post.authorName,
-        post.readingMinutes,
-        toJsonText(post.tags),
-        post.youtubeEmbedUrl,
-        toJsonText(post.sections),
-        post.createdAt,
-      );
-    });
-
-    const insertInventory = db.prepare(`
-      INSERT INTO inventories (
-        sort_order, id, category, brand, product_name, motherboard_form_factor, quantity,
-        tax_included, retail_price, cost_price, note, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.inventories.forEach((inventory, index) => {
-      insertInventory.run(
-        index,
-        inventory.id,
-        inventory.category,
-        inventory.brand,
-        inventory.productName,
-        inventory.motherboardFormFactor,
-        inventory.quantity,
-        toSqlBoolean(inventory.taxIncluded),
-        inventory.retailPrice,
-        inventory.costPrice,
-        inventory.note,
-        inventory.createdAt,
-        inventory.updatedAt,
-      );
-    });
-
-    const insertProcurement = db.prepare(`
-      INSERT INTO procurements (
-        sort_order, id, date, peer_name, supplier_name, source, tax_included,
-        settled_this_week, items_json, note, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.procurements.forEach((procurement, index) => {
-      insertProcurement.run(
-        index,
-        procurement.id,
-        procurement.date,
-        procurement.peerName,
-        procurement.supplierName,
-        procurement.source,
-        toSqlBoolean(procurement.taxIncluded),
-        toSqlBoolean(procurement.settledThisWeek),
-        toJsonText(procurement.items),
-        procurement.note,
-        procurement.createdAt,
-        procurement.updatedAt,
-      );
-    });
-
-    const insertPersonalProcurement = db.prepare(`
-      INSERT INTO personal_procurements (
-        sort_order, id, date, supplier_name, source, tax_included,
-        items_json, note, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    nextDb.personalProcurements.forEach((procurement, index) => {
-      insertPersonalProcurement.run(
-        index,
-        procurement.id,
-        procurement.date,
-        procurement.supplierName,
-        procurement.source,
-        toSqlBoolean(procurement.taxIncluded),
-        toJsonText(procurement.items),
-        procurement.note,
-        procurement.createdAt,
-        procurement.updatedAt,
-      );
-    });
-
-    const siteContent = nextDb.siteContent;
-    db.prepare(`
-      INSERT INTO site_content (
-        id, home_hero_kicker, home_hero_title, home_hero_subtitle, home_category_subtitle,
-        home_build_subtitle, home_workflow_subtitle, home_contact_subtitle, home_stats_json,
-        categories_hero_subtitle, categories_quick_tags_json, categories_portfolio_title,
-        categories_portfolio_subtitle, categories_brand_portfolios_json, brand_hero_title,
-        brand_hero_subtitle, shipment_tag_catalog_json, shipping_steps_json,
-        service_highlights_json, testimonials_json, contact_channels_json, footer_address,
-        footer_slogan, contact_address, contact_phone, contact_line, updated_at
-      )
-      VALUES (
-        1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-    `).run(
-      siteContent.homeHeroKicker,
-      siteContent.homeHeroTitle,
-      siteContent.homeHeroSubtitle,
-      siteContent.homeCategorySubtitle,
-      siteContent.homeBuildSubtitle,
-      siteContent.homeWorkflowSubtitle,
-      siteContent.homeContactSubtitle,
-      toJsonText(siteContent.homeStats),
-      siteContent.categoriesHeroSubtitle,
-      toJsonText(siteContent.categoriesQuickTags),
-      siteContent.categoriesPortfolioTitle,
-      siteContent.categoriesPortfolioSubtitle,
-      toJsonText(siteContent.categoriesBrandPortfolios),
-      siteContent.brandHeroTitle,
-      siteContent.brandHeroSubtitle,
-      toJsonText(siteContent.shipmentTagCatalog),
-      toJsonText(siteContent.shippingSteps),
-      toJsonText(siteContent.serviceHighlights),
-      toJsonText(siteContent.testimonials),
-      toJsonText(siteContent.contactChannels),
-      siteContent.footerAddress,
-      siteContent.footerSlogan,
-      siteContent.contactAddress,
-      siteContent.contactPhone,
-      siteContent.contactLine,
-      siteContent.updatedAt,
-    );
-
-    db.exec('COMMIT');
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
+    return await handler(client);
+  } finally {
+    client.release();
   }
+};
+
+const getSeedCredentials = (): { adminUsername: string; adminPassword: string } => {
+  return {
+    adminUsername: process.env.ADMIN_USERNAME || 'admin',
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin123456',
+  };
+};
+
+const normalizeStoredSnapshot = (value: unknown): DbSchema => {
+  const { adminUsername, adminPassword } = getSeedCredentials();
+  if (typeof value === 'string') {
+    try {
+      return normalizeDbSnapshot(JSON.parse(value), adminUsername, adminPassword);
+    } catch {
+      return normalizeDbSnapshot({}, adminUsername, adminPassword);
+    }
+  }
+
+  return normalizeDbSnapshot(value, adminUsername, adminPassword);
 };
 
 const loadLegacyJsonSeed = async (
@@ -2382,303 +1948,108 @@ const loadLegacyJsonSeed = async (
   }
 };
 
-const ensureSqliteStore = async ({
+const readStateRow = async (client: PoolClient): Promise<unknown | null> => {
+  const result = await client.query<{ data: unknown }>(
+    'SELECT data FROM app_state WHERE id = 1',
+  );
+
+  if (!result.rowCount || !result.rows[0]) {
+    return null;
+  }
+
+  return result.rows[0].data;
+};
+
+const writeStateRow = async (client: PoolClient, snapshot: DbSchema): Promise<void> => {
+  await client.query(
+    `
+      INSERT INTO app_state (id, data, updated_at)
+      VALUES (1, $1::jsonb, $2::timestamptz)
+      ON CONFLICT (id)
+      DO UPDATE SET
+        data = EXCLUDED.data,
+        updated_at = EXCLUDED.updated_at
+    `,
+    [JSON.stringify(snapshot), snapshot.meta.updatedAt],
+  );
+};
+
+const ensurePostgresStore = async ({
   adminUsername,
   adminPassword,
 }: {
   adminUsername: string;
   adminPassword: string;
 }): Promise<void> => {
-  const db = await openSqlite();
+  await withPostgresClient(async (client) => {
+    await runPostgresMigrations(client);
 
-  const meta = db.prepare('SELECT id FROM meta WHERE id = 1').get() as
-    | Record<string, unknown>
-    | undefined;
+    const existing = await readStateRow(client);
+    if (existing) {
+      return;
+    }
 
-  if (meta) {
-    return;
-  }
+    const legacySeed = await loadLegacyJsonSeed(adminUsername, adminPassword);
+    const seed = legacySeed || defaultDb(adminUsername, adminPassword);
+    const normalized = normalizeDbSnapshot(seed, adminUsername, adminPassword);
 
-  const legacySeed = await loadLegacyJsonSeed(adminUsername, adminPassword);
-  const seed = legacySeed || defaultDb(adminUsername, adminPassword);
-  writeDbToSqlite(db, seed, { touchUpdatedAt: false });
+    await writeStateRow(client, normalized);
+  });
 };
 
 const ensureStoreReadyForRead = async (): Promise<void> => {
-  await ensureSqliteStore({
-    adminUsername: process.env.ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin123456',
-  });
+  const { adminUsername, adminPassword } = getSeedCredentials();
+  await ensurePostgresStore({ adminUsername, adminPassword });
 };
 
 export const readDb = async (): Promise<DbSchema> => {
   await ensureStoreReadyForRead();
-  const db = await openSqlite();
 
-  const metaRow = db.prepare(`
-    SELECT created_at AS createdAt, updated_at AS updatedAt, version
-    FROM meta
-    WHERE id = 1
-  `).get() as Record<string, unknown> | undefined;
+  return withPostgresClient(async (client) => {
+    await runPostgresMigrations(client);
+    const stored = await readStateRow(client);
+    if (!stored) {
+      const { adminUsername, adminPassword } = getSeedCredentials();
+      return defaultDb(adminUsername, adminPassword);
+    }
 
-  const usersRaw = db.prepare(`
-    SELECT id, username, password_hash AS passwordHash, role, created_at AS createdAt
-    FROM users
-    ORDER BY created_at ASC, username ASC
-  `).all() as Record<string, unknown>[];
-
-  const buildsRaw = db.prepare(`
-    SELECT
-      id, name, description,
-      detail_intro AS detailIntro,
-      requirement_intro AS requirementIntro,
-      youtube_embed_url AS youtubeEmbedUrl,
-      price,
-      deal_date AS dealDate,
-      badge,
-      image, cpu, ram, storage, gpu, psu,
-      pc_case AS pcCase,
-      specs_json AS specsJson,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM builds
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const categoriesRaw = db.prepare(`
-    SELECT
-      id, title, summary,
-      primary_category AS primaryCategory,
-      secondary_category AS secondaryCategory,
-      tags_json AS tagsJson,
-      points_json AS pointsJson,
-      detail_intro AS detailIntro,
-      detail_hero_image AS detailHeroImage,
-      detail_recommendations_json AS detailRecommendationsJson,
-      detail_faqs_json AS detailFaqsJson,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM categories
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const ordersRaw = db.prepare(`
-    SELECT
-      id, date, item,
-      requirement_intro AS requirementIntro,
-      youtube_embed_url AS youtubeEmbedUrl,
-      tags_json AS tagsJson,
-      location,
-      sale_price AS salePrice,
-      status,
-      cpu, ram, storage, gpu, psu,
-      pc_case AS pcCase,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM orders
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const blogPostsRaw = db.prepare(`
-    SELECT
-      id, slug, title, summary,
-      cover_image AS coverImage,
-      published_at AS publishedAt,
-      updated_at AS updatedAt,
-      author_name AS authorName,
-      reading_minutes AS readingMinutes,
-      tags_json AS tagsJson,
-      youtube_embed_url AS youtubeEmbedUrl,
-      sections_json AS sectionsJson,
-      created_at AS createdAt
-    FROM blog_posts
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const inventoriesRaw = db.prepare(`
-    SELECT
-      id, category, brand,
-      product_name AS productName,
-      motherboard_form_factor AS motherboardFormFactor,
-      quantity,
-      tax_included AS taxIncluded,
-      retail_price AS retailPrice,
-      cost_price AS costPrice,
-      note,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM inventories
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const procurementsRaw = db.prepare(`
-    SELECT
-      id, date,
-      peer_name AS peerName,
-      supplier_name AS supplierName,
-      source,
-      tax_included AS taxIncluded,
-      settled_this_week AS settledThisWeek,
-      items_json AS itemsJson,
-      note,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM procurements
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const personalProcurementsRaw = db.prepare(`
-    SELECT
-      id, date,
-      supplier_name AS supplierName,
-      source,
-      tax_included AS taxIncluded,
-      items_json AS itemsJson,
-      note,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM personal_procurements
-    ORDER BY sort_order ASC
-  `).all() as Record<string, unknown>[];
-
-  const siteContentRaw = db.prepare(`
-    SELECT
-      home_hero_kicker AS homeHeroKicker,
-      home_hero_title AS homeHeroTitle,
-      home_hero_subtitle AS homeHeroSubtitle,
-      home_category_subtitle AS homeCategorySubtitle,
-      home_build_subtitle AS homeBuildSubtitle,
-      home_workflow_subtitle AS homeWorkflowSubtitle,
-      home_contact_subtitle AS homeContactSubtitle,
-      home_stats_json AS homeStatsJson,
-      categories_hero_subtitle AS categoriesHeroSubtitle,
-      categories_quick_tags_json AS categoriesQuickTagsJson,
-      categories_portfolio_title AS categoriesPortfolioTitle,
-      categories_portfolio_subtitle AS categoriesPortfolioSubtitle,
-      categories_brand_portfolios_json AS categoriesBrandPortfoliosJson,
-      brand_hero_title AS brandHeroTitle,
-      brand_hero_subtitle AS brandHeroSubtitle,
-      shipment_tag_catalog_json AS shipmentTagCatalogJson,
-      shipping_steps_json AS shippingStepsJson,
-      service_highlights_json AS serviceHighlightsJson,
-      testimonials_json AS testimonialsJson,
-      contact_channels_json AS contactChannelsJson,
-      footer_address AS footerAddress,
-      footer_slogan AS footerSlogan,
-      contact_address AS contactAddress,
-      contact_phone AS contactPhone,
-      contact_line AS contactLine,
-      updated_at AS updatedAt
-    FROM site_content
-    WHERE id = 1
-  `).get() as Record<string, unknown> | undefined;
-
-  const fallback = defaultSiteContent();
-  const siteContent = normalizeSiteContent(
-    siteContentRaw
-      ? {
-          homeHeroKicker: siteContentRaw.homeHeroKicker,
-          homeHeroTitle: siteContentRaw.homeHeroTitle,
-          homeHeroSubtitle: siteContentRaw.homeHeroSubtitle,
-          homeCategorySubtitle: siteContentRaw.homeCategorySubtitle,
-          homeBuildSubtitle: siteContentRaw.homeBuildSubtitle,
-          homeWorkflowSubtitle: siteContentRaw.homeWorkflowSubtitle,
-          homeContactSubtitle: siteContentRaw.homeContactSubtitle,
-          homeStats: parseJsonArray(siteContentRaw.homeStatsJson),
-          categoriesHeroSubtitle: siteContentRaw.categoriesHeroSubtitle,
-          categoriesQuickTags: parseJsonArray(siteContentRaw.categoriesQuickTagsJson),
-          categoriesPortfolioTitle: siteContentRaw.categoriesPortfolioTitle,
-          categoriesPortfolioSubtitle: siteContentRaw.categoriesPortfolioSubtitle,
-          categoriesBrandPortfolios: parseJsonArray(siteContentRaw.categoriesBrandPortfoliosJson),
-          brandHeroTitle: siteContentRaw.brandHeroTitle,
-          brandHeroSubtitle: siteContentRaw.brandHeroSubtitle,
-          shipmentTagCatalog: parseJsonArray(siteContentRaw.shipmentTagCatalogJson),
-          shippingSteps: parseJsonArray(siteContentRaw.shippingStepsJson),
-          serviceHighlights: parseJsonArray(siteContentRaw.serviceHighlightsJson),
-          testimonials: parseJsonArray(siteContentRaw.testimonialsJson),
-          contactChannels: parseJsonArray(siteContentRaw.contactChannelsJson),
-          footerAddress: siteContentRaw.footerAddress,
-          footerSlogan: siteContentRaw.footerSlogan,
-          contactAddress: siteContentRaw.contactAddress,
-          contactPhone: siteContentRaw.contactPhone,
-          contactLine: siteContentRaw.contactLine,
-          updatedAt: siteContentRaw.updatedAt,
-        }
-      : fallback,
-  );
-
-  const metaFallback = { createdAt: now(), updatedAt: now(), version: 1 };
-  const parsedDb: DbSchema = {
-    meta: normalizeDbMeta(metaRow, metaFallback),
-    users: normalizeUsers(usersRaw),
-    builds: normalizeBuilds(
-      buildsRaw.map((item) => ({
-        ...item,
-        specs: parseJsonArray(item.specsJson),
-      })),
-    ),
-    categories: normalizeCategories(
-      categoriesRaw.map((item) => ({
-        ...item,
-        tags: parseJsonArray(item.tagsJson),
-        points: parseJsonArray(item.pointsJson),
-        detailRecommendations: parseJsonArray(item.detailRecommendationsJson),
-        detailFaqs: parseJsonArray(item.detailFaqsJson),
-      })),
-    ),
-    orders: normalizeOrders(
-      ordersRaw.map((item) => ({
-        ...item,
-        tags: parseJsonArray(item.tagsJson),
-      })),
-    ),
-    blogPosts: normalizeBlogPosts(
-      blogPostsRaw.map((item) => ({
-        ...item,
-        tags: parseJsonArray(item.tagsJson),
-        sections: parseJsonArray(item.sectionsJson),
-      })),
-    ),
-    inventories: normalizeInventories(
-      inventoriesRaw.map((item) => ({
-        ...item,
-        taxIncluded: fromSqlBoolean(item.taxIncluded),
-      })),
-    ),
-    procurements: normalizeProcurements(
-      procurementsRaw.map((item) => ({
-        ...item,
-        taxIncluded: fromSqlBoolean(item.taxIncluded),
-        settledThisWeek: fromSqlBoolean(item.settledThisWeek),
-        items: parseJsonArray(item.itemsJson),
-      })),
-    ),
-    personalProcurements: normalizePersonalProcurements(
-      personalProcurementsRaw.map((item) => ({
-        ...item,
-        taxIncluded: fromSqlBoolean(item.taxIncluded),
-        items: parseJsonArray(item.itemsJson),
-      })),
-    ),
-    siteContent,
-  };
-
-  return parsedDb;
-};
-
-const writeDb = async (nextDb: DbSchema): Promise<void> => {
-  await ensureStoreReadyForRead();
-  const db = await openSqlite();
-  writeDbToSqlite(db, nextDb, { touchUpdatedAt: true });
+    return normalizeStoredSnapshot(stored);
+  });
 };
 
 export const mutateDb = <T>(mutator: (draft: DbSchema) => T | Promise<T>): Promise<T> => {
   const next = writeQueue.then(async () => {
-    const current = await readDb();
-    const draft = structuredClone(current);
-    const result = await mutator(draft);
-    await writeDb(draft);
-    return result;
+    await ensureStoreReadyForRead();
+
+    return withPostgresClient(async (client) => {
+      await runPostgresMigrations(client);
+      await client.query('BEGIN');
+
+      try {
+        const locked = await client.query<{ data: unknown }>(
+          'SELECT data FROM app_state WHERE id = 1 FOR UPDATE',
+        );
+
+        const current =
+          locked.rowCount && locked.rows[0]
+            ? normalizeStoredSnapshot(locked.rows[0].data)
+            : defaultDb(getSeedCredentials().adminUsername, getSeedCredentials().adminPassword);
+
+        const draft = structuredClone(current);
+        const result = await mutator(draft);
+
+        draft.meta.updatedAt = now();
+        draft.meta.createdAt = asString(draft.meta.createdAt) || draft.meta.updatedAt;
+        draft.meta.version = Number.isInteger(draft.meta.version) && draft.meta.version > 0 ? draft.meta.version : 1;
+
+        await writeStateRow(client, draft);
+        await client.query('COMMIT');
+        return result;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
+    });
   });
 
   writeQueue = next.then(
@@ -2696,7 +2067,7 @@ export const initStore = async ({
   adminUsername: string;
   adminPassword: string;
 }): Promise<void> => {
-  await ensureSqliteStore({ adminUsername, adminPassword });
+  await ensurePostgresStore({ adminUsername, adminPassword });
 
   const db = await readDb();
   if (!Array.isArray(db.users) || db.users.length === 0) {

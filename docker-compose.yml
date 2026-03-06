@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nszpc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nszpc
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: Asia/Taipei
+    ports:
+      - "5432:5432"
+    volumes:
+      - nszpc_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nszpc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: nszpc-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@nszpc.dev
+      PGADMIN_DEFAULT_PASSWORD: change-this-password
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - nszpc_pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  nszpc_postgres_data:
+  nszpc_pgadmin_data:

@@ -88,5 +88,5 @@ VITE_API_BASE_URL=http://localhost:3000
 ## 常見問題
 
 - 登入失敗：確認 backend 是否已啟動、帳密是否正確。
-- API 無資料：確認 backend DB 已初始化（`npm run db:init`）。
+- API 無資料：確認 backend PostgreSQL 已初始化（`npm run db:init`）。
 - CORS 問題：檢查 backend `CORS_ORIGIN` 是否為前端網址。

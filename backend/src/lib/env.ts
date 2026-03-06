@@ -3,6 +3,10 @@ import path from 'node:path';
 
 const ENV_LINE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/;
 
+interface LoadEnvFileOptions {
+  overrideExisting?: boolean;
+}
+
 const stripWrappingQuotes = (value: string): string => {
   if (
     (value.startsWith('"') && value.endsWith('"')) ||
@@ -14,8 +18,12 @@ const stripWrappingQuotes = (value: string): string => {
   return value;
 };
 
-export const loadEnvFile = async (envFilePath = '.env'): Promise<void> => {
+export const loadEnvFile = async (
+  envFilePath = '.env',
+  options: LoadEnvFileOptions = {},
+): Promise<void> => {
   const absolutePath = path.resolve(process.cwd(), envFilePath);
+  const { overrideExisting = false } = options;
 
   try {
     const content = await fs.readFile(absolutePath, 'utf8');
@@ -33,7 +41,7 @@ export const loadEnvFile = async (envFilePath = '.env'): Promise<void> => {
       }
 
       const [, key, rawValue] = match;
-      if (process.env[key] !== undefined) {
+      if (!overrideExisting && process.env[key] !== undefined) {
         continue;
       }
 

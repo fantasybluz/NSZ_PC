@@ -4,7 +4,7 @@ import { hashPassword } from '../lib/auth.ts';
 import { loadEnvFile } from '../lib/env.ts';
 import { initStore, mutateDb } from '../lib/store.ts';
 
-await loadEnvFile();
+await loadEnvFile('.env', { overrideExisting: true });
 
 const username = process.argv[3] || process.env.ADMIN_USERNAME || 'admin';
 const newPassword = process.argv[2];

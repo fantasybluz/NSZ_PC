@@ -8,5 +8,8 @@
     "start": "node --experimental-strip-types src/server.ts",
     "reset-admin": "node --experimental-strip-types src/scripts/resetAdminPassword.ts",
     "db:init": "node --experimental-strip-types src/scripts/initDatabase.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.3"
   }
 }

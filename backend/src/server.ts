@@ -19,7 +19,7 @@ import {
 } from './lib/validation.ts';
 import { createServiceContainer } from './interfaces/http/serviceContainer.ts';
 
-await loadEnvFile();
+await loadEnvFile('.env', { overrideExisting: true });
 
 interface ServerConfig {
   port: number;
