@@ -269,7 +269,7 @@ export const defaultPublicSiteContent: PublicSiteContent = {
       images: ['/images/carousel/IMG_4730.JPG', '/images/carousel/IMG_6165.JPG', '/images/carousel/IMG_6544.JPG'],
     },
   ],
-  brandHeroTitle: '近期出機',
+  brandHeroTitle: '訂單管理',
   brandHeroSubtitle: '依近期實際出機案例整理，包含需求重點與配備說明。',
   shipmentTagCatalog: [
     '4K 遊戲',

@@ -102,6 +102,7 @@ const AdminDashboard: React.FC = () => {
   const [buildsError, setBuildsError] = React.useState('');
   const [buildsSuccess, setBuildsSuccess] = React.useState('');
   const [buildForm, setBuildForm] = React.useState<BuildFormState>(defaultBuildForm);
+  const [buildStorageFields, setBuildStorageFields] = React.useState<string[]>(createDefaultOrderStorageFields);
   const [buildSearchKeyword, setBuildSearchKeyword] = React.useState('');
   const [buildPage, setBuildPage] = React.useState(1);
   const [editingBuildId, setEditingBuildId] = React.useState<string | null>(null);
@@ -198,6 +199,7 @@ const AdminDashboard: React.FC = () => {
 
   const resetBuildForm = () => {
     setBuildForm(defaultBuildForm);
+    setBuildStorageFields(createDefaultOrderStorageFields());
     setEditingBuildId(null);
     setIsBuildEditModalOpen(false);
   };
@@ -282,7 +284,7 @@ const AdminDashboard: React.FC = () => {
 
       const payload = (await response.json()) as OrdersResponse | unknown;
       if (!response.ok) {
-        throw new Error(toApiErrorMessage(payload, '讀取近期出機失敗'));
+        throw new Error(toApiErrorMessage(payload, '讀取訂單管理失敗'));
       }
 
       const list = (payload as OrdersResponse).data;
@@ -293,7 +295,7 @@ const AdminDashboard: React.FC = () => {
         : [];
       setOrders(normalized);
     } catch (err) {
-      const message = err instanceof Error ? err.message : '讀取近期出機失敗';
+      const message = err instanceof Error ? err.message : '讀取訂單管理失敗';
       setOrdersError(message);
     } finally {
       setOrdersLoading(false);
@@ -596,6 +598,7 @@ const AdminDashboard: React.FC = () => {
 
       if (isBuildEditModalOpen) {
         setBuildForm(defaultBuildForm);
+        setBuildStorageFields(createDefaultOrderStorageFields());
         setEditingBuildId(null);
         setIsBuildEditModalOpen(false);
       }
@@ -700,6 +703,22 @@ const AdminDashboard: React.FC = () => {
     }));
   };
 
+  const handleBuildStorageFieldChange = (index: number, value: string) => {
+    setBuildStorageFields((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const handleAddBuildStorageField = () => {
+    setBuildStorageFields((prev) => [...prev, '']);
+  };
+
+  const handleRemoveBuildStorageField = (index: number) => {
+    setBuildStorageFields((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
+  };
+
   const handleFieldChange = <K extends keyof OrderFormState>(key: K, value: OrderFormState[K]) => {
     setOrderForm((prev) => ({
       ...prev,
@@ -730,7 +749,7 @@ const AdminDashboard: React.FC = () => {
   const handleSyncShipmentTagCatalogFromOrders = () => {
     const orderTags = allExistingOrderTags;
     if (orderTags.length === 0) {
-      setSiteContentError('目前沒有可同步的近期出機標籤');
+      setSiteContentError('目前沒有可同步的訂單管理標籤');
       return;
     }
 
@@ -1018,6 +1037,7 @@ const AdminDashboard: React.FC = () => {
     setBuildsError('');
     setBuildsSuccess('');
     setBuildForm(defaultBuildForm);
+    setBuildStorageFields(createDefaultOrderStorageFields());
     setEditingBuildId(null);
     setIsBuildEditModalOpen(true);
   };
@@ -1087,8 +1107,8 @@ const AdminDashboard: React.FC = () => {
       { value: siteContentForm.categoriesHeroSubtitle, label: '分類總覽說明' },
       { value: siteContentForm.categoriesPortfolioTitle, label: '分類總覽品牌作品集標題' },
       { value: siteContentForm.categoriesPortfolioSubtitle, label: '分類總覽品牌作品集說明' },
-      { value: siteContentForm.brandHeroTitle, label: '近期出機區塊標題' },
-      { value: siteContentForm.brandHeroSubtitle, label: '近期出機區塊說明' },
+      { value: siteContentForm.brandHeroTitle, label: '訂單管理區塊標題' },
+      { value: siteContentForm.brandHeroSubtitle, label: '訂單管理區塊說明' },
       { value: siteContentForm.footerAddress, label: 'Footer 地址' },
       { value: siteContentForm.footerSlogan, label: 'Footer 標語' },
       { value: siteContentForm.contactAddress, label: '聯絡地址' },
@@ -1187,7 +1207,7 @@ const AdminDashboard: React.FC = () => {
     }
 
     if (shipmentTagCatalog.length === 0) {
-      setSiteContentError('近期出機標籤庫至少需要一筆');
+      setSiteContentError('訂單管理標籤庫至少需要一筆');
       return;
     }
 
@@ -1263,11 +1283,14 @@ const AdminDashboard: React.FC = () => {
     const badge = buildForm.badge.trim();
     const dealDate = buildForm.dealDate.trim();
     const cpu = buildForm.cpu.trim();
+    const motherboard = buildForm.motherboard.trim();
     const ram = buildForm.ram.trim();
-    const storage = buildForm.storage.trim();
+    const storage = serializeOrderStorageFields(buildStorageFields);
     const gpu = buildForm.gpu.trim();
     const psu = buildForm.psu.trim();
     const pcCase = buildForm.pcCase.trim();
+    const tags = splitTextList(buildForm.tagsText);
+    const accessories = splitTextList(buildForm.accessoriesText);
     const specs = splitTextList(buildForm.specsText);
     const price = Number(buildForm.priceText);
 
@@ -1281,8 +1304,13 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!cpu || !ram || !storage || !gpu || !psu || !pcCase) {
-      setBuildsError('請完整填寫 CPU、RAM、硬碟、顯示卡、電源供應器、機殼');
+    if (!cpu || !motherboard || !ram || !storage || !gpu || !psu || !pcCase) {
+      setBuildsError('請完整填寫 CPU、主機板、RAM、硬碟、顯示卡、電源供應器、機殼');
+      return;
+    }
+
+    if (!tags.length) {
+      setBuildsError('請至少提供一筆配單標籤');
       return;
     }
 
@@ -1326,12 +1354,15 @@ const AdminDashboard: React.FC = () => {
           dealDate,
           image,
           badge,
+          tags,
           cpu,
+          motherboard,
           ram,
           storage,
           gpu,
           psu,
           pcCase,
+          accessories,
           specs,
         }),
       });
@@ -1357,6 +1388,7 @@ const AdminDashboard: React.FC = () => {
     setOrdersSuccess('');
     const storage = serializeOrderStorageFields(orderStorageFields);
     const salePrice = Number(orderForm.salePriceText.trim());
+    const serviceFee = Number(orderForm.serviceFeeText.trim());
     const requirementIntro = orderForm.requirementIntro.trim();
     const youtubeEmbedUrl = orderForm.youtubeEmbedUrl.trim();
     const tags = parseTagTextValue(orderForm.tagsText);
@@ -1368,19 +1400,29 @@ const AdminDashboard: React.FC = () => {
       tags.length === 0 ||
       !orderForm.location.trim() ||
       !orderForm.salePriceText.trim() ||
+      !orderForm.serviceFeeText.trim() ||
       !orderForm.cpu.trim() ||
+      !orderForm.motherboard.trim() ||
       !orderForm.ram.trim() ||
       !storage ||
       !orderForm.gpu.trim() ||
       !orderForm.psu.trim() ||
+      !orderForm.cooler.trim() ||
       !orderForm.pcCase.trim()
     ) {
-      setOrdersError('請完整填寫日期、品項、客戶需求、標籤、地區、售價與 CPU/RAM/硬碟/顯示卡/電源供應器/機殼');
+      setOrdersError(
+        '請完整填寫日期、品項、客戶需求、標籤、地區、售價、服務費用與 CPU/主機板/RAM/硬碟/顯示卡/散熱器/電源供應器/機殼',
+      );
       return;
     }
 
     if (!Number.isFinite(salePrice) || salePrice < 0) {
       setOrdersError('售價需為大於或等於 0 的數字');
+      return;
+    }
+
+    if (!Number.isFinite(serviceFee) || serviceFee < 0) {
+      setOrdersError('服務費用需為大於或等於 0 的數字');
       return;
     }
 
@@ -1419,12 +1461,15 @@ const AdminDashboard: React.FC = () => {
           tags,
           location: orderForm.location,
           salePrice: Math.trunc(salePrice),
+          serviceFee: Math.trunc(serviceFee),
           status: orderForm.status,
           cpu: orderForm.cpu,
+          motherboard: orderForm.motherboard,
           ram: orderForm.ram,
           storage,
           gpu: orderForm.gpu,
           psu: orderForm.psu,
+          cooler: orderForm.cooler,
           pcCase: orderForm.pcCase,
         }),
       });
@@ -1434,11 +1479,11 @@ const AdminDashboard: React.FC = () => {
         throw new Error(toApiErrorMessage(payload, isEdit ? '更新失敗' : '新增失敗'));
       }
 
-      setOrdersSuccess(isEdit ? '近期出機已更新' : '近期出機已新增');
+      setOrdersSuccess(isEdit ? '訂單管理已更新' : '訂單管理已新增');
       resetOrderForm();
       await loadOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '儲存近期出機失敗';
+      const message = err instanceof Error ? err.message : '儲存訂單管理失敗';
       setOrdersError(message);
     } finally {
       setIsSavingOrder(false);
@@ -1853,13 +1898,17 @@ const AdminDashboard: React.FC = () => {
       image: build.image,
       badge: build.badge || '',
       cpu: build.cpu || '',
+      motherboard: build.motherboard || '',
       ram: build.ram || '',
       storage: build.storage || '',
       gpu: build.gpu || '',
       psu: build.psu || '',
       pcCase: build.pcCase || '',
+      tagsText: (build.tags || []).join('\n'),
+      accessoriesText: (build.accessories || []).join('\n'),
       specsText: build.specs.join('\n'),
     });
+    setBuildStorageFields(normalizeOrderStorageFields(build.storage || ''));
   };
 
   const startEditOrder = (order: AdminOrder) => {
@@ -1873,14 +1922,18 @@ const AdminDashboard: React.FC = () => {
       requirementIntro: order.requirementIntro,
       youtubeEmbedUrl: order.youtubeEmbedUrl || '',
       tagsText: (order.tags || []).join('\n'),
+      imagesText: (order.images || []).join('\n'),
       location: order.location,
       salePriceText: String(order.salePrice),
+      serviceFeeText: String(order.serviceFee ?? 0),
       status: order.status,
       cpu: order.cpu || '',
+      motherboard: order.motherboard || '',
       ram: order.ram || '',
       storage: order.storage || '',
       gpu: order.gpu || '',
       psu: order.psu || '',
+      cooler: order.cooler || '',
       pcCase: order.pcCase || '',
     });
     setOrderStorageFields(normalizeOrderStorageFields(order.storage || ''));
@@ -1906,21 +1959,44 @@ const AdminDashboard: React.FC = () => {
     const quoteNumber = getQuoteNumber(order);
     const generatedAt = new Date().toLocaleString('zh-TW', { hour12: false });
     const storageItems = splitStorageItems(order.storage || '');
+    const quoteTotal = order.salePrice + (order.serviceFee || 0);
+    const storageLabel =
+      storageItems.length > 0
+        ? Object.entries(
+            storageItems.reduce<Record<string, number>>((acc, item) => {
+              const key = item.trim();
+              if (!key) {
+                return acc;
+              }
+              acc[key] = (acc[key] || 0) + 1;
+              return acc;
+            }, {}),
+          )
+            .map(([item, count]) => (count > 1 ? `${item} x${count}` : item))
+            .join(', ')
+        : order.storage || '待補充';
+    const storageQty = storageItems.length > 0 ? String(storageItems.length) : '1';
     const quoteSpecs = [
-      { part: 'CPU', spec: order.cpu || '待補充' },
-      { part: 'RAM', spec: order.ram || '待補充' },
-      ...(storageItems.length > 1
-        ? storageItems.map((item, index) => ({
-            part: `硬碟 ${index + 1}`,
-            spec: item,
-          }))
-        : [{ part: '硬碟', spec: storageItems[0] || order.storage || '待補充' }]),
-      { part: '顯示卡', spec: order.gpu || '待補充' },
-      { part: '電源供應器', spec: order.psu || '待補充' },
-      { part: '機殼', spec: order.pcCase || '待補充' },
+      { part: 'CPU', spec: order.cpu || '待補充', qty: '1', unit: '-' },
+      { part: '主機板', spec: order.motherboard || '待補充', qty: '1', unit: '-' },
+      { part: 'RAM', spec: order.ram || '待補充', qty: '1', unit: '-' },
+      { part: '硬碟', spec: storageLabel, qty: storageQty, unit: '-' },
+      { part: '顯示卡', spec: order.gpu || '待補充', qty: '1', unit: '-' },
+      { part: '散熱器', spec: order.cooler || '待補充', qty: '1', unit: '-' },
+      { part: '電源供應器', spec: order.psu || '待補充', qty: '1', unit: '-' },
+      { part: '機殼', spec: order.pcCase || '待補充', qty: '1', unit: '-' },
+      { part: '服務費用', spec: formatCurrency(order.serviceFee || 0), qty: '1', unit: formatCurrency(order.serviceFee || 0) },
     ];
     const quoteSpecsRows = quoteSpecs
-      .map((item) => `<tr><th>${escapeHtml(item.part)}</th><td>${escapeHtml(item.spec)}</td></tr>`)
+      .map(
+        (item) =>
+          `<tr>
+            <td>${escapeHtml(item.part)}</td>
+            <td>${escapeHtml(item.spec)}</td>
+            <td class="quote-qty">${escapeHtml(item.qty)}</td>
+            <td class="quote-qty">${escapeHtml(item.unit)}</td>
+          </tr>`,
+      )
       .join('');
 
     const quoteHtml = `<!doctype html>
@@ -2009,9 +2085,47 @@ const AdminDashboard: React.FC = () => {
         text-align: left;
         vertical-align: top;
       }
-      .quote-table th {
-        width: 150px;
+      .quote-table thead th {
         background: #f0f5fb;
+        font-weight: 600;
+      }
+      .quote-table tbody td:first-child {
+        width: 150px;
+        background: #f7fafc;
+        font-weight: 600;
+      }
+      .quote-table tbody td:last-child {
+        width: 90px;
+        text-align: center;
+      }
+      .quote-table tbody td:nth-child(3) {
+        width: 70px;
+        text-align: center;
+      }
+      .quote-footer {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: end;
+      }
+      .quote-stamp {
+        width: 210px;
+        height: 140px;
+        border: 2px dashed #b8c7dc;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8aa0b8;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-align: center;
+        background: #fbfdff;
+      }
+      .quote-totals {
+        display: grid;
+        gap: 6px;
       }
       .quote-total {
         margin-top: 16px;
@@ -2029,6 +2143,10 @@ const AdminDashboard: React.FC = () => {
         color: #4e637d;
         line-height: 1.5;
       }
+      @page {
+        size: A4;
+        margin: 0;
+      }
       @media print {
         body {
           background: #fff;
@@ -2039,7 +2157,47 @@ const AdminDashboard: React.FC = () => {
           box-shadow: none;
           border-radius: 0;
           max-width: none;
-          padding: 0;
+          width: 210mm;
+          height: 297mm;
+          padding: 12mm 10mm 40mm;
+        }
+        .quote-footer {
+          position: fixed;
+          bottom: 10mm;
+          left: 10mm;
+          right: 10mm;
+        }
+        .quote-title {
+          font-size: 24px;
+        }
+        .quote-grid {
+          margin-top: 12px;
+          gap: 10px;
+        }
+        .quote-box {
+          padding: 10px;
+        }
+        .quote-box p {
+          margin: 3px 0;
+        }
+        .quote-table {
+          font-size: 12px;
+        }
+        .quote-table th,
+        .quote-table td {
+          padding: 6px 8px;
+        }
+        .quote-total strong {
+          font-size: 20px;
+        }
+        .quote-note {
+          margin-top: 10px;
+          font-size: 12px;
+        }
+        .quote-table,
+        .quote-table tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .quote-actions {
           display: none;
@@ -2079,16 +2237,33 @@ const AdminDashboard: React.FC = () => {
         </article>
       </div>
       <table class="quote-table">
+        <thead>
+          <tr>
+            <th>品項</th>
+            <th>名稱</th>
+            <th>數量</th>
+            <th>單價</th>
+          </tr>
+        </thead>
         <tbody>
           ${quoteSpecsRows}
         </tbody>
       </table>
-      <div class="quote-total">
-        <span>估價總額</span>
-        <strong>${escapeHtml(formatCurrency(order.salePrice))}</strong>
+      <div class="quote-footer">
+        <div class="quote-stamp">發票章／公司章</div>
+        <div class="quote-totals">
+          <div class="quote-total">
+            <span>主機售價(未稅)</span>
+            <strong>${escapeHtml(formatCurrency(order.salePrice))}</strong>
+          </div>
+          <div class="quote-total">
+            <span>估價總額(含稅價格)</span>
+            <strong>${escapeHtml(formatCurrency(quoteTotal))}</strong>
+          </div>
+        </div>
       </div>
       <p class="quote-note">
-        此估價單由後台「近期出機」資料自動產出，僅供報價與規格確認使用；實際交期與付款方式請以雙方最終確認為準。
+        此估價單由後台「訂單管理」資料自動產出，僅供報價與規格確認使用；實際交期與付款方式請以雙方最終確認為準。
       </p>
     </section>
   </body>
@@ -2103,6 +2278,540 @@ const AdminDashboard: React.FC = () => {
     } catch {
       quoteWindow.close();
       setOrdersError('估價單產生失敗，請再試一次。');
+    }
+  };
+
+  const handleGenerateOrderChecklist = (order: AdminOrder) => {
+    setOrdersError('');
+    setOrdersSuccess('');
+
+    const checklistWindow = window.open('', 'nszpc-checklist', 'popup=yes,width=980,height=920');
+    if (!checklistWindow) {
+      setOrdersError('無法開啟出機檢查單視窗，請確認瀏覽器沒有封鎖彈出視窗');
+      return;
+    }
+
+    try {
+      checklistWindow.opener = null;
+    } catch {
+      // Ignore when browser does not allow assigning opener.
+    }
+
+    const checklistNumber = getQuoteNumber(order).replace('QT-', 'QC-');
+    const generatedAt = new Date().toLocaleString('zh-TW', { hour12: false });
+    const storageItems = splitStorageItems(order.storage || '');
+    const storageLabel =
+      storageItems.length > 0
+        ? Object.entries(
+            storageItems.reduce<Record<string, number>>((acc, item) => {
+              const key = item.trim();
+              if (!key) {
+                return acc;
+              }
+              acc[key] = (acc[key] || 0) + 1;
+              return acc;
+            }, {}),
+          )
+            .map(([item, count]) => (count > 1 ? `${item} x${count}` : item))
+            .join(', ')
+        : order.storage || '待補充';
+    const checklistSpecs = [
+      { part: 'CPU', spec: order.cpu || '待補充' },
+      { part: '主機板', spec: order.motherboard || '待補充' },
+      { part: 'RAM', spec: order.ram || '待補充' },
+      { part: '硬碟', spec: storageLabel },
+      { part: '顯示卡', spec: order.gpu || '待補充' },
+      { part: '散熱器', spec: order.cooler || '待補充' },
+      { part: '電源供應器', spec: order.psu || '待補充' },
+      { part: '機殼', spec: order.pcCase || '待補充' },
+    ];
+    const checklistSpecsRows = (() => {
+      const rows: string[] = [];
+      for (let index = 0; index < checklistSpecs.length; index += 2) {
+        const left = checklistSpecs[index];
+        const right = checklistSpecs[index + 1];
+        rows.push(
+          `<tr>
+            <th>${escapeHtml(left.part)}</th>
+            <td>${escapeHtml(left.spec)}</td>
+            ${
+              right
+                ? `<th>${escapeHtml(right.part)}</th><td>${escapeHtml(right.spec)}</td>`
+                : '<th></th><td></td>'
+            }
+          </tr>`,
+        );
+      }
+      return rows.join('');
+    })();
+
+    const checklistHtml = `<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <title>出機檢查單 ${escapeHtml(checklistNumber)}</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+        color: #1f2d3d;
+        background: #f4f7fb;
+      }
+      .checklist-page {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid #d5deea;
+        border-radius: 12px;
+        box-shadow: 0 10px 24px rgba(17, 39, 66, 0.08);
+        padding: 28px;
+      }
+      .checklist-actions {
+        margin-bottom: 16px;
+        display: flex;
+        gap: 10px;
+      }
+      .checklist-actions button {
+        border: 1px solid #b5c6dd;
+        border-radius: 8px;
+        background: #fff;
+        color: #1f2d3d;
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+      .checklist-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 2px solid #12324d;
+        padding-bottom: 12px;
+      }
+      .checklist-kicker {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #5c7694;
+      }
+      .checklist-title {
+        margin: 6px 0 0;
+        font-size: 28px;
+        letter-spacing: 0.06em;
+      }
+      .checklist-sub {
+        margin: 6px 0 0;
+        color: #35506f;
+      }
+      .checklist-meta p {
+        margin: 4px 0;
+        text-align: right;
+      }
+      .checklist-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .checklist-box {
+        border: 1px solid #d5deea;
+        border-radius: 10px;
+        padding: 12px;
+        background: #f9fcff;
+      }
+      .checklist-box h3 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: #12324d;
+      }
+      .checklist-box p {
+        margin: 4px 0;
+        line-height: 1.45;
+      }
+      .checklist-section-title {
+        margin: 12px 0 6px;
+        font-size: 16px;
+        color: #12324d;
+      }
+      .checklist-specs {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      .checklist-specs th,
+      .checklist-specs td {
+        border: 1px solid #d5deea;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+        line-height: 1.35;
+      }
+      .checklist-specs th {
+        width: 110px;
+        background: #f0f5fb;
+      }
+      .checklist-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 12.5px;
+        border: 1px solid #d5deea;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .checklist-table th,
+      .checklist-table td {
+        border: 1px solid #d5deea;
+        padding: 7px 9px;
+        text-align: left;
+        vertical-align: middle;
+      }
+      .checklist-table th {
+        background: #f0f5fb;
+        color: #12324d;
+        font-weight: 600;
+      }
+      .checklist-table .section {
+        background: #e9f2fb;
+        color: #12324d;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .checklist-table .key-cell {
+        background: #f7faff;
+        font-weight: 600;
+        color: #2a3f5c;
+        width: 120px;
+      }
+      .checklist-table .fill-cell {
+        height: 28px;
+      }
+      .checklist-table .fill-line {
+        display: block;
+        width: 100%;
+        height: 16px;
+        border-bottom: 1px solid #7b8da3;
+      }
+      .checklist-table .muted {
+        color: #5f7187;
+        font-size: 12px;
+      }
+      .checklist-table .center {
+        text-align: center;
+      }
+      .line {
+        border-bottom: 1px solid #7b8da3;
+        display: inline-block;
+        min-width: 140px;
+        height: 1em;
+        vertical-align: baseline;
+      }
+      .checklist-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+        margin-top: 16px;
+        font-size: 13px;
+      }
+      .checklist-date {
+        font-weight: 500;
+        color: #22364f;
+      }
+      .checklist-signature {
+        font-weight: 500;
+        color: #22364f;
+      }
+      .checklist-social {
+        text-align: right;
+        line-height: 1.6;
+        white-space: nowrap;
+      }
+      .checklist-note {
+        margin-top: 12px;
+        text-align: left;
+        font-size: 13px;
+        color: #4e637d;
+      }
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      @media print {
+        body {
+          background: #fff;
+          padding: 0;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .checklist-page {
+          border: 0;
+          box-shadow: none;
+          border-radius: 0;
+          max-width: none;
+          width: 210mm;
+          min-height: 297mm;
+          height: auto;
+          padding: 16mm 10mm 18mm;
+          overflow: visible;
+        }
+        .checklist-grid {
+          display: block;
+        }
+        .checklist-box {
+          margin-bottom: 8px;
+          page-break-inside: avoid;
+        }
+        .checklist-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        .checklist-title {
+          font-size: 24px;
+        }
+        .checklist-head {
+          margin-top: 6mm;
+        }
+        .checklist-grid {
+          margin-top: 12px;
+          gap: 10px;
+        }
+        .checklist-box {
+          padding: 10px;
+        }
+        .checklist-box p {
+          margin: 3px 0;
+        }
+        .checklist-section-title {
+          margin: 12px 0 6px;
+          font-size: 14px;
+        }
+        .checklist-specs,
+        .checklist-table {
+          font-size: 10.5px;
+        }
+        .checklist-specs th,
+        .checklist-specs td,
+        .checklist-table th,
+        .checklist-table td {
+          padding: 4px 6px;
+        }
+        .checklist-table {
+          border-radius: 0;
+          overflow: visible;
+        }
+        .checklist-table th,
+        .checklist-table td {
+          border-color: #a8b8cc;
+        }
+        .checklist-table .muted {
+          font-size: 10px;
+        }
+        .checklist-footer {
+          margin-top: 12px;
+          gap: 16px;
+        }
+        .checklist-note {
+          margin-top: 8px;
+          font-size: 12px;
+        }
+        .checklist-date {
+          position: fixed;
+          bottom: 8mm;
+          left: 10mm;
+          font-size: 12px;
+        }
+        .checklist-signature {
+          position: fixed;
+          bottom: 8mm;
+          right: 10mm;
+          font-size: 12px;
+        }
+        .checklist-table,
+        .checklist-table tr,
+        .checklist-specs,
+        .checklist-specs tr {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+        .checklist-actions {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="checklist-page">
+      <div class="checklist-actions">
+        <button type="button" onclick="window.print()">列印 / 另存 PDF</button>
+        <button type="button" onclick="window.close()">關閉</button>
+      </div>
+      <header class="checklist-head">
+        <div>
+          <p class="checklist-kicker">Shipping QC</p>
+          <h1 class="checklist-title">出機檢查單</h1>
+          <p class="checklist-sub">星辰電腦 NSZPC</p>
+        </div>
+        <div class="checklist-meta">
+          <p>檢查單號：${escapeHtml(checklistNumber)}</p>
+          <p>建立時間：${escapeHtml(generatedAt)}</p>
+          <p>交付狀態：${escapeHtml(statusLabelMap[order.status])}</p>
+        </div>
+      </header>
+
+      <div class="checklist-grid">
+        <article class="checklist-box">
+          <h3>出機資訊</h3>
+          <p>品項：${escapeHtml(order.item)}</p>
+          <p>需求地區：${escapeHtml(order.location)}</p>
+          <p>出貨日期：${escapeHtml(order.date)}</p>
+        </article>
+        <article class="checklist-box">
+          <h3>店家資訊</h3>
+          <p>地址：${escapeHtml(siteContentForm.contactAddress || '待補充')}</p>
+          <p>電話：${escapeHtml(siteContentForm.contactPhone || '待補充')}</p>
+          <p>LINE：${escapeHtml(siteContentForm.contactLine || '待補充')}</p>
+        </article>
+      </div>
+
+      <h3 class="checklist-section-title">本機配置</h3>
+      <table class="checklist-specs">
+        <colgroup>
+          <col style="width: 110px;" />
+          <col />
+          <col style="width: 110px;" />
+          <col />
+        </colgroup>
+        <tbody>
+          ${checklistSpecsRows}
+        </tbody>
+      </table>
+
+      <h3 class="checklist-section-title">出貨前測試檢測表</h3>
+      <table class="checklist-table">
+        <tr>
+          <th class="section" colspan="6">Windows 系統 (OS)（Windows / Bios）</th>
+        </tr>
+        <tr>
+          <td>系統安裝</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>BIOS 優化</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>零組件相關驅動程式</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>主板驅動安裝</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>顯卡驅動安裝</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>主板(燈光/音效等)</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>水冷螢幕驅動</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>硬碟4K對齊</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td colspan="2"></td>
+        </tr>
+
+        <tr>
+          <th class="section" colspan="6">測試 OCCT（30M/1H）</th>
+        </tr>
+        <tr>
+          <td>CPU + RAM</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>CPU</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>RAM</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>LINPACK</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>3D ADA</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>VRAM</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>POWER</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td colspan="4" class="fill-cell"><span class="fill-line"></span></td>
+        </tr>
+
+        <tr>
+          <th class="section" colspan="6">測試 R23（測 CPU）</th>
+        </tr>
+        <tr>
+          <td>Multi Core</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>Single Core</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td colspan="2" class="fill-cell"><span class="fill-line"></span></td>
+        </tr>
+
+        <tr>
+          <th class="section" colspan="6">測試 AIDA64 + FURMARK（測 CPU / GPU）3H</th>
+        </tr>
+        <tr>
+          <td>CPU 滿載功耗/溫度</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>GPU 滿載功耗/溫度</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td colspan="2" class="fill-cell"><span class="fill-line"></span></td>
+        </tr>
+
+        <tr>
+          <th class="section" colspan="6">其他測試/配件檢查 AS SSD Benchmark</th>
+        </tr>
+        <tr>
+          <td>待機瓦數</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>滿載瓦數</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>整體穩定性</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>WIFI/藍芽</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>前後音源孔</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>前後USB</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+        <tr>
+          <td>燈光同步</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>電源線</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+          <td>WIFI天線</td>
+          <td class="center fill-cell"><span class="fill-line"></span></td>
+        </tr>
+      </table>
+
+      <div class="checklist-footer">
+        <div class="checklist-date">出貨日期：${escapeHtml(order.date || '')}</div>
+        <div class="checklist-signature">出貨確認簽章：<span class="line"></span></div>
+      </div>
+    </section>
+  </body>
+</html>`;
+
+    try {
+      checklistWindow.document.open();
+      checklistWindow.document.write(checklistHtml);
+      checklistWindow.document.close();
+      checklistWindow.focus();
+      setOrdersSuccess(`已為「${order.item}」產出出機檢查單`);
+    } catch {
+      checklistWindow.close();
+      setOrdersError('出機檢查單產生失敗，請再試一次。');
     }
   };
 
@@ -2267,10 +2976,10 @@ const AdminDashboard: React.FC = () => {
         resetOrderForm();
       }
 
-      setOrdersSuccess('近期出機已刪除');
+      setOrdersSuccess('訂單管理已刪除');
       await loadOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '刪除近期出機失敗';
+      const message = err instanceof Error ? err.message : '刪除訂單管理失敗';
       setOrdersError(message);
     } finally {
       setDeletingOrderId(null);
@@ -3516,10 +4225,10 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="admin-content-block">
-                <h3>近期出機區塊：標題與描述</h3>
+                <h3>訂單管理區塊：標題與描述</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field" htmlFor="content-brand-hero-title">
-                    近期出機區塊標題
+                    訂單管理區塊標題
                     <input
                       id="content-brand-hero-title"
                       type="text"
@@ -3529,7 +4238,7 @@ const AdminDashboard: React.FC = () => {
                   </label>
 
                   <label className="auth-field" htmlFor="content-brand-hero-subtitle">
-                    近期出機區塊描述
+                    訂單管理區塊描述
                     <input
                       id="content-brand-hero-subtitle"
                       type="text"
@@ -3541,7 +4250,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="admin-content-block">
-                <h3>近期出機：統一標籤庫</h3>
+                <h3>訂單管理：統一標籤庫</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field admin-field-wide" htmlFor="content-shipment-tag-catalog">
                     標籤庫（每行一個）
@@ -3556,14 +4265,14 @@ const AdminDashboard: React.FC = () => {
                     />
                   </label>
                 </div>
-                <p className="admin-note">近期出機編輯彈窗會優先提供這份標籤供快速勾選。</p>
+                <p className="admin-note">訂單管理編輯彈窗會優先提供這份標籤供快速勾選。</p>
                 <div className="admin-site-tag-actions">
                   <button
                     type="button"
                     className="ghost-btn"
                     onClick={handleSyncShipmentTagCatalogFromOrders}
                   >
-                    從近期出機同步標籤
+                    從訂單管理同步標籤
                   </button>
                   <span className="admin-note">目前標籤數：{managedShipmentTagCatalog.length}</span>
                 </div>
@@ -4104,13 +4813,13 @@ const AdminDashboard: React.FC = () => {
         <section className="section-card reveal">
           <div className="section-head">
             <p className="section-kicker">Recent Shipment</p>
-            <h2 className="section-title">近期出機管理</h2>
-            <p className="section-sub">可新增、編輯、刪除近期出機資料，並可一鍵自動產出估價單。</p>
+            <h2 className="section-title">訂單管理</h2>
+            <p className="section-sub">可新增、編輯、刪除訂單管理資料，並可一鍵產出估價單與出機檢查單。</p>
           </div>
 
           <div className="admin-order-form-actions">
             <button type="button" className="solid-btn" onClick={openCreateOrderModal}>
-              新增近期出機
+              新增訂單管理
             </button>
             <button type="button" className="ghost-btn" onClick={() => loadOrders()} disabled={ordersLoading}>
               重新載入
@@ -4122,7 +4831,7 @@ const AdminDashboard: React.FC = () => {
 
           <div className="admin-list-tools">
             <label className="auth-field admin-search-field" htmlFor="order-search">
-              查詢近期出機
+              查詢訂單管理
               <input
                 id="order-search"
                 type="text"
@@ -4138,11 +4847,11 @@ const AdminDashboard: React.FC = () => {
             ) : null}
           </div>
 
-          {ordersLoading ? <p className="admin-note">讀取近期出機中...</p> : null}
+          {ordersLoading ? <p className="admin-note">讀取訂單管理中...</p> : null}
 
-          {!ordersLoading && orders.length === 0 ? <p className="admin-note">目前沒有近期出機資料。</p> : null}
+          {!ordersLoading && orders.length === 0 ? <p className="admin-note">目前沒有訂單管理資料。</p> : null}
           {!ordersLoading && orders.length > 0 && filteredOrders.length === 0 ? (
-            <p className="admin-note">查無符合條件的近期出機。</p>
+            <p className="admin-note">查無符合條件的訂單管理。</p>
           ) : null}
 
           {!ordersLoading && orders.length > 0 ? (
@@ -4227,6 +4936,9 @@ const AdminDashboard: React.FC = () => {
                           </a>
                           <button type="button" className="ghost-btn" onClick={() => handleGenerateOrderQuotation(order)}>
                             產出估價單
+                          </button>
+                          <button type="button" className="ghost-btn" onClick={() => handleGenerateOrderChecklist(order)}>
+                            產出出機檢查單
                           </button>
                           <button type="button" className="ghost-btn" onClick={() => startEditOrder(order)}>
                             編輯
@@ -5317,6 +6029,17 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-tags">
+                  配單標籤（必填，換行或逗號分隔）
+                  <textarea
+                    id="edit-build-tags"
+                    rows={3}
+                    placeholder={'例如:\n直播\n剪輯\n白色主題'}
+                    value={buildForm.tagsText}
+                    onChange={(event) => handleBuildFieldChange('tagsText', event.target.value)}
+                  />
+                </label>
+
                 <label className="auth-field admin-field-wide" htmlFor="edit-build-youtube-embed-url">
                   YouTube 連結（可空白，支援 watch/share/embed）
                   <input
@@ -5328,7 +6051,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-build-cpu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-cpu">
                   CPU
                   <input
                     id="edit-build-cpu"
@@ -5338,7 +6061,17 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-build-ram">
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-motherboard">
+                  主機板
+                  <input
+                    id="edit-build-motherboard"
+                    type="text"
+                    value={buildForm.motherboard}
+                    onChange={(event) => handleBuildFieldChange('motherboard', event.target.value)}
+                  />
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-ram">
                   RAM
                   <input
                     id="edit-build-ram"
@@ -5348,17 +6081,41 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-build-storage">
-                  硬碟
-                  <input
-                    id="edit-build-storage"
-                    type="text"
-                    value={buildForm.storage}
-                    onChange={(event) => handleBuildFieldChange('storage', event.target.value)}
-                  />
-                </label>
+                <div className="auth-field admin-field-wide">
+                  <span>硬碟</span>
+                  <div className="admin-multi-input-list">
+                    {buildStorageFields.map((storage, index) => (
+                      <div key={`build-storage-${index}`} className="admin-multi-input-row">
+                        <input
+                          id={`edit-build-storage-${index}`}
+                          type="text"
+                          placeholder={index === 0 ? '例如：1TB Gen4 SSD' : `硬碟 ${index + 1}`}
+                          value={storage}
+                          onChange={(event) => handleBuildStorageFieldChange(index, event.target.value)}
+                        />
+                        {buildStorageFields.length > 1 ? (
+                          <button
+                            type="button"
+                            className="ghost-btn admin-icon-btn"
+                            onClick={() => handleRemoveBuildStorageField(index)}
+                            aria-label={`移除第 ${index + 1} 顆硬碟`}
+                          >
+                            -
+                          </button>
+                        ) : null}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="ghost-btn admin-add-storage-btn"
+                      onClick={handleAddBuildStorageField}
+                    >
+                      + 新增硬碟
+                    </button>
+                  </div>
+                </div>
 
-                <label className="auth-field" htmlFor="edit-build-gpu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-gpu">
                   顯示卡
                   <input
                     id="edit-build-gpu"
@@ -5368,7 +6125,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-build-psu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-psu">
                   電源供應器
                   <input
                     id="edit-build-psu"
@@ -5378,7 +6135,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-build-case">
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-case">
                   機殼
                   <input
                     id="edit-build-case"
@@ -5388,15 +6145,17 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field admin-field-wide" htmlFor="edit-build-specs">
-                  需求說明條列（可選填，換行或逗號分隔）
+                <label className="auth-field admin-field-wide" htmlFor="edit-build-accessories">
+                  配件（可選填，換行或逗號分隔）
                   <textarea
-                    id="edit-build-specs"
-                    rows={4}
-                    value={buildForm.specsText}
-                    onChange={(event) => handleBuildFieldChange('specsText', event.target.value)}
+                    id="edit-build-accessories"
+                    rows={3}
+                    placeholder={'例如:\nWi-Fi 天線\nARGB 延長線\n原廠風扇升級'}
+                    value={buildForm.accessoriesText}
+                    onChange={(event) => handleBuildFieldChange('accessoriesText', event.target.value)}
                   />
                 </label>
+
               </div>
 
               {buildsError ? <p className="auth-error">{buildsError}</p> : null}
@@ -6085,7 +6844,7 @@ const AdminDashboard: React.FC = () => {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="admin-modal-head">
-              <h3 id="edit-order-title">{editingOrderId ? '編輯近期出機' : '新增近期出機'}</h3>
+              <h3 id="edit-order-title">{editingOrderId ? '編輯訂單管理' : '新增訂單管理'}</h3>
               <button type="button" className="admin-modal-close" onClick={resetOrderForm}>
                 關閉
               </button>
@@ -6093,7 +6852,7 @@ const AdminDashboard: React.FC = () => {
 
             <form className="admin-order-form" onSubmit={handleSaveOrder}>
               <div className="admin-form-grid">
-                <label className="auth-field" htmlFor="edit-shipment-date">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-date">
                   出貨日期
                   <input
                     id="edit-shipment-date"
@@ -6103,7 +6862,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-location">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-location">
                   地區
                   <input
                     id="edit-shipment-location"
@@ -6181,7 +6940,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-sale-price">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-sale-price">
                   售價（NT$）
                   <input
                     id="edit-shipment-sale-price"
@@ -6193,7 +6952,19 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-status">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-service-fee">
+                  服務費用（NT$）
+                  <input
+                    id="edit-shipment-service-fee"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={orderForm.serviceFeeText}
+                    onChange={(event) => handleFieldChange('serviceFeeText', event.target.value)}
+                  />
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-status">
                   狀態
                   <select
                     id="edit-shipment-status"
@@ -6208,7 +6979,7 @@ const AdminDashboard: React.FC = () => {
                   </select>
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-cpu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-cpu">
                   CPU
                   <input
                     id="edit-shipment-cpu"
@@ -6218,7 +6989,17 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-ram">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-motherboard">
+                  主機板
+                  <input
+                    id="edit-shipment-motherboard"
+                    type="text"
+                    value={orderForm.motherboard}
+                    onChange={(event) => handleFieldChange('motherboard', event.target.value)}
+                  />
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-ram">
                   RAM
                   <input
                     id="edit-shipment-ram"
@@ -6262,7 +7043,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <label className="auth-field" htmlFor="edit-shipment-gpu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-gpu">
                   顯示卡
                   <input
                     id="edit-shipment-gpu"
@@ -6272,7 +7053,17 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-psu">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-cooler">
+                  散熱器
+                  <input
+                    id="edit-shipment-cooler"
+                    type="text"
+                    value={orderForm.cooler}
+                    onChange={(event) => handleFieldChange('cooler', event.target.value)}
+                  />
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-psu">
                   電源供應器
                   <input
                     id="edit-shipment-psu"
@@ -6282,7 +7073,7 @@ const AdminDashboard: React.FC = () => {
                   />
                 </label>
 
-                <label className="auth-field" htmlFor="edit-shipment-case">
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-case">
                   機殼
                   <input
                     id="edit-shipment-case"
@@ -6297,7 +7088,7 @@ const AdminDashboard: React.FC = () => {
 
               <div className="admin-modal-actions">
                 <button type="submit" className="solid-btn" disabled={isSavingOrder}>
-                  {isSavingOrder ? '儲存中...' : editingOrderId ? '儲存變更' : '新增近期出機'}
+                  {isSavingOrder ? '儲存中...' : editingOrderId ? '儲存變更' : '新增訂單管理'}
                 </button>
                 <button type="button" className="ghost-btn" onClick={resetOrderForm}>
                   取消

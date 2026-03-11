@@ -277,6 +277,10 @@ export const validateBuildInput = (payload: MutablePayload): ValidationResult<Bu
     errors.push('cpu is required');
   }
 
+  if (!isNonEmptyString(payload.motherboard)) {
+    errors.push('motherboard is required');
+  }
+
   if (!isNonEmptyString(payload.ram)) {
     errors.push('ram is required');
   }
@@ -298,6 +302,11 @@ export const validateBuildInput = (payload: MutablePayload): ValidationResult<Bu
   }
 
   const specs = uniqueTrimmedStrings(payload.specs);
+  const accessories = uniqueTrimmedStrings(payload.accessories);
+  const tags = uniqueTrimmedStrings(payload.tags);
+  if (!tags.length) {
+    errors.push('tags must contain at least one item');
+  }
 
   return {
     ok: errors.length === 0,
@@ -312,12 +321,15 @@ export const validateBuildInput = (payload: MutablePayload): ValidationResult<Bu
       dealDate: asString(payload.dealDate).trim(),
       image: asString(payload.image).trim(),
       badge: isNonEmptyString(payload.badge) ? payload.badge.trim() : '',
+      tags,
       cpu: asString(payload.cpu).trim(),
+      motherboard: asString(payload.motherboard).trim(),
       ram: asString(payload.ram).trim(),
       storage: asString(payload.storage).trim(),
       gpu: asString(payload.gpu).trim(),
       psu: asString(payload.psu).trim(),
       pcCase: asString(payload.pcCase).trim(),
+      accessories,
       specs,
     },
   };
@@ -480,8 +492,17 @@ export const validateOrderInput = (payload: MutablePayload): ValidationResult<Or
     errors.push('salePrice must be a number greater than or equal to 0');
   }
 
+  const serviceFee = Number(payload.serviceFee);
+  if (!Number.isFinite(serviceFee) || serviceFee < 0) {
+    errors.push('serviceFee must be a number greater than or equal to 0');
+  }
+
   if (!isNonEmptyString(payload.cpu)) {
     errors.push('cpu is required');
+  }
+
+  if (!isNonEmptyString(payload.motherboard)) {
+    errors.push('motherboard is required');
   }
 
   if (!isNonEmptyString(payload.ram)) {
@@ -498,6 +519,10 @@ export const validateOrderInput = (payload: MutablePayload): ValidationResult<Or
 
   if (!isNonEmptyString(payload.psu)) {
     errors.push('psu is required');
+  }
+
+  if (!isNonEmptyString(payload.cooler)) {
+    errors.push('cooler is required');
   }
 
   if (!isNonEmptyString(payload.pcCase)) {
@@ -521,12 +546,15 @@ export const validateOrderInput = (payload: MutablePayload): ValidationResult<Or
       tags,
       location: asString(payload.location).trim(),
       salePrice: Number.isFinite(salePrice) ? Math.max(0, Math.trunc(salePrice)) : 0,
+      serviceFee: Number.isFinite(serviceFee) ? Math.max(0, Math.trunc(serviceFee)) : 0,
       status,
       cpu: asString(payload.cpu).trim(),
+      motherboard: asString(payload.motherboard).trim(),
       ram: asString(payload.ram).trim(),
       storage: asString(payload.storage).trim(),
       gpu: asString(payload.gpu).trim(),
       psu: asString(payload.psu).trim(),
+      cooler: asString(payload.cooler).trim(),
       pcCase: asString(payload.pcCase).trim(),
     },
   };

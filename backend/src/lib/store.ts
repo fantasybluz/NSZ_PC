@@ -110,6 +110,7 @@ const normalizeBuilds = (value: unknown): BuildRecord[] => {
       const rawDealDate = asString(typed.dealDate);
       const dealDate = DEAL_DATE_PATTERN.test(rawDealDate) ? rawDealDate : getTodayDealDate();
       const specs = normalizeStringList(typed.specs);
+      const tags = normalizeStringList(typed.tags);
 
       if (!id || !name || !description || !image || !Number.isFinite(price) || price <= 0) {
         return null;
@@ -126,13 +127,16 @@ const normalizeBuilds = (value: unknown): BuildRecord[] => {
         price: Math.trunc(price),
         dealDate,
         badge: asString(typed.badge),
+        tags,
         image,
         cpu: asString(typed.cpu) || '待補充',
+        motherboard: asString(typed.motherboard) || '待補充',
         ram: asString(typed.ram) || '待補充',
         storage: asString(typed.storage) || '待補充',
         gpu: asString(typed.gpu) || '待補充',
         psu: asString(typed.psu) || '待補充',
         pcCase: asString(typed.pcCase) || '待補充',
+        accessories: normalizeStringList(typed.accessories),
         specs,
         createdAt: asString(typed.createdAt) || now(),
         updatedAt: asString(typed.updatedAt) || now(),
@@ -410,10 +414,12 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
       const location = asString(typed.location);
       const tags = normalizeStringList(typed.tags);
       const cpu = asString(typed.cpu) || '待補充';
+      const motherboard = asString(typed.motherboard) || '待補充';
       const ram = asString(typed.ram) || '待補充';
       const storage = asString(typed.storage) || '待補充';
       const gpu = asString(typed.gpu) || '待補充';
       const psu = asString(typed.psu) || '待補充';
+      const cooler = asString(typed.cooler) || '待補充';
       const pcCase = asString(typed.pcCase) || '待補充';
 
       if (!id || !date || !orderItem || !location) {
@@ -426,15 +432,18 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
         item: orderItem,
         requirementIntro: requirementIntro || `客戶需求以「${orderItem}」為核心，配單會先依用途與預算拆解後再規劃。`,
         youtubeEmbedUrl: asString(typed.youtubeEmbedUrl),
-        tags: tags.length > 0 ? tags : deriveOrderTags(orderItem, [cpu, ram, storage, gpu, psu, pcCase]),
+        tags: tags.length > 0 ? tags : deriveOrderTags(orderItem, [cpu, motherboard, ram, storage, gpu, psu, cooler, pcCase]),
         location,
         salePrice: Math.max(0, Math.trunc(Number(typed.salePrice) || 0)),
+        serviceFee: Math.max(0, Math.trunc(Number(typed.serviceFee) || 0)),
         status: normalizeOrderStatus(typed.status),
         cpu,
+        motherboard,
         ram,
         storage,
         gpu,
         psu,
+        cooler,
         pcCase,
         createdAt: asString(typed.createdAt) || now(),
         updatedAt: asString(typed.updatedAt) || now(),
@@ -1175,6 +1184,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         price: 36900,
         dealDate: '2026/02/09',
         badge: '熱銷',
+        tags: ['直播', '剪輯', '多工'],
         image: '/images/carousel/IMG_4722.JPG',
         cpu: 'Ryzen 5 7600',
         ram: 'DDR5 32GB',
@@ -1198,6 +1208,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         price: 53900,
         dealDate: '2026/02/08',
         badge: '推薦',
+        tags: ['顯卡升級', 'SSD', '電供'],
         image: '/images/carousel/IMG_6486.JPG',
         cpu: 'Ryzen 7 7800X3D',
         ram: 'DDR5 32GB',
@@ -1209,7 +1220,11 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         createdAt: now(),
         updatedAt: now(),
       },
-    ],
+    ].map((build) => ({
+      ...build,
+      motherboard: asString((build as { motherboard?: string }).motherboard) || '待補充',
+      accessories: normalizeStringList((build as { accessories?: string[] }).accessories),
+    })),
     orders: [
       {
         id: crypto.randomUUID(),
@@ -1403,12 +1418,33 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         createdAt: now(),
         updatedAt: now(),
       },
-    ].map((order) => ({
-      ...order,
-      requirementIntro: `客戶需求以「${order.item}」為核心，配單會先依用途與預算拆解後再規劃。`,
-      youtubeEmbedUrl: '',
-      tags: deriveOrderTags(order.item, [order.cpu, order.ram, order.storage, order.gpu, order.psu, order.pcCase]),
-    })),
+    ].map((order) => {
+      const motherboard = asString((order as { motherboard?: string }).motherboard) || '待補充';
+      const cooler = asString((order as { cooler?: string }).cooler) || '待補充';
+      const serviceFee = Math.max(
+        0,
+        Math.trunc(Number((order as { serviceFee?: number }).serviceFee) || 0),
+      );
+
+      return {
+        ...order,
+        motherboard,
+        cooler,
+        serviceFee,
+        requirementIntro: `客戶需求以「${order.item}」為核心，配單會先依用途與預算拆解後再規劃。`,
+        youtubeEmbedUrl: '',
+        tags: deriveOrderTags(order.item, [
+          order.cpu,
+          motherboard,
+          order.ram,
+          order.storage,
+          order.gpu,
+          order.psu,
+          cooler,
+          order.pcCase,
+        ]),
+      };
+    }),
     blogPosts: [
       {
         id: crypto.randomUUID(),

@@ -31,12 +31,15 @@ export interface AdminBuild {
   dealDate?: string;
   image: string;
   badge?: string;
+  tags: string[];
   cpu?: string;
+  motherboard?: string;
   ram?: string;
   storage?: string;
   gpu?: string;
   psu?: string;
   pcCase?: string;
+  accessories?: string[];
   specs: string[];
   createdAt: string;
   updatedAt: string;
@@ -51,12 +54,16 @@ export interface AdminOrder {
   tags: string[];
   location: string;
   salePrice: number;
+  serviceFee: number;
   status: OrderStatus;
+  images: string[];
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
+  cooler: string;
   pcCase: string;
   createdAt: string;
   updatedAt: string;
@@ -220,7 +227,7 @@ export const adminTabOptions: Array<{ key: AdminTabKey; label: string }> = [
   { key: 'siteContent', label: '網站內容管理' },
   { key: 'builds', label: '推薦配單管理' },
   { key: 'categories', label: '分類總覽管理' },
-  { key: 'orders', label: '近期出機管理' },
+  { key: 'orders', label: '訂單管理' },
   { key: 'procurements', label: '同行拿貨紀錄' },
   { key: 'personalProcurements', label: '公司進貨紀錄' },
   { key: 'inventories', label: '庫存管理' },
@@ -236,12 +243,15 @@ export interface BuildFormState {
   dealDate: string;
   image: string;
   badge: string;
+  tagsText: string;
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
   pcCase: string;
+  accessoriesText: string;
   specsText: string;
 }
 
@@ -251,14 +261,18 @@ export interface OrderFormState {
   requirementIntro: string;
   youtubeEmbedUrl: string;
   tagsText: string;
+  imagesText: string;
   location: string;
   salePriceText: string;
+  serviceFeeText: string;
   status: OrderStatus;
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
+  cooler: string;
   pcCase: string;
 }
 
@@ -415,12 +429,15 @@ export const defaultBuildForm: BuildFormState = {
   dealDate: '',
   image: '',
   badge: '',
+  tagsText: '',
   cpu: '',
+  motherboard: '',
   ram: '',
   storage: '',
   gpu: '',
   psu: '',
   pcCase: '',
+  accessoriesText: '',
   specsText: '',
 };
 
@@ -430,14 +447,18 @@ export const defaultOrderForm: OrderFormState = {
   requirementIntro: '',
   youtubeEmbedUrl: '',
   tagsText: '',
+  imagesText: '',
   location: '',
   salePriceText: '',
+  serviceFeeText: '',
   status: 'pending',
   cpu: '',
+  motherboard: '',
   ram: '',
   storage: '',
   gpu: '',
   psu: '',
+  cooler: '',
   pcCase: '',
 };
 
@@ -950,10 +971,12 @@ export const normalizeAdminOrder = (value: unknown): AdminOrder | null => {
   const item = typeof raw.item === 'string' ? raw.item.trim() : '';
   const location = typeof raw.location === 'string' ? raw.location.trim() : '';
   const cpu = typeof raw.cpu === 'string' ? raw.cpu.trim() : '';
+  const motherboard = typeof raw.motherboard === 'string' ? raw.motherboard.trim() : '';
   const ram = typeof raw.ram === 'string' ? raw.ram.trim() : '';
   const storage = typeof raw.storage === 'string' ? raw.storage.trim() : '';
   const gpu = typeof raw.gpu === 'string' ? raw.gpu.trim() : '';
   const psu = typeof raw.psu === 'string' ? raw.psu.trim() : '';
+  const cooler = typeof raw.cooler === 'string' ? raw.cooler.trim() : '';
   const pcCase = typeof raw.pcCase === 'string' ? raw.pcCase.trim() : '';
   const tags = normalizeUnknownStringList(raw.tags);
 
@@ -972,15 +995,18 @@ export const normalizeAdminOrder = (value: unknown): AdminOrder | null => {
         ? raw.requirementIntro.trim()
         : `客戶需求以「${item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
     youtubeEmbedUrl: typeof raw.youtubeEmbedUrl === 'string' ? raw.youtubeEmbedUrl.trim() : '',
-    tags: tags.length > 0 ? tags : deriveOrderTags(item, [cpu, ram, storage, gpu, psu, pcCase]),
+    tags: tags.length > 0 ? tags : deriveOrderTags(item, [cpu, motherboard, ram, storage, gpu, psu, cooler, pcCase]),
     location,
     salePrice: Math.max(0, Math.trunc(toFiniteNumber(raw.salePrice))),
+    serviceFee: Math.max(0, Math.trunc(toFiniteNumber(raw.serviceFee))),
     status,
     cpu,
+    motherboard,
     ram,
     storage,
     gpu,
     psu,
+    cooler,
     pcCase,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '',
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',

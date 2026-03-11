@@ -87,6 +87,25 @@ const scoreBuildForCategory = (category: PublicCategory, build: PublicBuild): nu
   return score;
 };
 
+const countTagMatches = (categoryTags: string[], buildTags: string[]): number => {
+  const normalizedCategoryTags = dedupeCaseInsensitive(categoryTags)
+    .map((tag) => normalizeLower(tag))
+    .filter(Boolean);
+  const normalizedBuildTags = dedupeCaseInsensitive(buildTags)
+    .map((tag) => normalizeLower(tag))
+    .filter(Boolean);
+  const categoryTagSet = new Set(normalizedCategoryTags);
+  let count = 0;
+
+  normalizedBuildTags.forEach((tag) => {
+    if (categoryTagSet.has(tag)) {
+      count += 1;
+    }
+  });
+
+  return count;
+};
+
 const CategoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
@@ -159,9 +178,15 @@ const CategoryDetail: React.FC = () => {
   const recommendedBuilds = [...builds]
     .map((build) => ({
       build,
+      tagScore: countTagMatches(category.tags, build.tags),
       score: scoreBuildForCategory(category, build),
     }))
+    .filter((item) => item.tagScore > 0)
     .sort((left, right) => {
+      if (right.tagScore !== left.tagScore) {
+        return right.tagScore - left.tagScore;
+      }
+
       if (right.score !== left.score) {
         return right.score - left.score;
       }
@@ -183,7 +208,7 @@ const CategoryDetail: React.FC = () => {
               回分類總覽
             </Link>
             <Link to="/orders/tags" className="ghost-btn">
-              查看近期出機
+              查看訂單管理
             </Link>
           </div>
         </div>
@@ -245,18 +270,22 @@ const CategoryDetail: React.FC = () => {
         </div>
 
         <div className="build-grid">
-          {recommendedBuilds.map((build) => (
-            <ProductCard
-              key={build.id}
-              name={build.name}
-              image={build.image}
-              description={build.description}
-              price={build.price}
-              dealDate={build.dealDate}
-              badge={build.badge}
-              detailPath={getBuildDetailPath(build.id)}
-            />
-          ))}
+          {recommendedBuilds.length > 0 ? (
+            recommendedBuilds.map((build) => (
+              <ProductCard
+                key={build.id}
+                name={build.name}
+                image={build.image}
+                description={build.description}
+                price={build.price}
+                dealDate={build.dealDate}
+                badge={build.badge}
+                detailPath={getBuildDetailPath(build.id)}
+              />
+            ))
+          ) : (
+            <p>尚未設定對應標籤的推薦配單，請先在後台為配單補上標籤。</p>
+          )}
         </div>
       </section>
     </div>

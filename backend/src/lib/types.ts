@@ -20,13 +20,16 @@ export interface BuildRecord {
   price: number;
   dealDate: string;
   badge?: string;
+  tags: string[];
   image: string;
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
   pcCase: string;
+  accessories: string[];
   specs: string[];
   createdAt: string;
   updatedAt: string;
@@ -62,12 +65,16 @@ export interface OrderRecord {
   tags: string[];
   location: string;
   salePrice: number;
+  serviceFee: number;
   status: OrderStatus;
+  images: string[];
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
+  cooler: string;
   pcCase: string;
   createdAt: string;
   updatedAt: string;
@@ -266,12 +273,15 @@ export interface BuildInput {
   dealDate: string;
   image: string;
   badge: string;
+  tags: string[];
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
   pcCase: string;
+  accessories: string[];
   specs: string[];
 }
 
@@ -296,12 +306,16 @@ export interface OrderInput {
   tags: string[];
   location: string;
   salePrice: number;
+  serviceFee: number;
   status: OrderStatus;
+  images: string[];
   cpu: string;
+  motherboard: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
+  cooler: string;
   pcCase: string;
 }
 

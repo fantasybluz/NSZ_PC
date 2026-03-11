@@ -23,16 +23,27 @@ await loadEnvFile('.env', { overrideExisting: true });
 
 interface ServerConfig {
   port: number;
-  corsOrigin: string;
+  corsOrigins: string[];
   authSecret: string;
   tokenTtlHours: number;
   adminUsername: string;
   adminPassword: string;
 }
 
+const parseCorsOrigins = (value: string): string[] => {
+  const list = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return list.length > 0 ? list : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+};
+
 const config: ServerConfig = {
   port: Number(process.env.PORT || 3000),
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  corsOrigins: parseCorsOrigins(
+    process.env.CORS_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173',
+  ),
   authSecret: process.env.AUTH_SECRET || 'development-secret-change-me',
   tokenTtlHours: Number(process.env.TOKEN_TTL_HOURS || 8),
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
@@ -267,8 +278,7 @@ const handleCrudCollection = async ({
 };
 
 const server = http.createServer(async (req, res) => {
-  const allowedOrigin = config.corsOrigin === '*' ? '*' : config.corsOrigin;
-  if (withCors(req, res, allowedOrigin)) {
+  if (withCors(req, res, config.corsOrigins)) {
     return;
   }
 

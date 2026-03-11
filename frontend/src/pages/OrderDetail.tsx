@@ -105,6 +105,12 @@ const OrderDetail: React.FC = () => {
             <p>交機地區：{order.location}</p>
             <p>狀態：{orderStatusLabelMap[order.status]}</p>
             <p>成交金額：{typeof order.salePrice === 'number' ? `NT$ ${order.salePrice.toLocaleString('zh-TW')}` : '未標示'}</p>
+            <p>
+              服務費用：
+              {Number.isFinite(order.serviceFee)
+                ? `NT$ ${Number(order.serviceFee).toLocaleString('zh-TW')}`
+                : '未標示'}
+            </p>
           </div>
         </div>
       </section>
@@ -129,6 +135,10 @@ const OrderDetail: React.FC = () => {
             <p>CPU：{order.cpu}</p>
           </article>
           <article className="detail-card-item">
+            <i className="fa-solid fa-network-wired" aria-hidden="true" />
+            <p>主機板：{order.motherboard || '待補充'}</p>
+          </article>
+          <article className="detail-card-item">
             <i className="fa-solid fa-memory" aria-hidden="true" />
             <p>RAM：{order.ram}</p>
           </article>
@@ -139,6 +149,10 @@ const OrderDetail: React.FC = () => {
           <article className="detail-card-item">
             <i className="fa-solid fa-tv" aria-hidden="true" />
             <p>顯示卡：{order.gpu}</p>
+          </article>
+          <article className="detail-card-item">
+            <i className="fa-solid fa-fan" aria-hidden="true" />
+            <p>散熱器：{order.cooler || '待補充'}</p>
           </article>
           <article className="detail-card-item">
             <i className="fa-solid fa-bolt" aria-hidden="true" />

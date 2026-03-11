@@ -12,12 +12,15 @@ export interface PublicBuild {
   dealDate?: string;
   image: string;
   badge?: string;
+  tags: string[];
   cpu?: string;
+  motherboard?: string;
   ram?: string;
   storage?: string;
   gpu?: string;
   psu?: string;
   pcCase?: string;
+  accessories: string[];
   specs: string[];
 }
 
@@ -111,12 +114,15 @@ const sanitizeBuild = (value: unknown): PublicBuild | null => {
   const price = Number(raw.price);
   const dealDateRaw = sanitizeString(raw.dealDate);
   const badgeRaw = sanitizeString(raw.badge);
+  const tags = sanitizeSpecs(raw.tags);
   const cpu = sanitizeString(raw.cpu);
+  const motherboard = sanitizeString(raw.motherboard);
   const ram = sanitizeString(raw.ram);
   const storage = sanitizeString(raw.storage);
   const gpu = sanitizeString(raw.gpu);
   const psu = sanitizeString(raw.psu);
   const pcCase = sanitizeString(raw.pcCase);
+  const accessories = sanitizeSpecs(raw.accessories);
 
   if (!id || !name || !description || !image || !Number.isFinite(price) || price <= 0) {
     return null;
@@ -133,12 +139,15 @@ const sanitizeBuild = (value: unknown): PublicBuild | null => {
     dealDate: isDealDateFormat(dealDateRaw) ? dealDateRaw : undefined,
     image,
     badge: badgeRaw || undefined,
+    tags,
     cpu: cpu || undefined,
+    motherboard: motherboard || undefined,
     ram: ram || undefined,
     storage: storage || undefined,
     gpu: gpu || undefined,
     psu: psu || undefined,
     pcCase: pcCase || undefined,
+    accessories,
     specs,
   };
 };
@@ -149,6 +158,8 @@ export const fallbackPublicBuilds: PublicBuild[] = featuredBuilds.map((build, in
   return {
     id: `fallback-build-${index + 1}`,
     ...build,
+    tags: build.tags || [],
+    accessories: build.accessories || [],
     detailIntro: build.detailIntro || build.description,
     requirementIntro: build.requirementIntro || '此配單會先依用途與預算拆解需求，再安排升級路線。',
     youtubeEmbedUrl: embedUrl || undefined,

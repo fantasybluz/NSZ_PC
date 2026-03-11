@@ -1336,7 +1336,7 @@
 }
 
 .shipment-list {
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .shipment-slider {
@@ -3041,6 +3041,211 @@
 
 .admin-modal-actions .ghost-btn {
   border: 1px solid var(--line-strong);
+}
+
+.order-modal-card {
+  width: min(100%, 920px);
+  padding: 1.25rem 1.35rem 1.4rem;
+}
+
+.order-modal-head {
+  align-items: flex-start;
+}
+
+.order-modal-head h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+
+.order-modal-meta {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  color: var(--ink-600);
+}
+
+.order-modal-gallery {
+  margin-top: 0.9rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  background: #f2f6fb;
+}
+
+.order-modal-image {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.order-modal-gallery-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ink-600);
+  background: #f7faff;
+  border-top: 1px solid var(--line-soft);
+}
+
+.order-modal-gallery-controls button {
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--ink-700);
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-modal-gallery-controls button:hover {
+  color: var(--brand-600);
+  border-color: color-mix(in srgb, var(--brand-500) 30%, var(--line-soft));
+}
+
+.order-modal-tags {
+  margin: 0.9rem 0 1.1rem;
+}
+
+.order-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.order-modal-section {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 0.9rem;
+  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+}
+
+.order-modal-text {
+  margin: 0.3rem 0 0;
+  color: var(--ink-700);
+  line-height: 1.6;
+}
+
+.order-modal-list {
+  margin: 0.3rem 0 0;
+}
+
+.order-modal-price {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.shipment-item-compact {
+  cursor: pointer;
+}
+
+.shipment-item-cta {
+  margin-top: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--brand-600);
+}
+
+.order-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, #0b1020 42%, transparent);
+}
+
+.order-modal {
+  width: min(92vw, 860px);
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 76%, #ffffff);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-strong);
+  padding: 1.25rem 1.4rem 1.6rem;
+  animation: orderModalPop 0.18s ease-out;
+}
+
+@keyframes orderModalPop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.order-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.order-modal-head h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+
+.order-modal-meta {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  color: var(--ink-600);
+}
+
+.order-modal-tags {
+  margin: 0.9rem 0 1rem;
+}
+
+.order-modal-section {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 0.9rem;
+  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  margin-bottom: 0.9rem;
+}
+
+.order-modal-text {
+  margin: 0.3rem 0 0;
+  color: var(--ink-700);
+  line-height: 1.6;
+}
+
+.order-modal-list {
+  margin: 0.3rem 0 0;
+}
+
+.order-modal-price {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+  font-weight: 600;
+  color: var(--ink-800);
 }
 
 .reveal {

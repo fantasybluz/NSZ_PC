@@ -104,6 +104,17 @@ const BuildDetail: React.FC = () => {
             ))}
           </ul>
         ) : null}
+
+        {build.accessories.length > 0 ? (
+          <>
+            <h3 className="section-title">配件</h3>
+            <ul className="detail-list">
+              {build.accessories.map((item) => (
+                <li key={`${build.id}-${item}`}>{item}</li>
+              ))}
+            </ul>
+          </>
+        ) : null}
       </section>
 
       <section className="section-card reveal">
@@ -116,6 +127,10 @@ const BuildDetail: React.FC = () => {
           <article className="detail-card-item">
             <i className="fa-solid fa-microchip" aria-hidden="true" />
             <p>CPU：{build.cpu || '未標示'}</p>
+          </article>
+          <article className="detail-card-item">
+            <i className="fa-solid fa-network-wired" aria-hidden="true" />
+            <p>主機板：{build.motherboard || '未標示'}</p>
           </article>
           <article className="detail-card-item">
             <i className="fa-solid fa-memory" aria-hidden="true" />

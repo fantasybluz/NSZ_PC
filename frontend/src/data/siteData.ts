@@ -36,12 +36,15 @@ export interface BuildPackage {
   price: number;
   dealDate: string;
   badge?: string;
+  tags?: string[];
   cpu: string;
+  motherboard?: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
   pcCase: string;
+  accessories?: string[];
   specs: string[];
 }
 
@@ -318,11 +321,15 @@ export interface RecentOrder {
   tags?: string[];
   location: string;
   cpu: string;
+  motherboard?: string;
   ram: string;
   storage: string;
   gpu: string;
   psu: string;
+  cooler?: string;
   pcCase: string;
+  images?: string[];
+  serviceFee?: number;
 }
 
 export const recentOrders: RecentOrder[] = [

@@ -7,9 +7,11 @@ export interface PublicOrder extends Omit<RecentOrder, 'requirementIntro' | 'you
   id: string;
   status: PublicOrderStatus;
   salePrice?: number;
+  serviceFee?: number;
   requirementIntro: string;
   youtubeEmbedUrl?: string;
   tags: string[];
+  images: string[];
 }
 
 interface PublicOrdersResponse {
@@ -134,6 +136,7 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
   const youtubeEmbedUrl = normalizeYouTubeEmbedUrl(asString(raw.youtubeEmbedUrl));
   const tags = parseStringList(raw.tags);
   const location = asString(raw.location);
+  const images = parseStringList(raw.images);
 
   if (!date || !item || !location) {
     return null;
@@ -141,11 +144,14 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
 
   const salePrice = Number(raw.salePrice);
   const cpu = asString(raw.cpu) || '待補充';
+  const motherboard = asString(raw.motherboard) || '待補充';
   const ram = asString(raw.ram) || '待補充';
   const storage = asString(raw.storage) || '待補充';
   const gpu = asString(raw.gpu) || '待補充';
   const psu = asString(raw.psu) || '待補充';
+  const cooler = asString(raw.cooler) || '待補充';
   const pcCase = asString(raw.pcCase) || '待補充';
+  const serviceFee = Number(raw.serviceFee);
 
   return {
     id,
@@ -154,15 +160,19 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
     requirementIntro:
       requirementIntro || `客戶需求以「${item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
     youtubeEmbedUrl: youtubeEmbedUrl || undefined,
-    tags: tags.length > 0 ? tags : deriveOrderTags(item, [cpu, ram, storage, gpu, psu, pcCase]),
+    tags: tags.length > 0 ? tags : deriveOrderTags(item, [cpu, motherboard, ram, storage, gpu, psu, cooler, pcCase]),
+    images,
     location,
     status: asStatus(raw.status),
     salePrice: Number.isFinite(salePrice) && salePrice >= 0 ? Math.trunc(salePrice) : undefined,
+    serviceFee: Number.isFinite(serviceFee) && serviceFee >= 0 ? Math.trunc(serviceFee) : undefined,
     cpu,
+    motherboard,
     ram,
     storage,
     gpu,
     psu,
+    cooler,
     pcCase,
   };
 };
@@ -171,6 +181,9 @@ export const fallbackPublicOrders: PublicOrder[] = fallbackRecentOrders.map((ord
   id: `fallback-order-${index + 1}`,
   status: 'delivered',
   ...order,
+  images: Array.isArray(order.images) ? order.images : [],
+  motherboard: order.motherboard || '待補充',
+  cooler: order.cooler || '待補充',
   requirementIntro:
     order.requirementIntro ||
     `客戶需求以「${order.item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
@@ -178,7 +191,16 @@ export const fallbackPublicOrders: PublicOrder[] = fallbackRecentOrders.map((ord
   tags:
     Array.isArray(order.tags) && order.tags.length > 0
       ? [...new Set(order.tags.map((tag) => tag.trim()).filter(Boolean))]
-      : deriveOrderTags(order.item, [order.cpu, order.ram, order.storage, order.gpu, order.psu, order.pcCase]),
+      : deriveOrderTags(order.item, [
+          order.cpu,
+          order.motherboard || '待補充',
+          order.ram,
+          order.storage,
+          order.gpu,
+          order.psu,
+          order.cooler || '待補充',
+          order.pcCase,
+        ]),
 }));
 
 export const getOrderDetailPath = (id: string): string => {

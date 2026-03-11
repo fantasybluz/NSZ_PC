@@ -54,9 +54,27 @@ export const sendError = (
   });
 };
 
-export const withCors = (req: IncomingMessage, res: ServerResponse, origin: string): boolean => {
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Vary', 'Origin');
+export const withCors = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  allowedOrigins: string[],
+): boolean => {
+  const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
+  let allowOrigin = '';
+
+  if (allowedOrigins.includes('*')) {
+    allowOrigin = requestOrigin || '*';
+  } else if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    allowOrigin = requestOrigin;
+  } else if (!requestOrigin && allowedOrigins.length > 0) {
+    allowOrigin = allowedOrigins[0];
+  }
+
+  if (allowOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+    res.setHeader('Vary', 'Origin');
+  }
+
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
 
