@@ -1109,6 +1109,10 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
             items: { type: 'string' },
             minItems: 1,
           },
+          images: {
+            type: 'array',
+            items: { type: 'string' },
+          },
           location: { type: 'string' },
           salePrice: { type: 'number', minimum: 0, example: 53900 },
           serviceFee: { type: 'number', minimum: 0, example: 1500 },
@@ -1160,6 +1164,10 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
             type: 'array',
             items: { type: 'string' },
             minItems: 1,
+          },
+          images: {
+            type: 'array',
+            items: { type: 'string' },
           },
           location: { type: 'string' },
           salePrice: { type: 'number', minimum: 0 },

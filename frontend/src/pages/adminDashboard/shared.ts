@@ -56,7 +56,7 @@ export interface AdminOrder {
   salePrice: number;
   serviceFee: number;
   status: OrderStatus;
-  images: string[];
+  images?: string[];
   cpu: string;
   motherboard: string;
   ram: string;
@@ -979,6 +979,7 @@ export const normalizeAdminOrder = (value: unknown): AdminOrder | null => {
   const cooler = typeof raw.cooler === 'string' ? raw.cooler.trim() : '';
   const pcCase = typeof raw.pcCase === 'string' ? raw.pcCase.trim() : '';
   const tags = normalizeUnknownStringList(raw.tags);
+  const images = normalizeUnknownStringList(raw.images);
 
   if (!id || !date || !item || !location) {
     return null;
@@ -996,6 +997,7 @@ export const normalizeAdminOrder = (value: unknown): AdminOrder | null => {
         : `客戶需求以「${item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
     youtubeEmbedUrl: typeof raw.youtubeEmbedUrl === 'string' ? raw.youtubeEmbedUrl.trim() : '',
     tags: tags.length > 0 ? tags : deriveOrderTags(item, [cpu, motherboard, ram, storage, gpu, psu, cooler, pcCase]),
+    images,
     location,
     salePrice: Math.max(0, Math.trunc(toFiniteNumber(raw.salePrice))),
     serviceFee: Math.max(0, Math.trunc(toFiniteNumber(raw.serviceFee))),

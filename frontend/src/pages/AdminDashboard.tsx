@@ -726,6 +726,39 @@ const AdminDashboard: React.FC = () => {
     }));
   };
 
+  const handleOrderImagesUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const fileList = Array.from(files);
+    const readers = fileList.map(
+      (file) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+          reader.onerror = () => resolve('');
+          reader.readAsDataURL(file);
+        }),
+    );
+
+    Promise.all(readers).then((results) => {
+      const nextImages = results.map((item) => item.trim()).filter(Boolean);
+      if (nextImages.length === 0) {
+        return;
+      }
+
+      setOrderForm((prev) => {
+        const existing = splitTextList(prev.imagesText);
+        const merged = [...existing, ...nextImages];
+        return {
+          ...prev,
+          imagesText: merged.join('\n'),
+        };
+      });
+    });
+  };
+
   const handleToggleOrderTag = (tag: string) => {
     const normalizedTarget = tag.trim().toLowerCase();
     if (!normalizedTarget) {
@@ -1392,6 +1425,7 @@ const AdminDashboard: React.FC = () => {
     const requirementIntro = orderForm.requirementIntro.trim();
     const youtubeEmbedUrl = orderForm.youtubeEmbedUrl.trim();
     const tags = parseTagTextValue(orderForm.tagsText);
+    const images = splitTextList(orderForm.imagesText);
 
     if (
       !orderForm.date.trim() ||
@@ -1459,6 +1493,7 @@ const AdminDashboard: React.FC = () => {
           requirementIntro,
           youtubeEmbedUrl,
           tags,
+          images,
           location: orderForm.location,
           salePrice: Math.trunc(salePrice),
           serviceFee: Math.trunc(serviceFee),
@@ -6927,6 +6962,28 @@ const AdminDashboard: React.FC = () => {
                       </button>
                     ) : null}
                   </div>
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-images">
+                  出機照片（可空白，換行或逗號分隔）
+                  <textarea
+                    id="edit-shipment-images"
+                    rows={3}
+                    placeholder={'例如:\n/images/orders/2026-0212-1.jpg\n/images/orders/2026-0212-2.jpg'}
+                    value={orderForm.imagesText}
+                    onChange={(event) => handleFieldChange('imagesText', event.target.value)}
+                  />
+                </label>
+
+                <label className="auth-field admin-field-wide" htmlFor="edit-shipment-images-upload">
+                  上傳出機照片（支援多張）
+                  <input
+                    id="edit-shipment-images-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(event) => handleOrderImagesUpload(event.target.files)}
+                  />
                 </label>
 
                 <label className="auth-field admin-field-wide" htmlFor="edit-shipment-youtube-embed-url">

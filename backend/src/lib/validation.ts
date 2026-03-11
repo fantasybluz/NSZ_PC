@@ -304,6 +304,7 @@ export const validateBuildInput = (payload: MutablePayload): ValidationResult<Bu
   const specs = uniqueTrimmedStrings(payload.specs);
   const accessories = uniqueTrimmedStrings(payload.accessories);
   const tags = uniqueTrimmedStrings(payload.tags);
+  const images = uniqueTrimmedStrings(payload.images);
   if (!tags.length) {
     errors.push('tags must contain at least one item');
   }
@@ -544,6 +545,7 @@ export const validateOrderInput = (payload: MutablePayload): ValidationResult<Or
       requirementIntro,
       youtubeEmbedUrl: asString(payload.youtubeEmbedUrl).trim(),
       tags,
+      images,
       location: asString(payload.location).trim(),
       salePrice: Number.isFinite(salePrice) ? Math.max(0, Math.trunc(salePrice)) : 0,
       serviceFee: Number.isFinite(serviceFee) ? Math.max(0, Math.trunc(serviceFee)) : 0,

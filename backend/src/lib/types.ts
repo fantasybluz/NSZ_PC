@@ -67,7 +67,7 @@ export interface OrderRecord {
   salePrice: number;
   serviceFee: number;
   status: OrderStatus;
-  images: string[];
+  images?: string[];
   cpu: string;
   motherboard: string;
   ram: string;
@@ -130,7 +130,7 @@ export interface BrandPortfolioRecord {
   name: string;
   tagline: string;
   focus: string[];
-  images: string[];
+  images?: string[];
   tags: string[];
 }
 

@@ -413,6 +413,7 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
       const requirementIntro = asString(typed.requirementIntro);
       const location = asString(typed.location);
       const tags = normalizeStringList(typed.tags);
+      const images = normalizeStringList(typed.images);
       const cpu = asString(typed.cpu) || '待補充';
       const motherboard = asString(typed.motherboard) || '待補充';
       const ram = asString(typed.ram) || '待補充';
@@ -433,6 +434,7 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
         requirementIntro: requirementIntro || `客戶需求以「${orderItem}」為核心，配單會先依用途與預算拆解後再規劃。`,
         youtubeEmbedUrl: asString(typed.youtubeEmbedUrl),
         tags: tags.length > 0 ? tags : deriveOrderTags(orderItem, [cpu, motherboard, ram, storage, gpu, psu, cooler, pcCase]),
+        images,
         location,
         salePrice: Math.max(0, Math.trunc(Number(typed.salePrice) || 0)),
         serviceFee: Math.max(0, Math.trunc(Number(typed.serviceFee) || 0)),
