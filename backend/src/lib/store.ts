@@ -74,13 +74,13 @@ const normalizeBuilds = (value: unknown): BuildRecord[] => {
         badge: asString(typed.badge),
         tags,
         image,
-        cpu: asString(typed.cpu) || '待補充',
-        motherboard: asString(typed.motherboard) || '待補充',
-        ram: asString(typed.ram) || '待補充',
-        storage: asString(typed.storage) || '待補充',
-        gpu: asString(typed.gpu) || '待補充',
-        psu: asString(typed.psu) || '待補充',
-        pcCase: asString(typed.pcCase) || '待補充',
+        cpu: asString(typed.cpu) || '',
+        motherboard: asString(typed.motherboard) || '',
+        ram: asString(typed.ram) || '',
+        storage: asString(typed.storage) || '',
+        gpu: asString(typed.gpu) || '',
+        psu: asString(typed.psu) || '',
+        pcCase: asString(typed.pcCase) || '',
         accessories: normalizeStringList(typed.accessories),
         specs,
         createdAt: asString(typed.createdAt) || now(),
@@ -347,14 +347,14 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
       const location = asString(typed.location);
       const tags = normalizeStringList(typed.tags);
       const images = normalizeStringList(typed.images);
-      const cpu = asString(typed.cpu) || '待補充';
-      const motherboard = asString(typed.motherboard) || '待補充';
-      const ram = asString(typed.ram) || '待補充';
-      const storage = asString(typed.storage) || '待補充';
-      const gpu = asString(typed.gpu) || '待補充';
-      const psu = asString(typed.psu) || '待補充';
-      const cooler = asString(typed.cooler) || '待補充';
-      const pcCase = asString(typed.pcCase) || '待補充';
+      const cpu = asString(typed.cpu) || '';
+      const motherboard = asString(typed.motherboard) || '';
+      const ram = asString(typed.ram) || '';
+      const storage = asString(typed.storage) || '';
+      const gpu = asString(typed.gpu) || '';
+      const psu = asString(typed.psu) || '';
+      const cooler = asString(typed.cooler) || '';
+      const pcCase = asString(typed.pcCase) || '';
 
       if (!id || !date || !orderItem || !location) {
         return null;
@@ -955,7 +955,7 @@ const defaultDb = (): DbSchema => {
       },
     ].map((build) => ({
       ...build,
-      motherboard: asString((build as { motherboard?: string }).motherboard) || '待補充',
+      motherboard: asString((build as { motherboard?: string }).motherboard) || '',
       accessories: normalizeStringList((build as { accessories?: string[] }).accessories),
     })),
     orders: [
@@ -1152,8 +1152,8 @@ const defaultDb = (): DbSchema => {
         updatedAt: now(),
       },
     ].map((order) => {
-      const motherboard = asString((order as { motherboard?: string }).motherboard) || '待補充';
-      const cooler = asString((order as { cooler?: string }).cooler) || '待補充';
+      const motherboard = asString((order as { motherboard?: string }).motherboard) || '';
+      const cooler = asString((order as { cooler?: string }).cooler) || '';
       const serviceFee = Math.max(
         0,
         Math.trunc(Number((order as { serviceFee?: number }).serviceFee) || 0),

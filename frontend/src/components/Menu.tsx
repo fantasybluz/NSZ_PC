@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
-// Apple 式的全站導覽：44px 細黑條、置中的小字連結（DESIGN.md 的 global-nav）。
-// 後台登入放在 footer，不放在給客人看的導覽裡。
+// Apple 式的全站導覽：44px 半透明細條、12px 小字連結（參考 apple.com/tw/mac）。
+// 給客人看的頁面不放後台的連結（從 DPOM 的側欄或直接打 /admin 進去）。
 const NAV_ITEMS: Array<{ to: string; label: string; end?: boolean }> = [
   { to: '/', label: '首頁', end: true },
   { to: '/orders/tags', label: '出機紀錄' },

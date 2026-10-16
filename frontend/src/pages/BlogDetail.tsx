@@ -218,11 +218,11 @@ const BlogDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="section-card reveal">
-        <div className="section-head">
-          <h2 className="section-title">影片補充（可在後台編輯）</h2>
-        </div>
-        {post.youtubeEmbedUrl ? (
+      {post.youtubeEmbedUrl ? (
+        <section className="section-card reveal">
+          <div className="section-head">
+            <h2 className="section-title">影片</h2>
+          </div>
           <div className="build-video-frame">
             <iframe
               src={post.youtubeEmbedUrl}
@@ -232,12 +232,8 @@ const BlogDetail: React.FC = () => {
               allowFullScreen
             />
           </div>
-        ) : (
-          <div className="build-video-placeholder">
-            <p>目前尚未設定影片，後台可隨時補上 YouTube 連結。</p>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section className="section-card reveal">
         <div className="section-head">

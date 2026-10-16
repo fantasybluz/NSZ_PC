@@ -103,7 +103,7 @@ const OrderDetail: React.FC = () => {
             <p>出貨日期：{order.date}</p>
             <p>交機地區：{order.location}</p>
             <p>狀態：{orderStatusLabelMap[order.status]}</p>
-            <p>成交金額：{typeof order.salePrice === 'number' ? `NT$ ${order.salePrice.toLocaleString('zh-TW')}` : '未標示'}</p>
+            {typeof order.salePrice === 'number' && order.salePrice > 0 ? <p>成交金額：NT$ {order.salePrice.toLocaleString('zh-TW')}</p> : null}
           </div>
         </div>
       </section>
@@ -121,47 +121,62 @@ const OrderDetail: React.FC = () => {
         </div>
 
         <div className="detail-card-grid build-core-list">
-          <article className="detail-card-item">
-            <i className="fa-solid fa-microchip" aria-hidden="true" />
-            <p>CPU：{order.cpu}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-network-wired" aria-hidden="true" />
-            <p>主機板：{order.motherboard || '待補充'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-memory" aria-hidden="true" />
-            <p>RAM：{order.ram}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-hard-drive" aria-hidden="true" />
-            <p>硬碟：{order.storage}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-tv" aria-hidden="true" />
-            <p>顯示卡：{order.gpu}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-fan" aria-hidden="true" />
-            <p>散熱器：{order.cooler || '待補充'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-bolt" aria-hidden="true" />
-            <p>電源供應器：{order.psu}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-box-open" aria-hidden="true" />
-            <p>機殼：{order.pcCase}</p>
-          </article>
+          {order.cpu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-microchip" aria-hidden="true" />
+              <p>CPU：{order.cpu}</p>
+            </article>
+          ) : null}
+          {order.motherboard ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-network-wired" aria-hidden="true" />
+              <p>主機板：{order.motherboard}</p>
+            </article>
+          ) : null}
+          {order.ram ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-memory" aria-hidden="true" />
+              <p>RAM：{order.ram}</p>
+            </article>
+          ) : null}
+          {order.storage ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-hard-drive" aria-hidden="true" />
+              <p>硬碟：{order.storage}</p>
+            </article>
+          ) : null}
+          {order.gpu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-tv" aria-hidden="true" />
+              <p>顯示卡：{order.gpu}</p>
+            </article>
+          ) : null}
+          {order.cooler ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-fan" aria-hidden="true" />
+              <p>散熱器：{order.cooler}</p>
+            </article>
+          ) : null}
+          {order.psu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-bolt" aria-hidden="true" />
+              <p>電源供應器：{order.psu}</p>
+            </article>
+          ) : null}
+          {order.pcCase ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-box-open" aria-hidden="true" />
+              <p>機殼：{order.pcCase}</p>
+            </article>
+          ) : null}
         </div>
       </section>
 
-      <section className="section-card reveal">
-        <div className="section-head">
-          <h2 className="section-title">YouTube 影片</h2>
-        </div>
-
-        {embedUrl ? (
+      {embedUrl ? (
+        <section className="section-card reveal">
+          <div className="section-head">
+            <h2 className="section-title">影片</h2>
+          </div>
           <div className="build-video-frame">
             <iframe
               src={embedUrl}
@@ -171,12 +186,8 @@ const OrderDetail: React.FC = () => {
               allowFullScreen
             />
           </div>
-        ) : (
-          <div className="build-video-placeholder">
-            <p>尚未設定影片。後台可填入 YouTube 連結（watch/share/embed）。</p>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 };

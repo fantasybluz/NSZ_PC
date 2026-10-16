@@ -259,14 +259,14 @@ const CategoryDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="section-card reveal">
-        <div className="section-head">
-          <h2 className="section-title">你可能有興趣的主機</h2>
-        </div>
+      {recommendedBuilds.length > 0 ? (
+        <section className="section-card reveal">
+          <div className="section-head">
+            <h2 className="section-title">你可能有興趣的主機</h2>
+          </div>
 
-        <div className="build-grid">
-          {recommendedBuilds.length > 0 ? (
-            recommendedBuilds.map((build) => (
+          <div className="build-grid">
+            {recommendedBuilds.map((build) => (
               <ProductCard
                 key={build.id}
                 name={build.name}
@@ -277,12 +277,10 @@ const CategoryDetail: React.FC = () => {
                 badge={build.badge}
                 detailPath={getBuildDetailPath(build.id)}
               />
-            ))
-          ) : (
-            <p>尚未設定對應標籤的推薦配單，請先在後台為配單補上標籤。</p>
-          )}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };

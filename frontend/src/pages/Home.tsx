@@ -34,7 +34,7 @@ const currencyFormatter = new Intl.NumberFormat('zh-TW', {
 
 const formatCurrency = (value?: number): string => {
   if (!Number.isFinite(value)) {
-    return '待補充';
+    return '';
   }
 
   return currencyFormatter.format(value as number);
@@ -357,14 +357,24 @@ const Home: React.FC = () => {
                 <div className="order-modal-section">
                   <p className="section-kicker">核心配備</p>
                   <ul className="shipment-core-specs order-modal-list">
-                    <li>CPU：{activeOrder.cpu}</li>
-                    <li>主機板：{activeOrder.motherboard}</li>
-                    <li>RAM：{activeOrder.ram}</li>
-                    <li>硬碟：{activeOrder.storage}</li>
-                    <li>顯示卡：{activeOrder.gpu}</li>
-                    <li>散熱器：{activeOrder.cooler}</li>
-                    <li>電源：{activeOrder.psu}</li>
-                    <li>機殼：{activeOrder.pcCase}</li>
+                    {(
+                      [
+                        ['CPU', activeOrder.cpu],
+                        ['主機板', activeOrder.motherboard],
+                        ['RAM', activeOrder.ram],
+                        ['硬碟', activeOrder.storage],
+                        ['顯示卡', activeOrder.gpu],
+                        ['散熱器', activeOrder.cooler],
+                        ['電源', activeOrder.psu],
+                        ['機殼', activeOrder.pcCase],
+                      ] as const
+                    )
+                      .filter(([, value]) => value)
+                      .map(([label, value]) => (
+                        <li key={label}>
+                          {label}：{value}
+                        </li>
+                      ))}
                   </ul>
                 </div>
 

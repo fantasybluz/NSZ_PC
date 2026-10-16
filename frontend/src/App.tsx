@@ -87,7 +87,7 @@ const AppFrame: React.FC<{ siteContent: PublicSiteContent; children: React.React
 
       <main className="page-wrap">{children}</main>
 
-      {/* Apple 式的 footer：分欄的連結、最下面一行版權；後台登入放在這裡 */}
+      {/* Apple 式的 footer：分欄的連結、最下面一行版權。後台不放連結（從 DPOM 的側欄或直接打 /admin 進去） */}
       <footer className="site-footer">
         <div className="footer-inner">
           <div className="footer-cols">
@@ -114,7 +114,6 @@ const AppFrame: React.FC<{ siteContent: PublicSiteContent; children: React.React
           </div>
           <div className="footer-legal">
             <span>Copyright © {new Date().getFullYear()} 星辰電腦 NSZPC。保留一切權利。</span>
-            <a href="/admin">後台登入</a>
           </div>
         </div>
       </footer>

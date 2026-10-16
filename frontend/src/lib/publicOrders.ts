@@ -143,14 +143,14 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
   }
 
   const salePrice = Number(raw.salePrice);
-  const cpu = asString(raw.cpu) || '待補充';
-  const motherboard = asString(raw.motherboard) || '待補充';
-  const ram = asString(raw.ram) || '待補充';
-  const storage = asString(raw.storage) || '待補充';
-  const gpu = asString(raw.gpu) || '待補充';
-  const psu = asString(raw.psu) || '待補充';
-  const cooler = asString(raw.cooler) || '待補充';
-  const pcCase = asString(raw.pcCase) || '待補充';
+  const cpu = asString(raw.cpu) || '';
+  const motherboard = asString(raw.motherboard) || '';
+  const ram = asString(raw.ram) || '';
+  const storage = asString(raw.storage) || '';
+  const gpu = asString(raw.gpu) || '';
+  const psu = asString(raw.psu) || '';
+  const cooler = asString(raw.cooler) || '';
+  const pcCase = asString(raw.pcCase) || '';
   const serviceFee = Number(raw.serviceFee);
 
   return {
@@ -182,8 +182,8 @@ export const fallbackPublicOrders: PublicOrder[] = fallbackRecentOrders.map((ord
   status: 'delivered',
   ...order,
   images: Array.isArray(order.images) ? order.images : [],
-  motherboard: order.motherboard || '待補充',
-  cooler: order.cooler || '待補充',
+  motherboard: order.motherboard || '',
+  cooler: order.cooler || '',
   requirementIntro:
     order.requirementIntro ||
     `客戶需求以「${order.item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
@@ -193,12 +193,12 @@ export const fallbackPublicOrders: PublicOrder[] = fallbackRecentOrders.map((ord
       ? [...new Set(order.tags.map((tag) => tag.trim()).filter(Boolean))]
       : deriveOrderTags(order.item, [
           order.cpu,
-          order.motherboard || '待補充',
+          order.motherboard || '',
           order.ram,
           order.storage,
           order.gpu,
           order.psu,
-          order.cooler || '待補充',
+          order.cooler || '',
           order.pcCase,
         ]),
 }));

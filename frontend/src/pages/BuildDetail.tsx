@@ -120,34 +120,48 @@ const BuildDetail: React.FC = () => {
         </div>
 
         <div className="detail-card-grid build-core-list">
-          <article className="detail-card-item">
-            <i className="fa-solid fa-microchip" aria-hidden="true" />
-            <p>CPU：{build.cpu || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-network-wired" aria-hidden="true" />
-            <p>主機板：{build.motherboard || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-memory" aria-hidden="true" />
-            <p>RAM：{build.ram || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-hard-drive" aria-hidden="true" />
-            <p>硬碟：{build.storage || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-tv" aria-hidden="true" />
-            <p>顯示卡：{build.gpu || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-bolt" aria-hidden="true" />
-            <p>電源供應器：{build.psu || '未標示'}</p>
-          </article>
-          <article className="detail-card-item">
-            <i className="fa-solid fa-box-open" aria-hidden="true" />
-            <p>機殼：{build.pcCase || '未標示'}</p>
-          </article>
+          {build.cpu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-microchip" aria-hidden="true" />
+              <p>CPU：{build.cpu}</p>
+            </article>
+          ) : null}
+          {build.motherboard ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-network-wired" aria-hidden="true" />
+              <p>主機板：{build.motherboard}</p>
+            </article>
+          ) : null}
+          {build.ram ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-memory" aria-hidden="true" />
+              <p>RAM：{build.ram}</p>
+            </article>
+          ) : null}
+          {build.storage ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-hard-drive" aria-hidden="true" />
+              <p>硬碟：{build.storage}</p>
+            </article>
+          ) : null}
+          {build.gpu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-tv" aria-hidden="true" />
+              <p>顯示卡：{build.gpu}</p>
+            </article>
+          ) : null}
+          {build.psu ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-bolt" aria-hidden="true" />
+              <p>電源供應器：{build.psu}</p>
+            </article>
+          ) : null}
+          {build.pcCase ? (
+            <article className="detail-card-item">
+              <i className="fa-solid fa-box-open" aria-hidden="true" />
+              <p>機殼：{build.pcCase}</p>
+            </article>
+          ) : null}
         </div>
       </section>
 
@@ -157,19 +171,20 @@ const BuildDetail: React.FC = () => {
             <strong>參考價格</strong>
             <span>NT$ {build.price.toLocaleString('zh-TW')}</span>
           </div>
-          <div className="build-price-item">
-            <strong>成交日期</strong>
-            <span>{build.dealDate || '未標示'}</span>
-          </div>
+          {build.dealDate ? (
+            <div className="build-price-item">
+              <strong>成交日期</strong>
+              <span>{build.dealDate}</span>
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="section-card reveal">
-        <div className="section-head">
-          <h2 className="section-title">YouTube 介紹影片</h2>
-        </div>
-
-        {embedUrl ? (
+      {embedUrl ? (
+        <section className="section-card reveal">
+          <div className="section-head">
+            <h2 className="section-title">影片</h2>
+          </div>
           <div className="build-video-frame">
             <iframe
               src={embedUrl}
@@ -179,12 +194,8 @@ const BuildDetail: React.FC = () => {
               allowFullScreen
             />
           </div>
-        ) : (
-          <div className="build-video-placeholder">
-            <p>尚未設定影片。可在後台的推薦配單欄位填入 YouTube 連結（watch/share/embed）。</p>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 };

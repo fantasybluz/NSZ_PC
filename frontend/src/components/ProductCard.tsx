@@ -35,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="product-bottom">
         <div className="product-price-block">
           <strong>NT$ {price.toLocaleString('zh-TW')}</strong>
-          <span className="product-deal-date">成交日期：{dealDate || '未標示'}</span>
+          {dealDate ? <span className="product-deal-date">成交日期：{dealDate}</span> : null}
         </div>
         <Link to={detailPath} className="inline-btn">
           查看細節
