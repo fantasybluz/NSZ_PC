@@ -64,7 +64,6 @@ const BuildDetail: React.FC = () => {
     <div className="page build-detail-page">
       <section className="page-hero reveal category-detail-hero">
         <div>
-          <p className="section-kicker">Build Detail</p>
           <h1>{build.name}</h1>
           <p>{build.description}</p>
           <div className="hero-actions">
@@ -84,7 +83,6 @@ const BuildDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Overview</p>
           <h2 className="section-title">電腦介紹</h2>
         </div>
         <p>{build.detailIntro || build.description}</p>
@@ -92,7 +90,6 @@ const BuildDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Requirements</p>
           <h2 className="section-title">需求說明</h2>
         </div>
         <p>{build.requirementIntro}</p>
@@ -119,7 +116,6 @@ const BuildDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Core Parts</p>
           <h2 className="section-title">核心配備</h2>
         </div>
 
@@ -170,7 +166,6 @@ const BuildDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Video</p>
           <h2 className="section-title">YouTube 介紹影片</h2>
         </div>
 

@@ -93,14 +93,12 @@ const Brand: React.FC = () => {
   return (
     <div className="page brand-page">
       <section className="page-hero reveal">
-        <p className="section-kicker">Shipping Process</p>
         <h1>{siteContent.brandHeroTitle}</h1>
         <p>{siteContent.brandHeroSubtitle}</p>
       </section>
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Step by Step</p>
           <h2 className="section-title">流程細節</h2>
         </div>
 
@@ -119,7 +117,6 @@ const Brand: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Recent Shipment</p>
           <h2 className="section-title">近期出貨</h2>
         </div>
 
@@ -206,7 +203,6 @@ const Brand: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Promise</p>
           <h2 className="section-title">你會拿到的服務</h2>
         </div>
 

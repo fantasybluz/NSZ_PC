@@ -133,7 +133,6 @@ const OrderTagOverview: React.FC = () => {
   return (
     <div className="page order-tag-overview-page">
       <section className="page-hero reveal">
-        <p className="section-kicker">Shipment Tag Filter</p>
         <h1>標籤主機總覽</h1>
         <p>點任一標籤可篩選有相同需求的出機紀錄；可連續加選多個標籤縮小結果。</p>
 
@@ -149,7 +148,6 @@ const OrderTagOverview: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Tag Toolbar</p>
           <h2 className="section-title">標籤篩選器</h2>
           <p className="section-sub">{summaryText}</p>
         </div>
@@ -186,7 +184,6 @@ const OrderTagOverview: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Matched Builds</p>
           <h2 className="section-title">符合標籤的主機 ({visibleOrders.length})</h2>
         </div>
 

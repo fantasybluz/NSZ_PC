@@ -1,9 +1,11 @@
 import './App.css';
 // Apple 風格（DESIGN.md）疊在最上面
 import './styles/apple.css';
+// 前台的 Apple 版面（滿版區塊、橫向卡片列；參考 apple.com/tw/mac）
+import './styles/apple-site.css';
 
 import React from 'react';
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Menu from './components/Menu';
 import Categories from './pages/Categories';
@@ -20,6 +22,7 @@ import AdminBlogManager from './pages/AdminBlogManager';
 import {
   defaultPublicSiteContent,
   fetchPublicSiteContent,
+  type PublicSiteContent,
 } from './lib/publicSiteContent';
 import { applySeo } from './lib/seo';
 
@@ -57,13 +60,22 @@ const RouteSeoDefaults: React.FC = () => {
 };
 
 // 後台（登入頁以外）有自己的側邊選單，不顯示官網的頂欄和 footer
-const AppFrame: React.FC<{ footerAddress: string; footerSlogan: string; children: React.ReactNode }> = ({
-  footerAddress,
-  footerSlogan,
-  children,
-}) => {
-  const { pathname } = useLocation();
+const AppFrame: React.FC<{ siteContent: PublicSiteContent; children: React.ReactNode }> = ({ siteContent, children }) => {
+  const { pathname, hash } = useLocation();
   const isAdmin = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login');
+
+  // 換頁回到最上面；有 #（例如 /#contact）就捲到那一段。後台的分頁自己處理 #
+  React.useEffect(() => {
+    if (isAdmin) return;
+    if (!hash) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [pathname, hash, isAdmin]);
 
   if (isAdmin) {
     return <main className="admin-wrap">{children}</main>;
@@ -75,12 +87,36 @@ const AppFrame: React.FC<{ footerAddress: string; footerSlogan: string; children
 
       <main className="page-wrap">{children}</main>
 
+      {/* Apple 式的 footer：分欄的連結、最下面一行版權；後台登入放在這裡 */}
       <footer className="site-footer">
-        <div>
-          <strong>NSZPC 星辰電腦</strong>
-          <span>{footerAddress}</span>
+        <div className="footer-inner">
+          <div className="footer-cols">
+            <nav aria-label="探索">
+              <h2>探索</h2>
+              <Link to="/#builds">推薦配單</Link>
+              <Link to="/orders/tags">出機紀錄</Link>
+              <Link to="/categories">分類總覽</Link>
+              <Link to="/blog">技術文章</Link>
+            </nav>
+            <nav aria-label="聯絡星辰">
+              <h2>聯絡星辰</h2>
+              {siteContent.contactChannels.map((channel) => (
+                <a key={channel.label} href={channel.href} target="_blank" rel="noreferrer">
+                  {channel.label}
+                </a>
+              ))}
+            </nav>
+            <div>
+              <h2>門市</h2>
+              <p>{siteContent.footerAddress}</p>
+              <p>{siteContent.footerSlogan}</p>
+            </div>
+          </div>
+          <div className="footer-legal">
+            <span>Copyright © {new Date().getFullYear()} 星辰電腦 NSZPC。保留一切權利。</span>
+            <a href="/admin">後台登入</a>
+          </div>
         </div>
-        <p>{footerSlogan}</p>
       </footer>
     </div>
   );
@@ -103,7 +139,7 @@ function App() {
   return (
     <Router>
       <RouteSeoDefaults />
-      <AppFrame footerAddress={siteContent.footerAddress} footerSlogan={siteContent.footerSlogan}>
+      <AppFrame siteContent={siteContent}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/blog" element={<Blog />} />

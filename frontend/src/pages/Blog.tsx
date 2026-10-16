@@ -163,14 +163,12 @@ const Blog: React.FC = () => {
   return (
     <div className="page blog-list-page">
       <section className="page-hero reveal">
-        <p className="section-kicker">Tech Blog</p>
         <h1>技術文章</h1>
         <p>整理組機決策、散熱調校與升級邏輯，讓你在下單前就知道每個零件的取捨原因。</p>
       </section>
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Filter</p>
           <h2 className="section-title">文章篩選</h2>
         </div>
 
@@ -210,7 +208,6 @@ const Blog: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Articles</p>
           <h2 className="section-title">技術文章列表 ({filteredPosts.length})</h2>
         </div>
 

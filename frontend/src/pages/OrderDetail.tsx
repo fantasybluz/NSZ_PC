@@ -72,7 +72,6 @@ const OrderDetail: React.FC = () => {
     <div className="page order-detail-page">
       <section className="page-hero reveal category-detail-hero">
         <div>
-          <p className="section-kicker">Shipment Detail</p>
           <h1>{order.item}</h1>
           <p>{order.requirementIntro}</p>
           {order.tags.length > 0 ? (
@@ -111,7 +110,6 @@ const OrderDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Requirements</p>
           <h2 className="section-title">客戶需求描述</h2>
         </div>
         <p>{order.requirementIntro}</p>
@@ -119,7 +117,6 @@ const OrderDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Core Specs</p>
           <h2 className="section-title">配備說明</h2>
         </div>
 
@@ -161,7 +158,6 @@ const OrderDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Video</p>
           <h2 className="section-title">YouTube 影片</h2>
         </div>
 

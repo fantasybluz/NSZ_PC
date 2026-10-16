@@ -123,14 +123,12 @@ const Categories: React.FC = () => {
   return (
     <div className="page categories-page">
       <section className="page-hero reveal">
-        <p className="section-kicker">Categories</p>
         <h1>分類總覽</h1>
         <p>{siteContent.categoriesHeroSubtitle}</p>
       </section>
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Category Filter</p>
           <h2 className="section-title">分類篩選</h2>
         </div>
 
@@ -172,7 +170,6 @@ const Categories: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Category Overview</p>
           <h2 className="section-title">分類列表 ({visibleCategories.length})</h2>
         </div>
 

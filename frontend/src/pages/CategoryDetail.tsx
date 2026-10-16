@@ -200,7 +200,6 @@ const CategoryDetail: React.FC = () => {
     <div className="page category-detail-page">
       <section className="page-hero reveal category-detail-hero">
         <div>
-          <p className="section-kicker">Category Detail</p>
           <h1>{category.title}</h1>
           <p>{category.detailIntro || category.summary}</p>
           <div className="hero-actions">
@@ -220,7 +219,6 @@ const CategoryDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Highlights</p>
           <h2 className="section-title">這個分類的核心重點</h2>
         </div>
 
@@ -236,7 +234,6 @@ const CategoryDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Recommendations</p>
           <h2 className="section-title">建議規劃方式</h2>
         </div>
 
@@ -249,7 +246,6 @@ const CategoryDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">FAQ</p>
           <h2 className="section-title">常見問題</h2>
         </div>
 
@@ -265,7 +261,6 @@ const CategoryDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Suggested Build</p>
           <h2 className="section-title">你可能有興趣的主機</h2>
         </div>
 

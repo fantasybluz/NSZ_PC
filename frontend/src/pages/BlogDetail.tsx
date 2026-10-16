@@ -165,7 +165,6 @@ const BlogDetail: React.FC = () => {
     <div className="page blog-detail-page">
       <section className="page-hero reveal blog-detail-hero">
         <div>
-          <p className="section-kicker">Tech Blog</p>
           <h1>{post.title}</h1>
           <p>{post.summary}</p>
 
@@ -221,7 +220,6 @@ const BlogDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Video</p>
           <h2 className="section-title">影片補充（可在後台編輯）</h2>
         </div>
         {post.youtubeEmbedUrl ? (
@@ -243,7 +241,6 @@ const BlogDetail: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <p className="section-kicker">Next Step</p>
           <h2 className="section-title">看實際案例</h2>
         </div>
         <p>如果你已經有大概方向，可以直接到近期出貨與配單頁面對照需求與規格。</p>

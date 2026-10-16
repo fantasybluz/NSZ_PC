@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import ProductCard from '../components/ProductCard';
+import Shelf from '../components/Shelf';
 import { carouselImages } from '../data/siteData';
 import {
   fallbackPublicBuilds,
@@ -15,6 +15,12 @@ import {
   getOrderTagOverviewPath,
   type PublicOrder,
 } from '../lib/publicOrders';
+import {
+  fallbackPublicCategories,
+  fetchPublicCategories,
+  getCategoryDetailPath,
+  type PublicCategory,
+} from '../lib/publicCategories';
 import {
   defaultPublicSiteContent,
   fetchPublicSiteContent,
@@ -47,6 +53,15 @@ const Home: React.FC = () => {
   const [siteContent, setSiteContent] = React.useState(defaultPublicSiteContent);
   const [activeOrder, setActiveOrder] = React.useState<PublicOrder | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = React.useState(0);
+  const [categories, setCategories] = React.useState<PublicCategory[]>(fallbackPublicCategories);
+
+  React.useEffect(() => {
+    fetchPublicCategories()
+      .then(setCategories)
+      .catch(() => {
+        // Keep fallback categories when backend request fails.
+      });
+  }, []);
 
   React.useEffect(() => {
     setActiveSlideIndex(0);
@@ -85,179 +100,187 @@ const Home: React.FC = () => {
     });
   }, []);
 
+  // 「LINE 詢問」用聯絡管道裡的 LINE，沒有就跳到聯絡我們
+  const lineChannel = siteContent.contactChannels.find((channel) => /line/i.test(channel.label));
+  const orderImage = (order: PublicOrder, index: number): string =>
+    order.images[0] || carouselImages[(index * 3) % carouselImages.length];
+
+  // 版面參考 apple.com/tw/mac：大標＋分類列 → 推薦配單（橫向卡片）→ 近期出機（直式照片卡）
+  // → 跟星辰買電腦（服務流程）→ 客戶回饋 → 聯絡我們
   return (
     <div className="page home-page">
-      <section className="hero-panel reveal">
-        <div className="hero-copy">
-          <p className="section-kicker">{siteContent.homeHeroKicker}</p>
-          <h1>{siteContent.homeHeroTitle}</h1>
-          <p>{siteContent.homeHeroSubtitle}</p>
-          <div className="hero-actions">
-            <Link to="/categories" className="solid-btn">
-              查看分類總覽
+      <section className="tile tile-white store-hero">
+        <div className="tile-inner">
+          <h1 className="store-hero-title">星辰電腦</h1>
+          <p className="store-hero-lead">{siteContent.homeHeroTitle}</p>
+          <nav className="category-strip" aria-label="依用途找主機">
+            {categories.map((category, index) => (
+              <Link key={category.id} to={getCategoryDetailPath(category.id)} className="category-strip-item">
+                <img src={category.detailHeroImage || carouselImages[index % carouselImages.length]} alt="" loading="lazy" />
+                <span>{category.title}</span>
+              </Link>
+            ))}
+            <Link to="/categories" className="category-strip-item">
+              <span className="category-strip-more" aria-hidden="true">
+                <i className="fa-solid fa-ellipsis" />
+              </span>
+              <span>全部分類</span>
             </Link>
-            <Link to="/orders/tags" className="ghost-btn">
-              看出機紀錄
+          </nav>
+        </div>
+      </section>
+
+      <section className="tile tile-parchment" id="builds">
+        <div className="tile-inner">
+          <header className="tile-head">
+            <h2>探索推薦配單</h2>
+          </header>
+          <Shelf label="推薦配單">
+            {builds.map((build) => (
+              <article key={build.id} className="build-shelf-card">
+                <Link to={getBuildDetailPath(build.id)} className="build-shelf-media" aria-label={`看 ${build.name}`}>
+                  {build.badge ? <span className="build-shelf-badge">{build.badge}</span> : null}
+                  <img src={build.image} alt={build.name} loading="lazy" />
+                </Link>
+                <div className="build-shelf-body">
+                  <h3>{build.name}</h3>
+                  <p>{build.description}</p>
+                  <span className="build-shelf-price">NT${build.price.toLocaleString('zh-TW')} 起</span>
+                  <div className="build-shelf-actions">
+                    <Link to={getBuildDetailPath(build.id)} className="pill">
+                      進一步了解
+                    </Link>
+                    <a href={lineChannel?.href || '#contact'} className="chevron-link" target={lineChannel ? '_blank' : undefined} rel="noreferrer">
+                      LINE 詢問
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </Shelf>
+        </div>
+      </section>
+
+      <section className="tile tile-white" id="recent-shipment">
+        <div className="tile-inner">
+          <header className="tile-head tile-head-split">
+            <h2>{siteContent.brandHeroTitle || '近期出機'}</h2>
+            <Link to="/orders/tags" className="chevron-link">
+              看全部出機紀錄
             </Link>
+          </header>
+          <Shelf label="近期出機">
+            {recentOrders.slice(0, 8).map((order, index) => (
+              <button
+                key={order.id}
+                type="button"
+                className={`story-card ${index % 3 === 1 ? 'story-card-dark' : ''}`}
+                onClick={() => setActiveOrder(order)}
+                aria-label={`查看 ${order.item} 的配備`}
+              >
+                <span className="story-card-eyebrow">
+                  {order.date}・{order.location}
+                </span>
+                <span className="story-card-title">{order.item}</span>
+                <img src={orderImage(order, index)} alt="" loading="lazy" />
+                <span className="story-card-plus" aria-hidden="true">
+                  <i className="fa-solid fa-plus" />
+                </span>
+              </button>
+            ))}
+          </Shelf>
+        </div>
+      </section>
+
+      <section className="tile tile-parchment">
+        <div className="tile-inner">
+          <header className="tile-head">
+            <h2>跟星辰買電腦，最好。</h2>
+          </header>
+          <div className="stat-strip">
+            {siteContent.homeStats.map((item, index) => (
+              <div key={`${item.value}-${index}`}>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+          <Shelf label="服務流程">
+            {siteContent.shippingSteps.map((step, index) => (
+              <article key={step.title} className="info-card">
+                <span className="info-card-eyebrow">步驟 {index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </article>
+            ))}
+          </Shelf>
+        </div>
+      </section>
+
+      <section className="tile tile-white">
+        <div className="tile-inner">
+          <header className="tile-head">
+            <h2>客戶怎麼說</h2>
+          </header>
+          <div className="quote-grid">
+            {siteContent.testimonials.map((testimonial) => (
+              <figure key={testimonial.name} className="quote-card">
+                <blockquote>「{testimonial.quote}」</blockquote>
+                <figcaption>
+                  <strong>{testimonial.name}</strong>
+                  <span>{testimonial.tag}</span>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
+      </section>
 
-        <div className="stat-grid">
-          {siteContent.homeStats.map((item, index) => (
-            <article key={`${item.value}-${item.label}-${index}`} className="stat-card">
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
+      <section className="tile tile-parchment" id="contact">
+        <div className="tile-inner">
+          <header className="tile-head">
+            <h2>聯絡我們</h2>
+          </header>
+          <div className="duo-grid">
+            <article className="duo-card">
+              <h3>線上詢問</h3>
+              <p>{siteContent.homeContactSubtitle}</p>
+              <ul className="contact-rows">
+                {siteContent.contactChannels.map((channel) => (
+                  <li key={channel.label}>
+                    <a href={channel.href} target="_blank" rel="noreferrer">
+                      <i className={channel.icon} aria-hidden="true" />
+                      <span>{channel.label}</span>
+                      <strong>{channel.value}</strong>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </article>
-          ))}
-        </div>
-      </section>
-
-            <section className="section-card reveal">
-        <div className="section-head">
-          <p className="section-kicker">Customer Voice</p>
-          <h2 className="section-title">客戶回饋</h2>
-        </div>
-
-        <div className="testimonial-grid">
-          {siteContent.testimonials.map((testimonial) => (
-            <article key={testimonial.name} className="testimonial-card">
-              <p>“{testimonial.quote}”</p>
-              <strong>{testimonial.name}</strong>
-              <span>{testimonial.tag}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section-card reveal">
-        <div className="section-head">
-          <p className="section-kicker">Ready Packages</p>
-          <h2 className="section-title">本月推薦配單</h2>
-          <p className="section-sub">{siteContent.homeBuildSubtitle}</p>
-        </div>
-
-        <div className="build-grid">
-          {builds.slice(0, 3).map((build) => (
-            <ProductCard
-              key={build.id}
-              name={build.name}
-              image={build.image}
-              description={build.description}
-              price={build.price}
-              dealDate={build.dealDate}
-              badge={build.badge}
-              detailPath={getBuildDetailPath(build.id)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="section-card reveal" id="recent-shipment">
-        <div className="section-head">
-          <p className="section-kicker">Recent Shipment</p>
-          <h2 className="section-title">{siteContent.brandHeroTitle || '出機紀錄'}</h2>
-          <p className="section-sub">{siteContent.brandHeroSubtitle || '依近期實際出機案例整理，包含需求重點與配備說明。'}</p>
-        </div>
-
-        <div className="shipment-list">
-          {recentOrders.slice(0, 6).map((order) => (
-            <article
-              key={order.id}
-              className="shipment-item shipment-item-compact"
-              role="button"
-              tabIndex={0}
-              onClick={() => setActiveOrder(order)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  setActiveOrder(order);
-                }
-              }}
-              aria-label={`查看 ${order.item} 詳細資訊`}
-            >
-              <strong>{order.date}</strong>
-              <p>需求：{order.item}</p>
-              {order.tags.length > 0 ? (
-                <div className="tag-cloud shipment-tags">
-                  {order.tags.map((tag) => (
-                    <Link
-                      key={`${order.id}-${tag}`}
-                      to={getOrderTagOverviewPath(tag)}
-                      className="tag-pill"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      #{tag}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-              <span>交機地區：{order.location}</span>
-              <span className="shipment-item-cta">點擊查看詳細</span>
-            </article>
-          ))}
-        </div>
-        <Link to="/orders/tags" className="text-link">
-          看更多出機紀錄
-          <i className="fa-solid fa-arrow-right" />
-        </Link>
-      </section>
-
-      <section className="section-card reveal">
-        <div className="section-head">
-          <p className="section-kicker">Workflow</p>
-          <h2 className="section-title">出貨流程</h2>
-          <p className="section-sub">{siteContent.homeWorkflowSubtitle}</p>
-        </div>
-
-        <div className="process-grid">
-          {siteContent.shippingSteps.map((step, idx) => (
-            <article key={step.title} className="process-step">
-              <span>{String(idx + 1).padStart(2, '0')}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-
-
-      <section className="section-card reveal">
-        <div className="contact-grid">
-          <article className="contact-panel">
-            <p className="section-kicker">Contact</p>
-            <h2 className="section-title">聯絡我們</h2>
-            <p className="section-sub">{siteContent.homeContactSubtitle}</p>
-
-            <div className="contact-list">
-              {siteContent.contactChannels.map((channel) => (
+            <article className="duo-card duo-card-media">
+              <div className="duo-card-text">
+                <h3>到店諮詢</h3>
+                <p>{siteContent.footerAddress}</p>
                 <a
-                  key={channel.label}
-                  href={channel.href}
+                  className="chevron-link"
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteContent.footerAddress)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="contact-link"
                 >
-                  <i className={channel.icon} aria-hidden="true" />
-                  <div>
-                    <span>{channel.label}</span>
-                    <strong>{channel.value}</strong>
-                  </div>
+                  在 Google 地圖開啟
                 </a>
-              ))}
-            </div>
-          </article>
-
-          <div className="map-panel">
-            <iframe
-              title="星辰電腦地圖"
-              src="https://www.google.com/maps?q=高雄市前鎮區凱旋三路217號&output=embed"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+              </div>
+              <iframe
+                title="星辰電腦地圖"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(siteContent.footerAddress)}&output=embed`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </article>
           </div>
         </div>
       </section>
+
       {activeOrder ? (
         <div className="order-modal-overlay" onClick={() => setActiveOrder(null)}>
           {(() => {
@@ -279,7 +302,6 @@ const Home: React.FC = () => {
               >
                 <div className="order-modal-head">
                   <div>
-                    <p className="section-kicker">Order Detail</p>
                     <h3 id="order-modal-title">{activeOrder.item}</h3>
                   </div>
                   <button type="button" className="admin-modal-close" onClick={() => setActiveOrder(null)}>
