@@ -17,6 +17,7 @@ import {
   withHeaders,
 } from './lib/http.ts';
 import { getOpenApiDocument } from './lib/openapi.ts';
+import { SHARE_PREVIEW_PATHS, withSharePreview } from './lib/sharePreview.ts';
 import { useDatabase } from './lib/store.ts';
 import type { MutablePayload, PublicUser } from './lib/types.ts';
 import { createServiceContainer } from './interfaces/http/serviceContainer.ts';
@@ -287,6 +288,12 @@ export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     useDatabase(env.DB);
+
+    // 出機紀錄、推薦配單、分類、文章頁：照樣回前端頁面，只是先換掉分享縮圖的標籤（lib/sharePreview.ts）
+    if (/^\/(orders|builds|categories|blog)\//.test(url.pathname)) {
+      const page = await env.ASSETS.fetch(request);
+      return SHARE_PREVIEW_PATHS.test(url.pathname) ? withSharePreview(page, url, services.crudService) : page;
+    }
 
     let response: Response;
     try {

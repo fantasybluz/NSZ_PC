@@ -40,7 +40,7 @@ const RouteSeoDefaults: React.FC = () => {
       keywords: ['客製化主機', '電腦組裝', '近期出貨', '配單建議', 'NSZPC'],
       canonicalPath: location.pathname || '/',
       ogType: 'website',
-      ogImage: '/images/NSZ_LOGO.png',
+      ogImage: '/og-image.jpg',
       noindex: isAdminPath,
       jsonLd: {
         '@context': 'https://schema.org',

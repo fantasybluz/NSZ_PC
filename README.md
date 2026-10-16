@@ -100,7 +100,9 @@ npm run state:import -- backup.json
 
 1. 網域加進 Cloudflare（同一個帳號）
 2. `wrangler.jsonc` 的 `routes` 改成新網域（`{ "pattern": "example.com", "custom_domain": true }`）
-3. Access 應用的三個 Public hostname 換成新網域，`npm run deploy`
+3. Access 應用的三個 Public hostname 換成新網域
+4. `frontend/index.html` 的 `og:url`、`og:image`、`twitter:image` 換成新網域（分享縮圖要完整網址），`npm run deploy`
+5. DPOM 的 `wrangler.jsonc` 的 `WEBSITE_URL` 也要改
 
 ## 安全
 
@@ -108,6 +110,13 @@ npm run state:import -- backup.json
 - API 回應：`X-Content-Type-Options`、`X-Frame-Options: DENY`、HSTS、最嚴格的 CSP（`backend/src/lib/http.ts`）
 - 前端靜態檔案：CSP 只開 Google Fonts、YouTube / Google 地圖 iframe、https 圖片（`frontend/public/_headers`）
 - `workers.dev` 和預覽網址關掉，只留正式網址
+
+## 分享縮圖（LINE、FB、Discord）
+
+- 爬蟲不會跑 JS，所以全站預設的標題和 `frontend/public/og-image.jpg`（1200×630）直接寫在 `frontend/index.html`
+- 出機紀錄、推薦配單、分類、文章頁（`/orders/item/*`、`/builds/item/*`、`/categories/item/*`、`/blog/*`）會先經過 Worker，
+  用 HTMLRewriter 換成那一頁的標題、說明和第一張照片（`backend/src/lib/sharePreview.ts`）；沒有照片就用預設圖
+- LINE 會快取縮圖：改了之後要看新的，用 [LINE Page Poker](https://poker.line.naver.jp/) 清快取
 
 ## 文件
 
