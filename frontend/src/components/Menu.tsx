@@ -30,9 +30,9 @@ const Menu: React.FC = () => {
           <NavLink to="/categories" className="menu-link">
             分類總覽
           </NavLink>
-          <NavLink to="/admin/login" className="menu-link">
+          <a href="/admin" className="menu-link">
             後台登入
-          </NavLink>
+          </a>
         </nav>
 
         <button
@@ -59,9 +59,9 @@ const Menu: React.FC = () => {
           <NavLink to="/categories" className="menu-link">
             分類總覽
           </NavLink>
-          <NavLink to="/admin/login" className="menu-link">
+          <a href="/admin" className="menu-link">
             後台登入
-          </NavLink>
+          </a>
         </div>
       ) : null}
     </header>

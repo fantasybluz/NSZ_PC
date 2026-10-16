@@ -1,10 +1,3 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { Pool, type PoolClient } from 'pg';
-import { fileURLToPath } from 'node:url';
-
-import { hashPassword } from './auth.ts';
 import type {
   BlogArticleSectionRecord,
   BlogPostRecord,
@@ -16,19 +9,8 @@ import type {
   OrderRecord,
   PersonalProcurementRecord,
   ProcurementRecord,
-  PublicUser,
   SiteContentRecord,
-  UserRecord,
 } from './types.ts';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_DIRECTORY = path.resolve(__dirname, '../../data');
-const LEGACY_JSON_FILE = path.resolve(DATA_DIRECTORY, 'db.json');
-const DEFAULT_POSTGRES_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/nszpc';
-
-let writeQueue: Promise<void> = Promise.resolve();
-let pgPool: Pool | null = null;
 
 const now = (): string => new Date().toISOString();
 
@@ -40,39 +22,6 @@ const normalizeStringList = (value: unknown): string[] => {
   }
 
   return [...new Set(value.map((item) => asString(item)).filter(Boolean))];
-};
-
-const normalizeUsers = (value: unknown): UserRecord[] => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item) => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-
-      const typed = item as Record<string, unknown>;
-      const id = asString(typed.id);
-      const username = asString(typed.username);
-      const passwordHash = asString(typed.passwordHash);
-      const role = asString(typed.role) || 'admin';
-      const createdAt = asString(typed.createdAt) || now();
-
-      if (!id || !username || !passwordHash) {
-        return null;
-      }
-
-      return {
-        id,
-        username,
-        passwordHash,
-        role,
-        createdAt,
-      };
-    })
-    .filter((item): item is UserRecord => item !== null);
 };
 
 const DEAL_DATE_PATTERN = /^\d{4}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])$/;
@@ -142,7 +91,7 @@ const normalizeBuilds = (value: unknown): BuildRecord[] => {
         updatedAt: asString(typed.updatedAt) || now(),
       };
     })
-    .filter((item): item is BuildRecord => item !== null);
+    .filter((item) => item !== null);
 };
 
 const inventoryCategorySet = new Set<InventoryCategory>([
@@ -451,7 +400,7 @@ const normalizeOrders = (value: unknown): OrderRecord[] => {
         updatedAt: asString(typed.updatedAt) || now(),
       };
     })
-    .filter((item): item is OrderRecord => item !== null);
+    .filter((item) => item !== null);
 };
 
 const normalizeBlogSections = (value: unknown): BlogArticleSectionRecord[] => {
@@ -1021,7 +970,7 @@ const normalizeBrandPortfolios = (value: unknown): SiteContentRecord['categories
 
       return { id, name, tagline, focus, images, tags: resolvedTags };
     })
-    .filter((item): item is SiteContentRecord['categoriesBrandPortfolios'][number] => item !== null);
+    .filter((item) => item !== null);
 };
 
 const normalizeSiteContent = (value: unknown): SiteContentRecord => {
@@ -1095,24 +1044,14 @@ const normalizeSiteContent = (value: unknown): SiteContentRecord => {
   };
 };
 
-const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
-  const adminId = crypto.randomUUID();
-
+// 第一次啟動（D1 還沒有資料）時寫進去的範例內容
+const defaultDb = (): DbSchema => {
   return {
     meta: {
       createdAt: now(),
       updatedAt: now(),
       version: 1,
     },
-    users: [
-      {
-        id: adminId,
-        username: adminUsername,
-        passwordHash: hashPassword(adminPassword),
-        role: 'admin',
-        createdAt: now(),
-      },
-    ],
     categories: [
       {
         id: crypto.randomUUID(),
@@ -1234,7 +1173,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'RTX 5080 高階遊戲主機',
         location: '新北市',
         salePrice: 86900,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Ryzen 7 9800X3D',
         ram: 'DDR5 64GB',
         storage: '2TB Gen4 SSD',
@@ -1250,7 +1189,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'AI 影像生成工作站',
         location: '台北市',
         salePrice: 95800,
-        status: 'shipping',
+        status: 'shipping' as const,
         cpu: 'Core Ultra 9 285K',
         ram: 'DDR5 96GB',
         storage: '4TB Gen4 SSD',
@@ -1266,7 +1205,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '白色雙艙直播主機',
         location: '桃園市',
         salePrice: 51800,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Ryzen 7 7800X3D',
         ram: 'DDR5 32GB',
         storage: '2TB Gen4 SSD',
@@ -1282,7 +1221,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '企業批量設計工作機',
         location: '新竹市',
         salePrice: 47200,
-        status: 'shipping',
+        status: 'shipping' as const,
         cpu: 'Core i7-14700',
         ram: 'DDR5 64GB',
         storage: '2TB Gen4 SSD',
@@ -1298,7 +1237,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '2K 電競高幀率主機',
         location: '台中市',
         salePrice: 38800,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Ryzen 7 7700',
         ram: 'DDR5 32GB',
         storage: '1TB Gen4 SSD',
@@ -1314,7 +1253,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'RTX 4070 Super 遊戲主機',
         location: '台北市',
         salePrice: 53900,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Ryzen 7 7800X3D',
         ram: 'DDR5 32GB',
         storage: '2TB Gen4 SSD',
@@ -1330,7 +1269,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'Intel 創作者剪輯主機',
         location: '台中市',
         salePrice: 62900,
-        status: 'shipping',
+        status: 'shipping' as const,
         cpu: 'Core i7-14700K',
         ram: 'DDR5 64GB',
         storage: '2TB Gen4 SSD',
@@ -1346,7 +1285,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'AMD 創作渲染主機',
         location: '嘉義市',
         salePrice: 67800,
-        status: 'pending',
+        status: 'pending' as const,
         cpu: 'Ryzen 9 7950X',
         ram: 'DDR5 64GB',
         storage: '2TB Gen4 SSD',
@@ -1362,7 +1301,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '白色主題直播主機',
         location: '高雄市',
         salePrice: 32900,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Ryzen 5 7600',
         ram: 'DDR5 32GB',
         storage: '1TB Gen4 SSD',
@@ -1378,7 +1317,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: 'SFF 小型剪輯主機',
         location: '屏東市',
         salePrice: 35900,
-        status: 'delivered',
+        status: 'delivered' as const,
         cpu: 'Core i5-14600K',
         ram: 'DDR5 32GB',
         storage: '1TB Gen4 SSD',
@@ -1394,7 +1333,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '企業批量辦公工作站',
         location: '新竹市',
         salePrice: 28900,
-        status: 'shipping',
+        status: 'shipping' as const,
         cpu: 'Core i5-14500',
         ram: 'DDR5 32GB',
         storage: '1TB Gen4 SSD',
@@ -1410,7 +1349,7 @@ const defaultDb = (adminUsername: string, adminPassword: string): DbSchema => {
         item: '4K 剪輯與建模主機',
         location: '台南市',
         salePrice: 74200,
-        status: 'pending',
+        status: 'pending' as const,
         cpu: 'Core i9-14900K',
         ram: 'DDR5 96GB',
         storage: '4TB Gen4 SSD',
@@ -1882,248 +1821,165 @@ const normalizeDbMeta = (value: unknown, fallback: DbSchema['meta']): DbSchema['
   };
 };
 
-const normalizeDbSnapshot = (
-  value: unknown,
-  adminUsername: string,
-  adminPassword: string,
-): DbSchema => {
-  const fallback = defaultDb(adminUsername, adminPassword);
+const COLLECTION_KEYS = [
+  'categories',
+  'builds',
+  'orders',
+  'blogPosts',
+  'inventories',
+  'procurements',
+  'personalProcurements',
+  'siteContent',
+] as const satisfies readonly (keyof DbSchema)[];
 
-  if (!value || typeof value !== 'object') {
-    return fallback;
-  }
-
-  const raw = value as Record<string, unknown>;
+const STATE_KEYS = ['meta', ...COLLECTION_KEYS] as const;
+// 缺的集合才用範例內容補（範例每次都產生新的 id，只在真的缺的時候算一次）
+const normalizeDbSnapshot = (value: unknown): DbSchema => {
+  const raw = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  let fallbackCache: DbSchema | null = null;
+  const fallback = (): DbSchema => (fallbackCache ??= defaultDb());
 
   return {
-    meta: normalizeDbMeta(raw.meta, fallback.meta),
-    users: hasOwn(raw, 'users') ? normalizeUsers(raw.users) : fallback.users,
-    categories: hasOwn(raw, 'categories') ? normalizeCategories(raw.categories) : fallback.categories,
-    builds: hasOwn(raw, 'builds') ? normalizeBuilds(raw.builds) : fallback.builds,
-    orders: hasOwn(raw, 'orders') ? normalizeOrders(raw.orders) : fallback.orders,
-    blogPosts: hasOwn(raw, 'blogPosts') ? normalizeBlogPosts(raw.blogPosts) : fallback.blogPosts,
-    inventories: hasOwn(raw, 'inventories') ? normalizeInventories(raw.inventories) : fallback.inventories,
-    procurements: hasOwn(raw, 'procurements') ? normalizeProcurements(raw.procurements) : fallback.procurements,
+    meta: normalizeDbMeta(raw.meta, { createdAt: now(), updatedAt: now(), version: 1 }),
+    categories: hasOwn(raw, 'categories') ? normalizeCategories(raw.categories) : fallback().categories,
+    builds: hasOwn(raw, 'builds') ? normalizeBuilds(raw.builds) : fallback().builds,
+    orders: hasOwn(raw, 'orders') ? normalizeOrders(raw.orders) : fallback().orders,
+    blogPosts: hasOwn(raw, 'blogPosts') ? normalizeBlogPosts(raw.blogPosts) : fallback().blogPosts,
+    inventories: hasOwn(raw, 'inventories') ? normalizeInventories(raw.inventories) : fallback().inventories,
+    procurements: hasOwn(raw, 'procurements') ? normalizeProcurements(raw.procurements) : fallback().procurements,
     personalProcurements: hasOwn(raw, 'personalProcurements')
       ? normalizePersonalProcurements(raw.personalProcurements)
-      : fallback.personalProcurements,
-    siteContent: hasOwn(raw, 'siteContent') ? normalizeSiteContent(raw.siteContent) : fallback.siteContent,
+      : fallback().personalProcurements,
+    siteContent: hasOwn(raw, 'siteContent') ? normalizeSiteContent(raw.siteContent) : fallback().siteContent,
   };
 };
 
-const resolvePostgresConnectionString = (): string => {
-  const configured = asString(process.env.DATABASE_URL);
-  if (!configured) {
-    return DEFAULT_POSTGRES_URL;
+/*
+ * 存在 Cloudflare D1（migrations/0001_app_state.sql）：
+ * - app_state：每個集合一列（key = 集合名稱，data = JSON），單列不能超過 D1 的 2MB
+ * - state_versions：寫入時的版本號，用來偵測同時寫入（見 mutateDb）
+ */
+
+// D1 單列上限 2,000,000 bytes，留一點空間
+const MAX_ROW_BYTES = 1_900_000;
+const MAX_WRITE_ATTEMPTS = 5;
+
+let database: D1Database | null = null;
+
+/** 每個請求開始時叫一次（Worker 的 env.DB） */
+export const useDatabase = (db: D1Database): void => {
+  database = db;
+};
+
+const db = (): D1Database => {
+  if (!database) {
+    throw new Error('store: useDatabase() was not called');
   }
-
-  return configured;
+  return database;
 };
 
-const getPostgresPool = (): Pool => {
-  if (pgPool) {
-    return pgPool;
-  }
+interface LoadedState {
+  version: number;
+  // 資料庫裡每一列原本的 JSON 字串，寫回時只寫有變的
+  rows: Map<string, string>;
+  snapshot: DbSchema;
+}
 
-  pgPool = new Pool({
-    connectionString: resolvePostgresConnectionString(),
-  });
+const loadState = async (): Promise<LoadedState> => {
+  // 同一個 batch 是同一個交易，讀到的版本號和資料是一致的
+  const [stateResult, versionResult] = await db().batch([
+    db().prepare('SELECT key, data FROM app_state'),
+    db().prepare('SELECT COALESCE(MAX(version), 0) AS version FROM state_versions'),
+  ]);
 
-  return pgPool;
-};
-
-const runPostgresMigrations = async (client: PoolClient): Promise<void> => {
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS app_state (
-      id SMALLINT PRIMARY KEY CHECK (id = 1),
-      data JSONB NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-};
-
-const withPostgresClient = async <T>(handler: (client: PoolClient) => Promise<T>): Promise<T> => {
-  const pool = getPostgresPool();
-  const client = await pool.connect();
-
-  try {
-    return await handler(client);
-  } finally {
-    client.release();
-  }
-};
-
-const getSeedCredentials = (): { adminUsername: string; adminPassword: string } => {
-  return {
-    adminUsername: process.env.ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin123456',
-  };
-};
-
-const normalizeStoredSnapshot = (value: unknown): DbSchema => {
-  const { adminUsername, adminPassword } = getSeedCredentials();
-  if (typeof value === 'string') {
+  const rows = new Map<string, string>();
+  const raw: Record<string, unknown> = {};
+  for (const row of stateResult.results as { key: string; data: string }[]) {
+    rows.set(row.key, row.data);
     try {
-      return normalizeDbSnapshot(JSON.parse(value), adminUsername, adminPassword);
+      raw[row.key] = JSON.parse(row.data);
     } catch {
-      return normalizeDbSnapshot({}, adminUsername, adminPassword);
+      // 壞掉的那一列當作沒有，normalize 會補預設值
     }
   }
 
-  return normalizeDbSnapshot(value, adminUsername, adminPassword);
+  const version = Number((versionResult.results[0] as { version: number } | undefined)?.version ?? 0);
+  return { version, rows, snapshot: normalizeDbSnapshot(raw) };
 };
 
-const loadLegacyJsonSeed = async (
-  adminUsername: string,
-  adminPassword: string,
-): Promise<DbSchema | null> => {
+const isVersionConflict = (error: unknown): boolean =>
+  error instanceof Error && /UNIQUE constraint failed: state_versions/i.test(error.message);
+
+/** 把 draft 有變的集合寫回去；版本號被別人搶先就回 false */
+const writeState = async (loaded: LoadedState, draft: DbSchema): Promise<boolean> => {
+  const timestamp = draft.meta.updatedAt;
+  const nextVersion = loaded.version + 1;
+  const statements: D1PreparedStatement[] = [
+    db().prepare('INSERT INTO state_versions (version) VALUES (?)').bind(nextVersion),
+    db().prepare('DELETE FROM state_versions WHERE version < ?').bind(nextVersion),
+  ];
+
+  for (const key of STATE_KEYS) {
+    const json = JSON.stringify(draft[key]);
+    if (loaded.rows.get(key) === json) {
+      continue;
+    }
+    if (new TextEncoder().encode(json).byteLength > MAX_ROW_BYTES) {
+      throw new Error(`store: ${key} is larger than ${MAX_ROW_BYTES} bytes`);
+    }
+    statements.push(
+      db()
+        .prepare(
+          `INSERT INTO app_state (key, data, updated_at) VALUES (?, ?, ?)
+           ON CONFLICT (key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
+        )
+        .bind(key, json, timestamp),
+    );
+  }
+
   try {
-    const raw = await fs.readFile(LEGACY_JSON_FILE, 'utf8');
-    const parsed = JSON.parse(raw) as unknown;
-    return normalizeDbSnapshot(parsed, adminUsername, adminPassword);
-  } catch {
-    return null;
-  }
-};
-
-const readStateRow = async (client: PoolClient): Promise<unknown | null> => {
-  const result = await client.query<{ data: unknown }>(
-    'SELECT data FROM app_state WHERE id = 1',
-  );
-
-  if (!result.rowCount || !result.rows[0]) {
-    return null;
-  }
-
-  return result.rows[0].data;
-};
-
-const writeStateRow = async (client: PoolClient, snapshot: DbSchema): Promise<void> => {
-  await client.query(
-    `
-      INSERT INTO app_state (id, data, updated_at)
-      VALUES (1, $1::jsonb, $2::timestamptz)
-      ON CONFLICT (id)
-      DO UPDATE SET
-        data = EXCLUDED.data,
-        updated_at = EXCLUDED.updated_at
-    `,
-    [JSON.stringify(snapshot), snapshot.meta.updatedAt],
-  );
-};
-
-const ensurePostgresStore = async ({
-  adminUsername,
-  adminPassword,
-}: {
-  adminUsername: string;
-  adminPassword: string;
-}): Promise<void> => {
-  await withPostgresClient(async (client) => {
-    await runPostgresMigrations(client);
-
-    const existing = await readStateRow(client);
-    if (existing) {
-      return;
+    await db().batch(statements);
+    return true;
+  } catch (error) {
+    if (isVersionConflict(error)) {
+      return false;
     }
-
-    const legacySeed = await loadLegacyJsonSeed(adminUsername, adminPassword);
-    const seed = legacySeed || defaultDb(adminUsername, adminPassword);
-    const normalized = normalizeDbSnapshot(seed, adminUsername, adminPassword);
-
-    await writeStateRow(client, normalized);
-  });
-};
-
-const ensureStoreReadyForRead = async (): Promise<void> => {
-  const { adminUsername, adminPassword } = getSeedCredentials();
-  await ensurePostgresStore({ adminUsername, adminPassword });
+    throw error;
+  }
 };
 
 export const readDb = async (): Promise<DbSchema> => {
-  await ensureStoreReadyForRead();
-
-  return withPostgresClient(async (client) => {
-    await runPostgresMigrations(client);
-    const stored = await readStateRow(client);
-    if (!stored) {
-      const { adminUsername, adminPassword } = getSeedCredentials();
-      return defaultDb(adminUsername, adminPassword);
-    }
-
-    return normalizeStoredSnapshot(stored);
-  });
-};
-
-export const mutateDb = <T>(mutator: (draft: DbSchema) => T | Promise<T>): Promise<T> => {
-  const next = writeQueue.then(async () => {
-    await ensureStoreReadyForRead();
-
-    return withPostgresClient(async (client) => {
-      await runPostgresMigrations(client);
-      await client.query('BEGIN');
-
-      try {
-        const locked = await client.query<{ data: unknown }>(
-          'SELECT data FROM app_state WHERE id = 1 FOR UPDATE',
-        );
-
-        const current =
-          locked.rowCount && locked.rows[0]
-            ? normalizeStoredSnapshot(locked.rows[0].data)
-            : defaultDb(getSeedCredentials().adminUsername, getSeedCredentials().adminPassword);
-
-        const draft = structuredClone(current);
-        const result = await mutator(draft);
-
-        draft.meta.updatedAt = now();
-        draft.meta.createdAt = asString(draft.meta.createdAt) || draft.meta.updatedAt;
-        draft.meta.version = Number.isInteger(draft.meta.version) && draft.meta.version > 0 ? draft.meta.version : 1;
-
-        await writeStateRow(client, draft);
-        await client.query('COMMIT');
-        return result;
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      }
-    });
-  });
-
-  writeQueue = next.then(
-    () => undefined,
-    () => undefined,
-  );
-
-  return next;
-};
-
-export const initStore = async ({
-  adminUsername,
-  adminPassword,
-}: {
-  adminUsername: string;
-  adminPassword: string;
-}): Promise<void> => {
-  await ensurePostgresStore({ adminUsername, adminPassword });
-
-  const db = await readDb();
-  if (!Array.isArray(db.users) || db.users.length === 0) {
-    await mutateDb((draft) => {
-      draft.users = [
-        {
-          id: crypto.randomUUID(),
-          username: adminUsername,
-          passwordHash: hashPassword(adminPassword),
-          role: 'admin',
-          createdAt: now(),
-        },
-      ];
-    });
+  const loaded = await loadState();
+  if (loaded.rows.size > 0) {
+    return loaded.snapshot;
   }
+
+  // 第一次：把範例內容存起來，之後 id 才會固定
+  await writeState(loaded, loaded.snapshot);
+  return (await loadState()).snapshot;
 };
 
-export const withoutSensitiveUserFields = (user: UserRecord): PublicUser => {
-  const { passwordHash: _passwordHash, ...safeUser } = user;
-  return safeUser;
+/**
+ * 讀出整份資料、交給 mutator 改、再寫回去。
+ * 兩個請求同時改的話，後寫的會發現版本號被搶先，整個重讀重做（最多 MAX_WRITE_ATTEMPTS 次）。
+ */
+export const mutateDb = async <T>(mutator: (draft: DbSchema) => T | Promise<T>): Promise<T> => {
+  for (let attempt = 1; attempt <= MAX_WRITE_ATTEMPTS; attempt += 1) {
+    const loaded = await loadState();
+    const draft = structuredClone(loaded.snapshot);
+    const result = await mutator(draft);
+
+    draft.meta.updatedAt = now();
+    draft.meta.createdAt = asString(draft.meta.createdAt) || draft.meta.updatedAt;
+    draft.meta.version = Number.isInteger(draft.meta.version) && draft.meta.version > 0 ? draft.meta.version : 1;
+
+    if (await writeState(loaded, draft)) {
+      return result;
+    }
+  }
+
+  throw new Error('store: too many concurrent writes, please retry');
 };
+
+/** 匯入／匯出用（scripts/state.mjs 產生的 JSON 走這裡正規化） */
+export const normalizeImportedState = (value: unknown): DbSchema => normalizeDbSnapshot(value);

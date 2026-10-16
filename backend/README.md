@@ -1,168 +1,53 @@
 # NSZPC Backend
 
-NSZPC 後台 API（Node.js + TypeScript），採用 DDD 分層設計，使用 PostgreSQL 作為主要資料庫。
+跑在 Cloudflare Workers 上的 API，資料存在 Cloudflare D1。部署、本機開發、後台登入的設定見[根目錄的 README](../README.md)。
 
 ## 功能範圍
 
-- 認證：管理員登入、查看登入者、修改密碼
-- 公開 API：前台資料（配單、分類、出機、文章、站點內容）
-- 後台 API：各資源 CRUD 與站點內容管理
-- 文件：Swagger UI / OpenAPI JSON
-- 資料儲存：PostgreSQL（`DATABASE_URL`）
+- 前台公開 API：推薦配單、分類、出機紀錄、技術文章、網站內容
+- 後台 API：上面這些加上同行拿貨、公司進貨、庫存的 CRUD，以及網站內容編輯
+- OpenAPI 文件：`/openapi.json`、Swagger UI：`/api-docs`
 
-## DDD 架構
+## 結構（DDD 分層）
 
-`backend/src` 主要分層：
-
-- `domain/`：領域介面與核心模型（例如 `AuthRepository`、`ContentRepository`）
-- `application/`：Use Case / Application Service（登入、CRUD、公開查詢、儀表板）
-- `infrastructure/`：資料持久化與安全實作（PostgreSQL Store、JWT、Password Service）
-- `interfaces/`：介面層與組裝（HTTP service container、server 路由）
-- `lib/`：通用基礎工具（HTTP helper、validation、store、openapi）
-
-## 環境需求
-
-- Node.js（需支援 `--experimental-strip-types`，建議 Node 22+）
-- npm
-- PostgreSQL 14+（建議）
-
-## 用 Docker 啟動本機 PostgreSQL（建議）
-
-在專案根目錄執行：
-
-```bash
-docker compose up -d
-```
-
-預設：
-
-- PostgreSQL：`127.0.0.1:5432`
-  - database: `nszpc`
-  - username: `postgres`
-  - password: `postgres`
-- pgAdmin：`http://localhost:5050`
-  - email: `admin@nszpc.dev`
-  - password: `change-this-password`
-
-關閉服務：
-
-```bash
-docker compose down
-```
-
-## 快速啟動
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run db:init
-npm run dev
-```
-
-啟動後預設網址：
-
-- API Base URL：`http://localhost:3000`
-- Swagger UI：`http://localhost:3000/api-docs`
-- OpenAPI JSON：`http://localhost:3000/openapi.json`
-
-## 環境變數
-
-`.env`（可參考 `.env.example`）：
-
-- `PORT`：API 埠號，預設 `3000`
-- `CORS_ORIGIN`：允許前端來源，預設 `http://localhost:5173`
-- `AUTH_SECRET`：JWT 簽章密鑰（正式環境務必更換）
-- `TOKEN_TTL_HOURS`：登入 token 有效時數，預設 `8`
-- `ADMIN_USERNAME`：初始管理員帳號，預設 `admin`
-- `ADMIN_PASSWORD`：初始管理員密碼
-- `DATABASE_URL`：PostgreSQL 連線字串
-  - 預設：`postgresql://postgres:postgres@127.0.0.1:5432/nszpc`
-
-## 管理員帳號
-
-首次初始化會自動建立管理員：
-
-- 帳號：`ADMIN_USERNAME`
-- 密碼：`ADMIN_PASSWORD`
-
-重設管理員密碼：
-
-```bash
-npm run reset-admin -- <newPassword> [username]
-```
-
-例如：
-
-```bash
-npm run reset-admin -- change-this-password admin
-```
-
-## 可用指令
-
-- `npm run dev`：開發模式（watch）
-- `npm run start`：正式啟動模式
-- `npm run db:init`：初始化 PostgreSQL schema 與初始資料
-- `npm run reset-admin -- <newPassword> [username]`：重設或建立管理員密碼
+| 路徑 | 內容 |
+|---|---|
+| `src/worker.ts` | Worker 入口：路由、後台登入檢查、錯誤處理 |
+| `src/lib/access.ts` | Cloudflare Access 的 JWT 驗證 |
+| `src/lib/store.ts` | D1 讀寫（整份 JSON、版本號防同時寫入）、資料正規化、範例內容 |
+| `src/lib/http.ts` | Response 小工具、API 的安全標頭 |
+| `src/lib/validation.ts` | 所有寫入的輸入檢查 |
+| `src/lib/types.ts` | 資料型別 |
+| `src/lib/openapi.ts` | OpenAPI 文件 |
+| `src/application/*` | 用例（CRUD、公開查詢、網站內容、主控台） |
+| `src/domain/*` | 介面 |
+| `src/infrastructure/*` | 介面的實作（存在 store.ts） |
 
 ## API 概覽
 
-### 公開路由
+### 公開（不用登入）
 
 - `GET /api/health`
 - `GET /api/public/builds`
 - `GET /api/public/categories`
-- `GET /api/public/orders?limit=5`（`1~20`）
+- `GET /api/public/orders?limit=5`（最多 20）
 - `GET /api/public/blog-posts`
 - `GET /api/public/site-content`
 
-### 認證路由
+### 後台（Cloudflare Access）
 
-- `POST /api/auth/login`
-- `GET /api/auth/me`（Bearer Token）
-- `PUT /api/auth/password`（Bearer Token）
-
-### 後台路由（Bearer Token）
-
+- `GET /api/auth/me`：目前登入的人（email）
 - `GET /api/admin/dashboard`
-- `GET /api/admin/site-content`
-- `PUT /api/admin/site-content`
+- `GET|PUT /api/admin/site-content`
+- `GET|POST /api/admin/<collection>`、`GET|PUT|DELETE /api/admin/<collection>/:id`
+  - collection：`builds`、`categories`、`orders`、`blog-posts`、`inventories`、`procurements`、`personal-procurements`
 
-CRUD 資源：
+錯誤格式：`{ "error": { "message": "...", "details": ... } }`；未登入 401、沒有權限 403、Access 還沒設定 503、輸入錯誤 422。
 
-- `builds`
-- `blog-posts`
-- `categories`
-- `orders`
-- `inventories`
-- `procurements`
-- `personal-procurements`
+## 修改時注意
 
-每個資源都支援：
-
-- `GET /api/admin/<resource>`
-- `POST /api/admin/<resource>`
-- `GET /api/admin/<resource>/:id`
-- `PUT /api/admin/<resource>/:id`
-- `DELETE /api/admin/<resource>/:id`
-
-完整 schema 與 request/response 請看 Swagger。
-
-## 初始化與資料遷移
-
-- `npm run db:init` 會建立必要 schema 並初始化資料。
-- 若偵測到 `backend/data/db.json`，首次初始化會自動匯入其資料。
-
-## 安全建議（上線前）
-
-- 更換 `AUTH_SECRET`（高強度隨機字串）
-- 更換 `ADMIN_PASSWORD`
-- `CORS_ORIGIN` 設定為正式前端網域（避免 `*`）
-- `DATABASE_URL` 使用最小權限帳號
-
-## 常見問題
-
-- `401 Unauthorized`：請先登入，並帶 `Authorization: Bearer <token>`。
-- DB 連線失敗：確認 PostgreSQL 已啟動，且 `DATABASE_URL` 正確。
-- CORS 錯誤：確認 `CORS_ORIGIN` 與前端實際網址一致。
-- 登入失敗：檢查 `ADMIN_USERNAME` / `ADMIN_PASSWORD`，或使用 `reset-admin`。
+- 新增或改欄位：同時改 `src/lib/validation.ts`、`src/lib/types.ts`、`store.ts` 的 normalize 函式
+- 新增集合：`src/domain/content/ContentRepository.ts`、`src/application/content/collectionValidators.ts`、`src/lib/types.ts`、
+  `store.ts` 的 `COLLECTION_KEYS`、`scripts/state.mjs` 的 `KEYS`
+- 改了 `wrangler.jsonc`：`npm run cf-typegen`
+- Worker 免費方案每個請求 10ms CPU：不要在請求裡做重的運算（例如密碼雜湊）

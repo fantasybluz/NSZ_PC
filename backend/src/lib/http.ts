@@ -1,97 +1,77 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
+// Worker 的 Response 小工具（錯誤格式跟原本 Node 版一樣：{ error: { message, details? } }）
 
-export const sendJson = (res: ServerResponse, statusCode: number, payload: unknown): void => {
-  const body = JSON.stringify(payload);
+// API 回應都加上的安全標頭；API 不會被當網頁顯示，CSP 給最嚴的
+export const API_SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+};
 
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Content-Length': Buffer.byteLength(body),
+const MAX_BODY_BYTES = 1024 * 1024;
+
+export const json = (status: number, payload: unknown, headers: Record<string, string> = {}): Response =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      ...headers,
+    },
   });
 
-  res.end(body);
-};
-
-export const parseJsonBody = async <T = Record<string, unknown>>(
-  req: IncomingMessage,
-): Promise<T> => {
-  const chunks: Buffer[] = [];
-  let size = 0;
-
-  for await (const chunk of req) {
-    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
-    size += buffer.length;
-
-    if (size > 1024 * 1024) {
-      throw new Error('Request body too large');
-    }
-
-    chunks.push(buffer);
-  }
-
-  if (!chunks.length) {
-    return {} as T;
-  }
-
-  const raw = Buffer.concat(chunks).toString('utf8').trim();
-  if (!raw) {
-    return {} as T;
-  }
-
-  return JSON.parse(raw) as T;
-};
-
-export const sendError = (
-  res: ServerResponse,
-  statusCode: number,
-  message: string,
-  details?: unknown,
-): void => {
-  sendJson(res, statusCode, {
+export const errorResponse = (status: number, message: string, details?: unknown): Response =>
+  json(status, {
     error: {
       message,
       ...(details !== undefined ? { details } : {}),
     },
   });
+
+export const notFound = (): Response => errorResponse(404, 'Resource not found');
+
+export const methodNotAllowed = (methods: string[]): Response => {
+  const response = errorResponse(405, 'Method not allowed');
+  response.headers.set('Allow', methods.join(', '));
+  return response;
 };
 
-export const withCors = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  allowedOrigins: string[],
-): boolean => {
-  const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
-  let allowOrigin = '';
+export class BodyError extends Error {}
 
-  if (allowedOrigins.includes('*')) {
-    allowOrigin = requestOrigin || '*';
-  } else if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-    allowOrigin = requestOrigin;
-  } else if (!requestOrigin && allowedOrigins.length > 0) {
-    allowOrigin = allowedOrigins[0];
+/** 讀 JSON body；只收物件，超過 1MB 或格式不對丟 BodyError */
+export const readJsonObject = async (request: Request): Promise<Record<string, unknown>> => {
+  const declared = Number(request.headers.get('Content-Length') || 0);
+  if (declared > MAX_BODY_BYTES) {
+    throw new BodyError('Request body too large');
   }
 
-  if (allowOrigin) {
-    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
-    res.setHeader('Vary', 'Origin');
+  const raw = (await request.text()).trim();
+  if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
+    throw new BodyError('Request body too large');
+  }
+  if (!raw) {
+    return {};
   }
 
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return true;
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    throw new BodyError('Invalid JSON payload');
   }
-
-  return false;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new BodyError('Invalid JSON payload');
+  }
+  return payload as Record<string, unknown>;
 };
 
-export const notFound = (res: ServerResponse): void => {
-  sendError(res, 404, 'Resource not found');
-};
-
-export const methodNotAllowed = (res: ServerResponse, methods: string[]): void => {
-  res.setHeader('Allow', methods.join(', '));
-  sendError(res, 405, 'Method not allowed');
+export const withHeaders = (response: Response, headers: Record<string, string>): Response => {
+  const next = new Response(response.body, response);
+  for (const [key, value] of Object.entries(headers)) {
+    if (!next.headers.has(key)) {
+      next.headers.set(key, value);
+    }
+  }
+  return next;
 };

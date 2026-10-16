@@ -4,11 +4,9 @@ import type {
   CategoryInput,
   InventoryCategory,
   InventoryInput,
-  LoginInput,
   MutablePayload,
   OrderInput,
   OrderStatus,
-  PasswordChangeInput,
   PersonalProcurementInput,
   ProcurementInput,
   SiteContentInput,
@@ -217,27 +215,6 @@ const parseBlogSections = (
     .filter(
       (item): item is { heading: string; paragraphs: string[]; bullets: string[] } => item !== null,
     );
-};
-
-export const validateLoginInput = (payload: MutablePayload): ValidationResult<LoginInput> => {
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(payload.username)) {
-    errors.push('username is required');
-  }
-
-  if (!isNonEmptyString(payload.password)) {
-    errors.push('password is required');
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    value: {
-      username: asString(payload.username).trim(),
-      password: asString(payload.password),
-    },
-  };
 };
 
 export const validateBuildInput = (payload: MutablePayload): ValidationResult<BuildInput> => {
@@ -532,6 +509,8 @@ export const validateOrderInput = (payload: MutablePayload): ValidationResult<Or
 
   const rawStatus = isNonEmptyString(payload.status) ? payload.status.trim().toLowerCase() : 'pending';
   const status = rawStatus as OrderStatus;
+  // 出機照片（原本這裡少宣告 images，新增／修改出機紀錄會丟 ReferenceError）
+  const images = uniqueTrimmedStrings(payload.images);
   if (!ORDER_STATUS.includes(status)) {
     errors.push(`status must be one of: ${ORDER_STATUS.join(', ')}`);
   }
@@ -925,31 +904,6 @@ export const validateSiteContentInput = (
       contactAddress: asString(payload.contactAddress).trim(),
       contactPhone: asString(payload.contactPhone).trim(),
       contactLine: asString(payload.contactLine).trim(),
-    },
-  };
-};
-
-export const validatePasswordChangeInput = (
-  payload: MutablePayload,
-): ValidationResult<PasswordChangeInput> => {
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(payload.currentPassword)) {
-    errors.push('currentPassword is required');
-  }
-
-  if (!isNonEmptyString(payload.newPassword)) {
-    errors.push('newPassword is required');
-  } else if (payload.newPassword.trim().length < 8) {
-    errors.push('newPassword must be at least 8 characters');
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    value: {
-      currentPassword: asString(payload.currentPassword),
-      newPassword: asString(payload.newPassword),
     },
   };
 };

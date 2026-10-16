@@ -1,0 +1,38 @@
+{
+  // NSZPC 部署成一個 Cloudflare Worker：前端（frontend/dist）當靜態檔案，/api 交給 backend/src/worker.ts
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nszpc",
+  "main": "backend/src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "frontend/dist",
+    // 網址不是檔案（例如 /categories/item/xxx）就回 index.html，交給前端的路由
+    "not_found_handling": "single-page-application",
+    // API 和 API 文件先給 Worker，其他都是前端的檔案
+    "run_worker_first": ["/api/*", "/openapi.json", "/api-docs", "/api-docs/*", "/docs"]
+  },
+  // 先用 bluz.dev 的子網域給客戶 demo；客戶買了自己的網域再加一筆、換掉這筆
+  "routes": [{ "pattern": "nszpc.bluz.dev", "custom_domain": true }],
+  // 只留正式網址：workers.dev 和預覽網址前面沒有 Cloudflare Access
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    // 後台登入用 Cloudflare Access（見 README「後台登入」）
+    "ACCESS_TEAM_DOMAIN": "old-fog-9482.cloudflareaccess.com",
+    // Access 應用的 Application Audience (AUD) Tag；沒設的話後台 API 一律拒絕
+    "ACCESS_AUD": "",
+    // 可以進後台的 email，逗號分隔
+    "ADMIN_EMAILS": "fantasybluz@gmail.com,bluzstudio2020@gmail.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nszpc",
+      "database_id": "84acbf4b-9d3c-48ce-a9e1-562d68f5391d",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

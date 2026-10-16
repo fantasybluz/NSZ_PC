@@ -9,36 +9,21 @@
 
 ## 2. 啟動方式
 
-1. 在專案根目錄啟動資料庫
+網站跑在 Cloudflare Workers + D1，正式網址：<https://nszpc.bluz.dev>（給客戶 demo 用）。
+
+本機開發（在 repo 根目錄，詳見根目錄 README）：
 
 ```bash
-docker compose up -d
+npm install && npm --prefix frontend install
+cp .dev.vars.example .dev.vars
+npm run dev:api   # API + 本機 D1：http://localhost:8787
+npm run dev:web   # 前台：http://localhost:5173
 ```
 
-2. 啟動 backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run db:init
-npm run dev
-```
-
-3. 啟動 frontend
-
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-4. 常用網址
-- 前台：`http://localhost:5173`
-- 後端 API：`http://localhost:3000`
-- Swagger：`http://localhost:3000/api-docs`
-- pgAdmin：`http://localhost:5050`
+常用網址：
+- 前台：`/`
+- 後台：`/admin`
+- Swagger：`/api-docs`
 
 ## 3. 前台功能用法
 
@@ -88,8 +73,9 @@ npm run dev
 
 ### 4.1 登入
 
-- 入口：`/admin/login`
-- 預設帳號密碼使用 `backend/.env` 的 `ADMIN_USERNAME` / `ADMIN_PASSWORD`。
+- 入口：`/admin`（選單的「後台登入」）
+- 由 Cloudflare Access 登入：輸入管理員的 email，收信拿驗證碼（或用 Google 登入），只有指定的 email 能進
+- 登出：後台的「登出」或「切換帳號」
 
 ### 4.2 後台主控台 `/admin`
 

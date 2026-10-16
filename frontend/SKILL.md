@@ -5,8 +5,7 @@ This is the React + Vite frontend that includes the public site and the admin UI
 
 Quick Start
 1. Install deps: `npm install`
-2. Create env: `cp .env.example .env`
-3. Run dev server: `npm run dev`
+2. From the repo root, run `npm run dev:api` (Worker + local D1 on 8787) and `npm run dev:web` (Vite proxies `/api` to 8787)
 
 Key Commands
 - `npm run dev`: Vite dev server
@@ -23,7 +22,7 @@ Core Routes
 - `/orders/item/:id`: Order detail
 - `/blog`: Blog list
 - `/blog/:slug`: Blog detail
-- `/admin/login`: Admin login
+- `/admin/login`: Legacy URL, redirects to `/admin` (Cloudflare Access handles login)
 - `/admin`: Admin dashboard
 - `/admin/blog`: Admin blog manager
 
@@ -37,7 +36,8 @@ Core Paths
 Data Sources
 - Public data is fetched from backend `GET /api/public/*`.
 - Admin data is fetched from `GET/POST/PUT/DELETE /api/admin/*`.
-- Auth uses `POST /api/auth/login` and stores token in localStorage.
+- Admin auth is Cloudflare Access (cookie set by Cloudflare); the frontend stores no token. Logout is `/cdn-cgi/access/logout`.
+- API calls use same-origin relative paths (`getApiBaseUrl()` returns '' unless `VITE_API_BASE_URL` is set).
 
 Conventions
 - Use `src/lib/seo.ts` for page SEO.

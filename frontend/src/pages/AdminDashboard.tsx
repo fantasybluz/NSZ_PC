@@ -1,7 +1,14 @@
 import React from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
-import { clearAuth, getApiBaseUrl, getStoredToken, toApiErrorMessage } from '../lib/adminAuth';
+import {
+  ADMIN_LOGOUT_URL,
+  clearAuth,
+  getApiBaseUrl,
+  getStoredToken,
+  logoutAdmin,
+  toApiErrorMessage,
+} from '../lib/adminAuth';
 import { getCategoryDetailPath } from '../lib/publicCategories';
 import { getOrderDetailPath } from '../lib/publicOrders';
 import {
@@ -92,7 +99,6 @@ import {
 } from './adminDashboard/shared';
 
 const AdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [loginUsername, setLoginUsername] = React.useState('');
@@ -689,8 +695,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   const handleLogout = () => {
-    clearAuth();
-    navigate('/admin/login', { replace: true });
+    logoutAdmin();
   };
 
   const handleBuildFieldChange = <K extends keyof BuildFormState>(
@@ -3947,10 +3952,10 @@ const AdminDashboard: React.FC = () => {
             技術文章管理
             <i className="fa-solid fa-arrow-right" />
           </Link>
-          <Link to="/admin/login" className="text-link">
+          <a href={ADMIN_LOGOUT_URL} className="text-link">
             切換帳號
             <i className="fa-solid fa-arrow-right" />
-          </Link>
+          </a>
           <Link to="/" className="text-link">
             回首頁
             <i className="fa-solid fa-arrow-right" />

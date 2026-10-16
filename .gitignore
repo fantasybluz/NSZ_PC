@@ -42,3 +42,11 @@ pnpm-debug.log*
 
 # local scratch files
 主要分類管理
+
+# Cloudflare（wrangler）
+.wrangler/
+.dev.vars*
+!.dev.vars.example
+
+# 舊 Node 版的資料檔（有進貨成本，不放進公開的 repo）；要匯入用 npm run state:import
+backend/data/

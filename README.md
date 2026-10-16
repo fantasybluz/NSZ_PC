@@ -1,112 +1,117 @@
-# NSZPC Web Monorepo
+# NSZPC Web
 
-NSZPC 星辰電腦網站專案，包含：
+NSZPC 星辰電腦網站：
 
-- 前台網站（分類總覽、近期出機、技術文章）
-- 後台管理（推薦配單、分類、出機紀錄、文章、站點內容）
-- 後端 API（Node.js + TypeScript + DDD 分層）
-- PostgreSQL 資料庫
+- 前台：首頁、分類總覽、推薦配單、近期出機、技術文章
+- 後台：網站內容、推薦配單、分類、出機紀錄、文章、同行拿貨、公司進貨、庫存
 
-## 技術棧
+目前網址（給客戶 demo 用）：<https://nszpc.bluz.dev>
 
-- Frontend: `React 19` + `TypeScript` + `Vite` + `React Router`
-- Backend: `Node.js` + `TypeScript`（`--experimental-strip-types`）
-- Data: `PostgreSQL`
+## 架構
 
-## 專案結構
+整個網站是一個 Cloudflare Worker（免費方案就夠用）：
 
 ```text
-nszpc_web/
-├─ frontend/      # 前台與後台管理介面
-├─ backend/       # API + DDD 架構 + PostgreSQL Store
-├─ package.json   # 根目錄（目前僅保留最小設定）
-└─ README.md
+瀏覽器 ──▶ Cloudflare ──┬─ /api/*、/openapi.json、/api-docs ─▶ Worker（backend/src/worker.ts）─▶ D1（資料）
+                        │      └─ /api/admin/*、/api/auth/me：Cloudflare Access 登入 + Worker 再驗一次 JWT
+                        └─ 其他網址 ─▶ 前端靜態檔案（frontend/dist，React SPA）
 ```
 
-## 環境需求
+| 部分 | 技術 | 位置 |
+|---|---|---|
+| 前端 | React 19 + TypeScript + Vite + React Router | `frontend/` |
+| API | TypeScript，DDD 分層（application / domain / infrastructure） | `backend/src/` |
+| 資料 | Cloudflare D1（SQLite） | `migrations/`、`backend/src/lib/store.ts` |
+| 後台登入 | Cloudflare Access | `backend/src/lib/access.ts` |
+| 部署設定 | Wrangler | `wrangler.jsonc` |
 
-- Node.js 22+（建議）
-- npm
-- PostgreSQL 14+（建議）
+### 資料怎麼存
 
-## 用 Docker 啟動資料庫（建議）
+所有內容是一份 JSON（跟原本 PostgreSQL 版的 `app_state` 一樣），存在 D1 的 `app_state` 表，每個集合一列
+（`categories`、`builds`、`orders`、`blogPosts`、`inventories`、`procurements`、`personalProcurements`、`siteContent`、`meta`）。
+
+- 每次寫入是「整份讀出來 → 改 → 只寫回有變的集合」，同一個 D1 batch（交易）裡插入新的版本號（`state_versions`）。
+  兩個人同時改時，後寫的會撞到版本號、整個重讀重做，不會蓋掉對方的修改
+- D1 單列上限 2MB：單一集合（例如文章）超過約 1.9MB 會寫入失敗，到時候要把那個集合拆成獨立的表
+- 第一次啟動、資料庫是空的時候，會寫入 `store.ts` 裡的範例內容
+
+### 後台登入（Cloudflare Access）
+
+網站本身不存帳號密碼。進 `/admin` 時 Cloudflare 會先要求登入，只放行 Access 規則裡的 email；
+通過後 Cloudflare 在請求加上 `Cf-Access-Jwt-Assertion`（JWT），Worker 再自己驗一次：
+
+- RS256 簽章（公鑰從 `https://<team>/cdn-cgi/access/certs` 抓、快取）
+- `iss` 是自己的 team domain、`aud` 是這個 Access 應用的 AUD tag、沒過期
+- email 在 `ADMIN_EMAILS`（`wrangler.jsonc`）
+
+所以就算 Access 的設定被改錯、拿掉，沒有正確 JWT 的請求還是進不了後台 API。`ACCESS_AUD` 沒設的話後台 API 一律回 503。
+
+> 原本用帳號密碼（scrypt）登入：Workers 免費方案每個請求只有 10ms CPU，scrypt 會超過，所以改成 Access。
+
+## 第一次設定
+
+需要 Node.js 22+、Cloudflare 帳號（`npx wrangler login`）。
 
 ```bash
-docker compose up -d
-```
-
-預設會啟動：
-
-- PostgreSQL：`127.0.0.1:5432`（db: `nszpc`, user: `postgres`, pass: `postgres`）
-- pgAdmin：`http://localhost:5050`
-  - email: `admin@nszpc.dev`
-  - password: `change-this-password`
-
-停止：
-
-```bash
-docker compose down
-```
-
-## 本機快速啟動
-
-1. 啟動後端
-
-```bash
-cd backend
 npm install
-cp .env.example .env
-npm run db:init
-npm run dev
+npm --prefix frontend install
 ```
 
-2. 啟動前端
+D1 資料庫 `nszpc` 已經建好（`wrangler.jsonc` 的 `database_id`）。換帳號的話：`npx wrangler d1 create nszpc`，把新的 id 填進去。
+
+### Cloudflare Access（後台登入）
+
+在 Cloudflare 後台 › Zero Trust › Access › Applications：
+
+1. **Add an application** › **Self-hosted**
+2. Application name：`nszpc-admin`；Session duration 照預設
+3. **Public hostname** 加三筆（網域都是 `nszpc.bluz.dev`）：path 分別填 `admin`、`api/admin`、`api/auth`
+4. **Policy**：Action 選 Allow，Include › Emails 填可以進後台的 email
+5. 存好後在應用的 Overview 複製 **Application Audience (AUD) Tag**，填進 `wrangler.jsonc` 的 `ACCESS_AUD`，再 `npm run deploy`
+
+要加減管理員：Access 的 Policy 和 `wrangler.jsonc` 的 `ADMIN_EMAILS` 兩邊都要改。
+
+## 本機開發
 
 ```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
+cp .dev.vars.example .dev.vars   # 本機不經過 Access，直接當 DEV_ADMIN_EMAIL 登入後台（只在 localhost 有效）
+npm run dev:api                  # API + 本機 D1，http://localhost:8787
+npm run dev:web                  # 前端，http://localhost:5173（/api 代理到 8787）
 ```
 
-## 開發網址
+本機資料庫一開始是空的（會寫入範例內容）；要用正式環境的資料：
 
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
-- Swagger UI: `http://localhost:3000/api-docs`
-- OpenAPI JSON: `http://localhost:3000/openapi.json`
+```bash
+npm run state:export -- --remote > backup.json
+npm run state:import -- backup.json
+```
 
-## 預設管理員
+## 指令
 
-- 帳號：`ADMIN_USERNAME`（預設 `admin`）
-- 密碼：`ADMIN_PASSWORD`（請在 `backend/.env` 自行設定）
+| 指令 | 做什麼 |
+|---|---|
+| `npm run check` | 後端型別檢查、前端 lint、前端 build |
+| `npm run deploy` | `check` → 套用 D1 migration → 部署 Worker（前端一起上傳） |
+| `npm run state:export -- [--remote] > file.json` | 匯出網站資料（備份） |
+| `npm run state:import -- file.json [--remote]` | 用 JSON 蓋掉網站資料（舊版 `backend/data/db.json` 格式也可以，`users` 會略過） |
+| `npm run cf-typegen` | 改 `wrangler.jsonc` 後重新產生 Workers 型別（`worker-configuration.d.ts`） |
 
-## 環境變數
+## 換成客戶自己的網域
 
-- 前端：`frontend/.env`
-  - `VITE_API_BASE_URL=http://localhost:3000`
-- 後端：`backend/.env`
-  - `PORT`
-  - `CORS_ORIGIN`
-  - `AUTH_SECRET`
-  - `TOKEN_TTL_HOURS`
-  - `ADMIN_USERNAME`
-  - `ADMIN_PASSWORD`
-  - `DATABASE_URL`
+1. 網域加進 Cloudflare（同一個帳號）
+2. `wrangler.jsonc` 的 `routes` 改成新網域（`{ "pattern": "example.com", "custom_domain": true }`）
+3. Access 應用的三個 Public hostname 換成新網域，`npm run deploy`
 
-## 部署建議
+## 安全
 
-- 前端：部署靜態檔（Vercel / Cloudflare Pages / Netlify）
-- 後端：獨立 Node 服務（Render / Fly / Railway）
-- 資料庫：託管 PostgreSQL（Neon / Supabase / Render Postgres / RDS）
-- 正式環境請至少調整：
-  - `AUTH_SECRET` 為高強度隨機字串
-  - `ADMIN_PASSWORD` 非預設值
-  - `CORS_ORIGIN` 指向正式前端網域
+- 後台 API：Cloudflare Access + Worker 驗 JWT（見上面）
+- API 回應：`X-Content-Type-Options`、`X-Frame-Options: DENY`、HSTS、最嚴格的 CSP（`backend/src/lib/http.ts`）
+- 前端靜態檔案：CSP 只開 Google Fonts、YouTube / Google 地圖 iframe、https 圖片（`frontend/public/_headers`）
+- `workers.dev` 和預覽網址關掉，只留正式網址
 
-## 進一步文件
+## 文件
 
-- 前端說明：[frontend/README.md](frontend/README.md)
-- 後端說明：[backend/README.md](backend/README.md)
-- 功能用法文件：[docs/feature-usage.md](docs/feature-usage.md)
-- 資料庫設計文件：[docs/database-design.md](docs/database-design.md)
+- 功能用法：[docs/feature-usage.md](docs/feature-usage.md)
+- 資料設計：[docs/database-design.md](docs/database-design.md)
+- 前端：[frontend/README.md](frontend/README.md)
+- 後端：[backend/README.md](backend/README.md)

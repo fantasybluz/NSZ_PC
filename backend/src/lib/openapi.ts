@@ -44,7 +44,8 @@ const idPathParam = {
   schema: { type: 'string', format: 'uuid' },
 };
 
-const authSecurity = [{ BearerAuth: [] }];
+// 後台 API 由 Cloudflare Access 保護：通過 Access 的請求會帶 Cf-Access-Jwt-Assertion
+const authSecurity = [{ CloudflareAccess: [] }];
 
 export const getOpenApiDocument = (origin: string): OpenApiObject => ({
   openapi: '3.0.3',
@@ -86,32 +87,6 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
         },
       },
     },
-    '/api/auth/login': {
-      post: {
-        tags: ['Auth'],
-        summary: 'Admin login',
-        requestBody: {
-          required: true,
-          content: jsonContent({
-            $ref: '#/components/schemas/LoginRequest',
-          }),
-        },
-        responses: {
-          200: {
-            description: 'Login success',
-            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/LoginResult' })),
-          },
-          401: {
-            description: 'Invalid credentials',
-            content: jsonContent(errorEnvelope),
-          },
-          422: {
-            description: 'Validation failed',
-            content: jsonContent(errorEnvelope),
-          },
-        },
-      },
-    },
     '/api/auth/me': {
       get: {
         tags: ['Auth'],
@@ -124,41 +99,6 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
           },
           401: {
             description: 'Unauthorized',
-            content: jsonContent(errorEnvelope),
-          },
-        },
-      },
-    },
-    '/api/auth/password': {
-      put: {
-        tags: ['Auth'],
-        summary: 'Change admin password',
-        security: authSecurity,
-        requestBody: {
-          required: true,
-          content: jsonContent({
-            $ref: '#/components/schemas/PasswordChangeRequest',
-          }),
-        },
-        responses: {
-          200: {
-            description: 'Password updated',
-            content: jsonContent(
-              dataEnvelope({
-                type: 'object',
-                properties: {
-                  success: { type: 'boolean', example: true },
-                },
-                required: ['success'],
-              }),
-            ),
-          },
-          401: {
-            description: 'Unauthorized / current password mismatch',
-            content: jsonContent(errorEnvelope),
-          },
-          422: {
-            description: 'Validation failed',
             content: jsonContent(errorEnvelope),
           },
         },
@@ -845,47 +785,23 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
   },
   components: {
     securitySchemes: {
-      BearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'Token',
+      CloudflareAccess: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'Cf-Access-Jwt-Assertion',
+        description: 'Cloudflare Access 加上的 JWT；瀏覽器登入 Access 後由 Cloudflare 自動帶上',
       },
     },
     schemas: {
       User: {
         type: 'object',
         properties: {
-          id: { type: 'string', format: 'uuid' },
-          username: { type: 'string' },
+          id: { type: 'string', format: 'email' },
+          username: { type: 'string', format: 'email' },
           role: { type: 'string', example: 'admin' },
-          createdAt: { type: 'string', format: 'date-time' },
+          createdAt: { type: 'string', description: '固定是空字串（帳號由 Cloudflare Access 管理）' },
         },
         required: ['id', 'username', 'role', 'createdAt'],
-      },
-      LoginRequest: {
-        type: 'object',
-        properties: {
-          username: { type: 'string' },
-          password: { type: 'string' },
-        },
-        required: ['username', 'password'],
-      },
-      LoginResult: {
-        type: 'object',
-        properties: {
-          token: { type: 'string' },
-          expiresInHours: { type: 'integer', example: 8 },
-          user: { $ref: '#/components/schemas/User' },
-        },
-        required: ['token', 'expiresInHours', 'user'],
-      },
-      PasswordChangeRequest: {
-        type: 'object',
-        properties: {
-          currentPassword: { type: 'string' },
-          newPassword: { type: 'string', minLength: 8 },
-        },
-        required: ['currentPassword', 'newPassword'],
       },
       Build: {
         type: 'object',

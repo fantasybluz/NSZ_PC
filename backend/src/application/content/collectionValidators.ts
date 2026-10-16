@@ -13,11 +13,11 @@ import {
 export type CollectionValidator = (payload: MutablePayload) => ValidationResult<Record<string, unknown>>;
 
 export const collectionValidators: Record<ManagedCollection, CollectionValidator> = {
-  builds: validateBuildInput as CollectionValidator,
-  blogPosts: validateBlogPostInput as CollectionValidator,
-  categories: validateCategoryInput as CollectionValidator,
-  orders: validateOrderInput as CollectionValidator,
-  inventories: validateInventoryInput as CollectionValidator,
-  procurements: validateProcurementInput as CollectionValidator,
-  personalProcurements: validatePersonalProcurementInput as CollectionValidator,
+  builds: validateBuildInput as unknown as CollectionValidator,
+  blogPosts: validateBlogPostInput as unknown as CollectionValidator,
+  categories: validateCategoryInput as unknown as CollectionValidator,
+  orders: validateOrderInput as unknown as CollectionValidator,
+  inventories: validateInventoryInput as unknown as CollectionValidator,
+  procurements: validateProcurementInput as unknown as CollectionValidator,
+  personalProcurements: validatePersonalProcurementInput as unknown as CollectionValidator,
 };

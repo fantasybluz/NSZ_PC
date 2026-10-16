@@ -17,7 +17,6 @@ export interface DashboardOverview {
     builds: number;
     categories: number;
     orders: number;
-    users: number;
   };
   recentOrders: OrderRecord[];
   lastUpdatedAt: string;

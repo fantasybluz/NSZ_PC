@@ -1,5 +1,24 @@
 {
+  "name": "nszpc-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "wrangler d1 migrations apply nszpc --local && wrangler dev --local-upstream localhost",
+    "dev:web": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "typecheck": "tsc -p backend/tsconfig.json",
+    "lint": "npm --prefix frontend run lint",
+    "check": "npm run typecheck && npm run lint && npm run build",
+    "deploy": "npm run check && wrangler d1 migrations apply nszpc --remote && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "state:export": "node scripts/state.mjs export",
+    "state:import": "node scripts/state.mjs import"
+  },
   "dependencies": {
     "bootstrap": "^5.3.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.151.0"
   }
 }

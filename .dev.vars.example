@@ -1,0 +1,3 @@
+# 本機開發（npm run dev:api）用：localhost 上不經過 Cloudflare Access，直接當這個 email 登入後台
+# 複製成 .dev.vars 再改；正式環境不會讀這個檔案，而且只有 localhost 才有效
+DEV_ADMIN_EMAIL=fantasybluz@gmail.com

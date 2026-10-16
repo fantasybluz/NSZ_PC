@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 import {
-  clearAuth,
+  logoutAdmin,
   getApiBaseUrl,
   getStoredToken,
   toApiErrorMessage,
@@ -207,7 +207,6 @@ const formatDate = (value: string): string => {
 };
 
 const AdminBlogManager: React.FC = () => {
-  const navigate = useNavigate();
   const token = getStoredToken();
   const apiBaseUrl = getApiBaseUrl();
 
@@ -304,8 +303,7 @@ const AdminBlogManager: React.FC = () => {
   }
 
   const handleLogout = () => {
-    clearAuth();
-    navigate('/admin/login', { replace: true });
+    logoutAdmin();
   };
 
   const openCreateModal = () => {

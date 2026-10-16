@@ -1,14 +1,12 @@
 export type OrderStatus = 'pending' | 'shipping' | 'delivered' | 'cancelled';
 
-export interface UserRecord {
+// 後台登入的人（Cloudflare Access 驗過的 email）；欄位跟前端的 AdminUser 一樣
+export interface PublicUser {
   id: string;
   username: string;
-  passwordHash: string;
-  role: 'admin' | string;
+  role: 'admin';
   createdAt: string;
 }
-
-export type PublicUser = Omit<UserRecord, 'passwordHash'>;
 
 export interface BuildRecord {
   id: string;
@@ -230,7 +228,6 @@ export interface DbMeta {
 
 export interface DbSchema {
   meta: DbMeta;
-  users: UserRecord[];
   categories: CategoryRecord[];
   builds: BuildRecord[];
   orders: OrderRecord[];
@@ -256,11 +253,6 @@ export interface ValidationResult<T> {
   ok: boolean;
   errors: string[];
   value: T;
-}
-
-export interface LoginInput {
-  username: string;
-  password: string;
 }
 
 export interface BuildInput {
@@ -400,7 +392,3 @@ export interface PersonalProcurementInput {
   note: string;
 }
 
-export interface PasswordChangeInput {
-  currentPassword: string;
-  newPassword: string;
-}

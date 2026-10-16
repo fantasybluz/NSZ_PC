@@ -8,14 +8,6 @@ export interface AdminUser {
   createdAt: string;
 }
 
-export interface LoginResponse {
-  data: {
-    token: string;
-    expiresInHours: number;
-    user: AdminUser;
-  };
-}
-
 interface ErrorResponse {
   error?: {
     message?: string;
@@ -23,40 +15,32 @@ interface ErrorResponse {
   };
 }
 
+// 前端和 API 在同一個網址（Cloudflare Worker），預設用相對路徑；
+// 要連別的後端才設 VITE_API_BASE_URL
 export const getApiBaseUrl = (): string => {
   const fromEnv = import.meta.env.VITE_API_BASE_URL as string | undefined;
   if (fromEnv && fromEnv.trim()) {
     return fromEnv.trim().replace(/\/$/, '');
   }
 
-  return 'http://localhost:3000';
+  return '';
 };
 
-export const getStoredToken = (): string => {
-  return localStorage.getItem(ADMIN_TOKEN_KEY) || '';
-};
+// 後台登入交給 Cloudflare Access：進 /admin 時 Cloudflare 先要你登入，之後瀏覽器帶著 Access 的 cookie，
+// API 那邊驗 Access 加上的 JWT（backend/src/lib/access.ts）。前端不再存 token，
+// 下面幾個函式留著原本的名字，讓後台頁面不用大改。
+const ACCESS_SESSION = 'cloudflare-access';
 
-export const getStoredUser = (): AdminUser | null => {
-  const raw = localStorage.getItem(ADMIN_USER_KEY);
-  if (!raw) {
-    return null;
-  }
+/** Cloudflare Access 的登出網址 */
+export const ADMIN_LOGOUT_URL = '/cdn-cgi/access/logout';
 
-  try {
-    return JSON.parse(raw) as AdminUser;
-  } catch {
-    return null;
-  }
-};
+export const getStoredToken = (): string => ACCESS_SESSION;
 
-export const storeAuth = (token: string, user: AdminUser): void => {
-  localStorage.setItem(ADMIN_TOKEN_KEY, token);
-  localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(user));
-};
+export const clearAuth = (): void => {};
 
-export const clearAuth = (): void => {
-  localStorage.removeItem(ADMIN_TOKEN_KEY);
-  localStorage.removeItem(ADMIN_USER_KEY);
+/** 登出 Cloudflare Access（整頁跳轉） */
+export const logoutAdmin = (): void => {
+  window.location.assign(ADMIN_LOGOUT_URL);
 };
 
 export const toApiErrorMessage = (payload: unknown, fallback: string): string => {

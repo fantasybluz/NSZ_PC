@@ -17,7 +17,6 @@ export class StoreContentRepository implements ContentRepository {
         builds: db.builds.length,
         categories: db.categories.length,
         orders: db.orders.length,
-        users: db.users.length,
       },
       recentOrders: db.orders.slice(0, 5),
       lastUpdatedAt: db.meta.updatedAt,

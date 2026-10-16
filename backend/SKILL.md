@@ -1,24 +1,22 @@
 # Backend Skill Guide
 
 Purpose
-This service is a Node.js + TypeScript backend that exposes public APIs, admin CRUD APIs, and auth, using PostgreSQL as the datastore.
+This is a Cloudflare Worker (TypeScript) that exposes public APIs and admin CRUD APIs, storing data in Cloudflare D1. Admin auth is Cloudflare Access; see the root README.
 
 Quick Start
-1. Start PostgreSQL (Docker is recommended).
-2. Install deps: `npm install`
-3. Create env: `cp .env.example .env`
-4. Initialize DB: `npm run db:init`
-5. Run server: `npm run dev`
+1. From the repo root: `npm install`
+2. `cp .dev.vars.example .dev.vars` (local admin login without Access, localhost only)
+3. `npm run dev:api` (applies local D1 migrations, runs `wrangler dev` on 8787)
 
 Key Commands
-- `npm run dev`: run with watch mode
-- `npm run start`: run without watch
-- `npm run db:init`: initialize schema and seed data
-- `npm run reset-admin -- <newPassword> [username]`: reset admin password
+- `npm run typecheck` (root): type-check the Worker
+- `npm run deploy` (root): check, apply D1 migrations, deploy
+- `npm run state:export|state:import` (root): back up / restore all site data as JSON
 
 Core Paths
-- `src/server.ts`: HTTP server, routing, OpenAPI
-- `src/lib/store.ts`: PostgreSQL access, JSONB snapshot store
+- `src/worker.ts`: Worker entry, routing, admin auth check
+- `src/lib/access.ts`: Cloudflare Access JWT verification
+- `src/lib/store.ts`: D1 access (JSON snapshot, one row per collection, version-checked writes)
 - `src/lib/types.ts`: domain data types
 - `src/lib/validation.ts`: input validation rules
 - `src/application/*`: use cases
@@ -26,15 +24,14 @@ Core Paths
 - `src/infrastructure/*`: persistence and security implementations
 
 Data Model
-The current implementation stores the whole app state in a single JSONB row (`app_state`).
+All app state is one JSON document stored in D1 `app_state`, one row per collection (D1 rows are capped at 2MB).
 See `docs/database-design.md` for the current design and the proposed normalized schema.
 
 Environment
-- `DATABASE_URL`: Postgres connection string
-- `PORT`: server port (default 3000)
-- `CORS_ORIGIN`: frontend origin
-- `AUTH_SECRET`, `TOKEN_TTL_HOURS`
-- `ADMIN_USERNAME`, `ADMIN_PASSWORD`
+- `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`: Cloudflare Access team and application AUD tag (`wrangler.jsonc`)
+- `ADMIN_EMAILS`: comma-separated admin emails
+- `DEV_ADMIN_EMAIL`: local dev only (`.dev.vars`), honored on localhost only
+- Free plan: 10ms CPU per request, so avoid heavy work such as password hashing
 
 Conventions
 - Validate all write inputs in `src/lib/validation.ts`.

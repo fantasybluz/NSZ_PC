@@ -1,6 +1,8 @@
 # NSZPC Database Design
 
-本文件說明 NSZPC 專案目前的 PostgreSQL 資料儲存設計，並提供下一階段可落地的正規化資料表方案。
+本文件說明 NSZPC 專案目前的資料儲存設計（Cloudflare D1），並提供下一階段可落地的正規化資料表方案。
+
+> 2026-10：從 PostgreSQL 搬到 Cloudflare D1（SQLite）。第 2 節是目前的實作；第 5 節之後的 DDL 是當初為 PostgreSQL 寫的，搬到 D1 時要把 JSONB、TIMESTAMPTZ 等型別換成 SQLite 的 TEXT / INTEGER。
 
 ## 1. 設計目標
 
@@ -10,21 +12,26 @@
 
 ## 2. 目前實作（v1）
 
-目前 backend 使用 PostgreSQL，但採用「單表 + JSONB Snapshot」模式。
+目前 backend 使用 Cloudflare D1，採用「整份 JSON Snapshot」模式，每個集合存一列（D1 單列上限 2MB）。
 
-實際資料表：
+實際資料表（`migrations/0001_app_state.sql`）：
 
 ```sql
-CREATE TABLE IF NOT EXISTS app_state (
-  id SMALLINT PRIMARY KEY CHECK (id = 1),
-  data JSONB NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE app_state (
+  key TEXT PRIMARY KEY,      -- 集合名稱
+  data TEXT NOT NULL,        -- 那個集合的 JSON
+  updated_at TEXT NOT NULL
+);
+
+-- 寫入時在同一個交易插入「讀到的版本 + 1」，同時寫入的後一個會撞主鍵、重讀重做
+CREATE TABLE state_versions (
+  version INTEGER PRIMARY KEY
 );
 ```
 
-資料以單筆 `id = 1` 儲存完整網站狀態（`DbSchema`），包含：
+網站狀態（`DbSchema`）包含以下集合，各存一列（另外一列 `meta`）。
+後台登入改用 Cloudflare Access 後，不再有 `users`：
 
-- `users`
 - `builds`
 - `categories`
 - `orders`
