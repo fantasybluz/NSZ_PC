@@ -34,6 +34,14 @@ type WorkerEnv = Omit<Env, 'DEV_ADMIN_EMAIL'> & {
 
 const services = createServiceContainer();
 
+/** 會改資料的請求（POST/PUT/PATCH/DELETE），而且來源不是自己網站 */
+const isCrossSiteWrite = (request: Request, url: URL): boolean => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return false;
+  if (request.headers.get('Sec-Fetch-Site') === 'cross-site') return true;
+  const origin = request.headers.get('Origin');
+  return !!origin && origin !== url.origin;
+};
+
 const now = (): string => new Date().toISOString();
 
 const parseEmails = (value: string | undefined): string[] =>
@@ -310,7 +318,10 @@ export default {
 
     let response: Response;
     try {
-      response = await route(request, env, url);
+      // 擋跨站請求（CSRF）：會改資料的請求只接受從自己網站送出的（DPOM 是用 RPC，不經過這裡）
+      response = isCrossSiteWrite(request, url)
+        ? errorResponse(403, 'Forbidden', '不接受從其他網站送出的請求')
+        : await route(request, env, url);
     } catch (error) {
       if (error instanceof BodyError) {
         response = errorResponse(400, error.message);
