@@ -10,10 +10,12 @@
     // 網址不是檔案（例如 /categories/item/xxx）就回 index.html，交給前端的路由
     "not_found_handling": "single-page-application",
     // API 和 API 文件先給 Worker，其他都是前端的檔案。
-    // 出機紀錄、推薦配單、分類、文章頁也先給 Worker：回前端頁面前把分享縮圖的 og 標籤換成那一頁的（backend/src/lib/sharePreview.ts）
+    // 出機紀錄、推薦配單、分類、文章頁也先給 Worker：回前端頁面前把分享縮圖的 og 標籤換成那一頁的，文章另外加 SEO（backend/src/lib/sharePreview.ts）
     "run_worker_first": [
       "/api/*", "/openapi.json", "/api-docs", "/api-docs/*", "/docs", "/media/*",
-      "/orders/item/*", "/builds/item/*", "/categories/item/*", "/blog/*"
+      "/orders/item/*", "/builds/item/*", "/categories/item/*", "/blog", "/blog/*",
+      // robots.txt、sitemap.xml 由 Worker 從資料庫產生（backend/src/lib/sitemap.ts）
+      "/robots.txt", "/sitemap.xml"
     ]
   },
   // 先用 bluz.dev 的子網域給客戶 demo；客戶買了自己的網域再加一筆、換掉這筆

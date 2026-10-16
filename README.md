@@ -118,6 +118,14 @@ npm run state:import -- backup.json
   用 HTMLRewriter 換成那一頁的標題、說明和第一張照片（`backend/src/lib/sharePreview.ts`）；沒有照片就用預設圖
 - LINE 會快取縮圖：改了之後要看新的，用 [LINE Page Poker](https://poker.line.naver.jp/) 清快取
 
+## SEO
+
+- `robots.txt`、`sitemap.xml` 由 Worker 產生（`backend/src/lib/sitemap.ts`），sitemap 直接從資料庫列出文章、分類、推薦配單、出機紀錄；後台和 API 不收錄
+- 技術文章（`/blog`、`/blog/:slug`）在 Worker 先加上 canonical、關鍵字、發布日期、結構化資料（`BlogPosting`、`BreadcrumbList`、`Blog`、`ItemList`），
+  文章內容直接寫進 HTML，不跑 JS 的爬蟲也讀得到（`backend/src/lib/sharePreview.ts`）；前端載入後 React 會整個換掉
+- 前端的 `src/lib/seo.ts` 更新的是同一批標籤，兩邊的標題寫法要一致
+- 上線後到 Google Search Console 提交 `https://<網域>/sitemap.xml`
+
 ## 文件
 
 - 功能用法：[docs/feature-usage.md](docs/feature-usage.md)
