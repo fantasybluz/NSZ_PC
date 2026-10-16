@@ -18,9 +18,6 @@ const KEYS = [
   'builds',
   'orders',
   'blogPosts',
-  'inventories',
-  'procurements',
-  'personalProcurements',
   'siteContent',
 ];
 // D1 一個 SQL 指令最多 100KB：大的集合拆成幾段，用 data = data || '…' 接起來

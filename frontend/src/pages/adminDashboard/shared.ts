@@ -1,24 +1,11 @@
 import type { AdminUser } from '../../lib/adminAuth';
 
 export type OrderStatus = 'pending' | 'shipping' | 'delivered' | 'cancelled';
-export type InventoryCategory =
-  | 'cpu'
-  | 'motherboard'
-  | 'gpu'
-  | 'ram'
-  | 'ssd'
-  | 'hdd'
-  | 'cooler'
-  | 'psu'
-  | 'case';
 export type AdminTabKey =
   | 'siteContent'
   | 'builds'
   | 'categories'
-  | 'orders'
-  | 'procurements'
-  | 'personalProcurements'
-  | 'inventories';
+  | 'orders';
 
 export interface AdminBuild {
   id: string;
@@ -106,66 +93,6 @@ export interface CategoriesResponse {
   data: AdminCategory[];
 }
 
-export interface AdminInventory {
-  id: string;
-  category: InventoryCategory;
-  brand: string;
-  productName: string;
-  motherboardFormFactor: string;
-  quantity: number;
-  taxIncluded: boolean;
-  retailPrice: number;
-  costPrice: number;
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface InventoriesResponse {
-  data: AdminInventory[];
-}
-
-export interface AdminProcurementItem {
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  taxIncluded: boolean;
-}
-
-export interface AdminProcurement {
-  id: string;
-  date: string;
-  peerName: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  settledThisWeek: boolean;
-  items: AdminProcurementItem[];
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProcurementsResponse {
-  data: AdminProcurement[];
-}
-
-export interface AdminPersonalProcurement {
-  id: string;
-  date: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  items: AdminProcurementItem[];
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PersonalProcurementsResponse {
-  data: AdminPersonalProcurement[];
-}
-
 export const statusOptions: Array<{ value: OrderStatus; label: string }> = [
   { value: 'pending', label: '待處理' },
   { value: 'shipping', label: '配送中' },
@@ -180,57 +107,11 @@ export const statusLabelMap: Record<OrderStatus, string> = {
   cancelled: '已取消',
 };
 
-export const procurementSettlementLabels = {
-  settled: '已結清',
-  unsettled: '未結清',
-} as const;
-
-export const inventoryCategoryLabels: Record<InventoryCategory, string> = {
-  cpu: 'CPU',
-  motherboard: '主機板',
-  gpu: '顯示卡',
-  ram: '記憶體',
-  ssd: 'SSD',
-  hdd: 'HDD',
-  cooler: '散熱器',
-  psu: '電源供應器',
-  case: '機殼',
-};
-
-export const inventoryCategories: InventoryCategory[] = [
-  'cpu',
-  'motherboard',
-  'gpu',
-  'ram',
-  'ssd',
-  'hdd',
-  'cooler',
-  'psu',
-  'case',
-];
-
-export const inventoryMotherboardFormFactors = ['ATX', 'MATX', 'ITX', 'E-ATX', 'SSI-EEB', '其他'];
-
-export const inventoryBrandPresets: Record<InventoryCategory, string[]> = {
-  cpu: ['Intel', 'AMD'],
-  motherboard: ['ASUS', 'Gigabyte', 'MSI', 'ASRock'],
-  gpu: ['ASUS', 'Gigabyte', 'MSI', 'ASRock', 'ZOTAC', 'GALAX', 'Sapphire', 'PowerColor'],
-  ram: ['Kingston', 'Corsair', 'G.SKILL', 'Team', 'ADATA'],
-  ssd: ['Samsung', 'WD', 'Crucial', 'Kingston', 'ADATA', 'Solidigm'],
-  hdd: ['Seagate', 'WD', 'Toshiba'],
-  cooler: ['Thermalright', 'Noctua', 'DeepCool', 'Cooler Master', 'NZXT', 'Corsair'],
-  psu: ['Seasonic', 'Corsair', 'FSP', 'Cooler Master', 'Super Flower', 'Antec'],
-  case: ['Lian Li', 'Montech', 'Fractal', 'Darkflash', 'NZXT', 'Cooler Master'],
-};
-
 export const adminTabOptions: Array<{ key: AdminTabKey; label: string }> = [
   { key: 'siteContent', label: '網站內容管理' },
   { key: 'builds', label: '推薦配單管理' },
   { key: 'categories', label: '分類總覽管理' },
   { key: 'orders', label: '訂單管理' },
-  { key: 'procurements', label: '同行拿貨紀錄' },
-  { key: 'personalProcurements', label: '公司進貨紀錄' },
-  { key: 'inventories', label: '庫存管理' },
 ];
 
 export interface BuildFormState {
@@ -287,43 +168,6 @@ export interface CategoryFormState {
   detailHeroImage: string;
   detailRecommendationsText: string;
   detailFaqsText: string;
-}
-
-export interface InventoryFormState {
-  category: InventoryCategory;
-  brand: string;
-  productName: string;
-  motherboardFormFactor: string;
-  quantityText: string;
-  taxIncluded: boolean;
-  retailPriceText: string;
-  costPriceText: string;
-  note: string;
-}
-
-export interface ProcurementFormState {
-  date: string;
-  peerName: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  settledThisWeek: boolean;
-  note: string;
-}
-
-export interface PersonalProcurementFormState {
-  date: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  note: string;
-}
-
-export interface ProcurementItemFormState {
-  productName: string;
-  quantityText: string;
-  unitPriceText: string;
-  taxIncluded: boolean;
 }
 
 export interface AdminSiteStat {
@@ -475,36 +319,6 @@ export const defaultCategoryForm: CategoryFormState = {
   detailFaqsText: '',
 };
 
-export const defaultInventoryForm: InventoryFormState = {
-  category: 'cpu',
-  brand: '',
-  productName: '',
-  motherboardFormFactor: '',
-  quantityText: '0',
-  taxIncluded: true,
-  retailPriceText: '',
-  costPriceText: '',
-  note: '',
-};
-
-export const defaultProcurementForm: ProcurementFormState = {
-  date: '',
-  peerName: '',
-  supplierName: '',
-  source: '',
-  taxIncluded: true,
-  settledThisWeek: false,
-  note: '',
-};
-
-export const defaultPersonalProcurementForm: PersonalProcurementFormState = {
-  date: '',
-  supplierName: '',
-  source: '',
-  taxIncluded: true,
-  note: '',
-};
-
 export const defaultSiteContentForm: SiteContentFormState = {
   homeHeroKicker: '',
   homeHeroTitle: '',
@@ -568,10 +382,6 @@ export const createEmptyBrandPortfolio = (): AdminBrandPortfolio => ({
 export const BUILD_PAGE_SIZE = 9;
 export const CATEGORY_PAGE_SIZE = 9;
 export const ORDER_PAGE_SIZE = 9;
-export const PROCUREMENT_PAGE_SIZE = 9;
-export const PERSONAL_PROCUREMENT_PAGE_SIZE = 9;
-export const INVENTORY_PAGE_SIZE = 9;
-export const WEEKLY_PROCUREMENT_PAGE_SIZE = 8;
 
 export const orderPriceDistributionRanges: Array<{ key: string; label: string; min: number; max: number | null }> = [
   { key: 'range1to3', label: '1-3 萬', min: 10_000, max: 30_000 },
@@ -645,24 +455,6 @@ export const parseTagTextValue = (input: string): string[] => {
 };
 
 export const createDefaultOrderStorageFields = (): string[] => [''];
-
-export const createDefaultProcurementItems = (taxIncluded = true): ProcurementItemFormState[] => [
-  {
-    productName: '',
-    quantityText: '1',
-    unitPriceText: '',
-    taxIncluded,
-  },
-];
-
-export const createDefaultPersonalProcurementItems = (taxIncluded = true): ProcurementItemFormState[] => [
-  {
-    productName: '',
-    quantityText: '1',
-    unitPriceText: '',
-    taxIncluded,
-  },
-];
 
 export const splitStorageItems = (input: string): string[] => {
   return input
@@ -813,153 +605,6 @@ export const deriveOrderTags = (item: string, fields: string[]): string[] => {
   return [...new Set(tags)];
 };
 
-export const isInventoryCategory = (value: unknown): value is InventoryCategory => {
-  return inventoryCategories.includes(value as InventoryCategory);
-};
-
-export const normalizeAdminInventory = (value: unknown): AdminInventory | null => {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const category = raw.category;
-  const brand = typeof raw.brand === 'string' ? raw.brand.trim() : '';
-  const productName = typeof raw.productName === 'string' ? raw.productName.trim() : '';
-  const quantity = Number(raw.quantity);
-  const retailPrice = Number(raw.retailPrice);
-  const costPrice = Number(raw.costPrice);
-  const taxIncluded = typeof raw.taxIncluded === 'boolean' ? raw.taxIncluded : true;
-
-  if (
-    !id ||
-    !isInventoryCategory(category) ||
-    !brand ||
-    !productName ||
-    !Number.isInteger(quantity) ||
-    quantity < 0 ||
-    !Number.isFinite(retailPrice) ||
-    retailPrice < 0 ||
-    !Number.isFinite(costPrice) ||
-    costPrice < 0
-  ) {
-    return null;
-  }
-
-  return {
-    id,
-    category,
-    brand,
-    productName,
-    motherboardFormFactor: typeof raw.motherboardFormFactor === 'string' ? raw.motherboardFormFactor.trim().toUpperCase() : '',
-    quantity: Math.trunc(quantity),
-    taxIncluded,
-    retailPrice: Math.trunc(retailPrice),
-    costPrice: Math.trunc(costPrice),
-    note: typeof raw.note === 'string' ? raw.note.trim() : '',
-    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '',
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
-  };
-};
-
-export const normalizeAdminProcurementItem = (
-  value: unknown,
-  defaultTaxIncluded: boolean,
-): AdminProcurementItem | null => {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const productName = typeof raw.productName === 'string' ? raw.productName.trim() : '';
-  const quantity = Number(raw.quantity);
-  const unitPrice = Number(raw.unitPrice);
-  const taxIncluded = typeof raw.taxIncluded === 'boolean' ? raw.taxIncluded : defaultTaxIncluded;
-
-  if (!productName || !Number.isInteger(quantity) || quantity <= 0 || !Number.isFinite(unitPrice) || unitPrice < 0) {
-    return null;
-  }
-
-  return {
-    productName,
-    quantity: Math.trunc(quantity),
-    unitPrice: Math.trunc(unitPrice),
-    taxIncluded,
-  };
-};
-
-export const normalizeAdminProcurement = (value: unknown): AdminProcurement | null => {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const date = typeof raw.date === 'string' ? raw.date.trim() : '';
-  const peerName = typeof raw.peerName === 'string' ? raw.peerName.trim() : '';
-  const supplierName = typeof raw.supplierName === 'string' ? raw.supplierName.trim() : '';
-  const source = typeof raw.source === 'string' ? raw.source.trim() : '';
-  const procurementTaxIncluded = Boolean(raw.taxIncluded);
-  const items = Array.isArray(raw.items)
-    ? raw.items
-        .map((item) => normalizeAdminProcurementItem(item, procurementTaxIncluded))
-        .filter((item): item is AdminProcurementItem => item !== null)
-    : [];
-
-  if (!id || !date || !peerName || !supplierName || !source || items.length === 0) {
-    return null;
-  }
-
-  return {
-    id,
-    date,
-    peerName,
-    supplierName,
-    source,
-    taxIncluded: procurementTaxIncluded,
-    settledThisWeek: Boolean(raw.settledThisWeek),
-    items,
-    note: typeof raw.note === 'string' ? raw.note.trim() : '',
-    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '',
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
-  };
-};
-
-export const normalizeAdminPersonalProcurement = (value: unknown): AdminPersonalProcurement | null => {
-  if (!value || typeof value !== 'object') {
-    return null;
-  }
-
-  const raw = value as Record<string, unknown>;
-  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const date = typeof raw.date === 'string' ? raw.date.trim() : '';
-  const supplierName = typeof raw.supplierName === 'string' ? raw.supplierName.trim() : '';
-  const source = typeof raw.source === 'string' ? raw.source.trim() : '';
-  const defaultTaxIncluded = Boolean(raw.taxIncluded);
-  const items = Array.isArray(raw.items)
-    ? raw.items
-        .map((item) => normalizeAdminProcurementItem(item, defaultTaxIncluded))
-        .filter((item): item is AdminProcurementItem => item !== null)
-    : [];
-
-  if (!id || !date || !supplierName || !source || items.length === 0) {
-    return null;
-  }
-
-  return {
-    id,
-    date,
-    supplierName,
-    source,
-    taxIncluded: defaultTaxIncluded,
-    items,
-    note: typeof raw.note === 'string' ? raw.note.trim() : '',
-    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '',
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
-  };
-};
-
 export const normalizeAdminOrder = (value: unknown): AdminOrder | null => {
   if (!value || typeof value !== 'object') {
     return null;
@@ -1090,18 +735,6 @@ export const escapeHtml = (value: string): string => {
     .replaceAll("'", '&#39;');
 };
 
-export const formatSignedCurrency = (value: number): string => {
-  return `${value > 0 ? '+' : ''}NT$ ${value.toLocaleString('zh-TW')}`;
-};
-
-export const calculateUntaxedPrice = (price: number, taxIncluded: boolean): number => {
-  if (!taxIncluded) {
-    return Math.max(0, Math.trunc(price));
-  }
-
-  return Math.max(0, Math.round(price / 1.05));
-};
-
 export const parseYyyyMmDdDate = (value: string): Date | null => {
   const matched = value.trim().match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if (!matched) {
@@ -1126,19 +759,6 @@ export const parseYyyyMmDdDate = (value: string): Date | null => {
 
   parsed.setHours(0, 0, 0, 0);
   return parsed;
-};
-
-export const getWeekStartDate = (date: Date): Date => {
-  const weekStart = new Date(date);
-  const day = weekStart.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  weekStart.setDate(weekStart.getDate() + diff);
-  weekStart.setHours(0, 0, 0, 0);
-  return weekStart;
-};
-
-export const isSameWeekDate = (left: Date, right: Date): boolean => {
-  return getWeekStartDate(left).getTime() === getWeekStartDate(right).getTime();
 };
 
 export const getQuoteNumber = (order: AdminOrder): string => {

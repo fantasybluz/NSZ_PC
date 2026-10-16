@@ -105,12 +105,6 @@ const OrderDetail: React.FC = () => {
             <p>交機地區：{order.location}</p>
             <p>狀態：{orderStatusLabelMap[order.status]}</p>
             <p>成交金額：{typeof order.salePrice === 'number' ? `NT$ ${order.salePrice.toLocaleString('zh-TW')}` : '未標示'}</p>
-            <p>
-              服務費用：
-              {Number.isFinite(order.serviceFee)
-                ? `NT$ ${Number(order.serviceFee).toLocaleString('zh-TW')}`
-                : '未標示'}
-            </p>
           </div>
         </div>
       </section>

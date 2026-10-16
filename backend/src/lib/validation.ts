@@ -2,13 +2,9 @@ import type {
   BlogPostInput,
   BuildInput,
   CategoryInput,
-  InventoryCategory,
-  InventoryInput,
   MutablePayload,
   OrderInput,
   OrderStatus,
-  PersonalProcurementInput,
-  ProcurementInput,
   SiteContentInput,
   ValidationResult,
 } from './types.ts';
@@ -382,62 +378,7 @@ export const validateCategoryInput = (
 
 export const ORDER_STATUS: OrderStatus[] = ['pending', 'shipping', 'delivered', 'cancelled'];
 
-export const INVENTORY_CATEGORY_OPTIONS: InventoryCategory[] = [
-  'cpu',
-  'motherboard',
-  'gpu',
-  'ram',
-  'ssd',
-  'hdd',
-  'cooler',
-  'psu',
-  'case',
-];
-
 const INVENTORY_MOTHERBOARD_FORM_FACTORS = ['ATX', 'MATX', 'ITX', 'E-ATX', 'SSI-EEB', '其他'];
-
-const parseProcurementItems = (
-  values: unknown,
-  defaultTaxIncluded: boolean,
-): Array<{ productName: string; quantity: number; unitPrice: number; taxIncluded: boolean }> => {
-  if (!Array.isArray(values)) {
-    return [];
-  }
-
-  return values
-    .map((item) => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-
-      const typed = item as Record<string, unknown>;
-      const productName = asString(typed.productName).trim();
-      const quantity = Number(typed.quantity);
-      const unitPrice = Number(typed.unitPrice);
-      const taxIncluded = typeof typed.taxIncluded === 'boolean' ? typed.taxIncluded : defaultTaxIncluded;
-
-      if (
-        !productName ||
-        !Number.isInteger(quantity) ||
-        quantity <= 0 ||
-        !Number.isFinite(unitPrice) ||
-        unitPrice < 0
-      ) {
-        return null;
-      }
-
-      return {
-        productName,
-        quantity,
-        unitPrice: Math.trunc(unitPrice),
-        taxIncluded,
-      };
-    })
-    .filter(
-      (item): item is { productName: string; quantity: number; unitPrice: number; taxIncluded: boolean } =>
-        item !== null,
-    );
-};
 
 export const validateOrderInput = (payload: MutablePayload): ValidationResult<OrderInput> => {
   const errors: string[] = [];
@@ -615,149 +556,6 @@ export const validateBlogPostInput = (
       tags,
       youtubeEmbedUrl,
       sections,
-    },
-  };
-};
-
-export const validateInventoryInput = (
-  payload: MutablePayload,
-): ValidationResult<InventoryInput> => {
-  const errors: string[] = [];
-
-  const rawCategory = isNonEmptyString(payload.category) ? payload.category.trim().toLowerCase() : '';
-  const category = rawCategory as InventoryCategory;
-  if (!INVENTORY_CATEGORY_OPTIONS.includes(category)) {
-    errors.push(`category must be one of: ${INVENTORY_CATEGORY_OPTIONS.join(', ')}`);
-  }
-
-  if (!isNonEmptyString(payload.brand)) {
-    errors.push('brand is required');
-  }
-
-  if (!isNonEmptyString(payload.productName)) {
-    errors.push('productName is required');
-  }
-
-  const motherboardFormFactor = asString(payload.motherboardFormFactor).trim().toUpperCase();
-  if (category === 'motherboard' && !motherboardFormFactor) {
-    errors.push(`motherboardFormFactor is required for motherboard (${INVENTORY_MOTHERBOARD_FORM_FACTORS.join('/')})`);
-  }
-
-  const quantity = Number(payload.quantity);
-  if (!Number.isInteger(quantity) || quantity < 0) {
-    errors.push('quantity must be an integer greater than or equal to 0');
-  }
-
-  const taxIncluded = typeof payload.taxIncluded === 'boolean' ? payload.taxIncluded : true;
-
-  const retailPrice = Number(payload.retailPrice);
-  if (!Number.isFinite(retailPrice) || retailPrice < 0) {
-    errors.push('retailPrice must be a number greater than or equal to 0');
-  }
-
-  const costPrice = Number(payload.costPrice);
-  if (!Number.isFinite(costPrice) || costPrice < 0) {
-    errors.push('costPrice must be a number greater than or equal to 0');
-  }
-
-  if (Number.isFinite(retailPrice) && Number.isFinite(costPrice) && costPrice > retailPrice) {
-    errors.push('costPrice cannot be greater than retailPrice');
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    value: {
-      category,
-      brand: asString(payload.brand).trim(),
-      productName: asString(payload.productName).trim(),
-      motherboardFormFactor: motherboardFormFactor || '',
-      quantity: Number.isInteger(quantity) ? quantity : 0,
-      taxIncluded,
-      retailPrice: Number.isFinite(retailPrice) ? Math.trunc(retailPrice) : 0,
-      costPrice: Number.isFinite(costPrice) ? Math.trunc(costPrice) : 0,
-      note: asString(payload.note).trim(),
-    },
-  };
-};
-
-export const validateProcurementInput = (
-  payload: MutablePayload,
-): ValidationResult<ProcurementInput> => {
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(payload.date) || !DEAL_DATE_PATTERN.test(payload.date.trim())) {
-    errors.push('date must match YYYY/MM/DD');
-  }
-
-  if (!isNonEmptyString(payload.peerName)) {
-    errors.push('peerName is required');
-  }
-
-  if (!isNonEmptyString(payload.supplierName)) {
-    errors.push('supplierName is required');
-  }
-
-  if (!isNonEmptyString(payload.source)) {
-    errors.push('source is required');
-  }
-
-  const taxIncluded = typeof payload.taxIncluded === 'boolean' ? payload.taxIncluded : Boolean(payload.taxIncluded);
-  const settledThisWeek = Boolean(payload.settledThisWeek);
-  const items = parseProcurementItems(payload.items, taxIncluded);
-  if (items.length === 0) {
-    errors.push('items must contain at least one valid item');
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    value: {
-      date: asString(payload.date).trim(),
-      peerName: asString(payload.peerName).trim(),
-      supplierName: asString(payload.supplierName).trim(),
-      source: asString(payload.source).trim(),
-      taxIncluded,
-      settledThisWeek,
-      items,
-      note: asString(payload.note).trim(),
-    },
-  };
-};
-
-export const validatePersonalProcurementInput = (
-  payload: MutablePayload,
-): ValidationResult<PersonalProcurementInput> => {
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(payload.date) || !DEAL_DATE_PATTERN.test(payload.date.trim())) {
-    errors.push('date must match YYYY/MM/DD');
-  }
-
-  if (!isNonEmptyString(payload.supplierName)) {
-    errors.push('supplierName is required');
-  }
-
-  if (!isNonEmptyString(payload.source)) {
-    errors.push('source is required');
-  }
-
-  const taxIncluded = typeof payload.taxIncluded === 'boolean' ? payload.taxIncluded : Boolean(payload.taxIncluded);
-  const items = parseProcurementItems(payload.items, taxIncluded);
-  if (items.length === 0) {
-    errors.push('items must contain at least one valid item');
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    value: {
-      date: asString(payload.date).trim(),
-      supplierName: asString(payload.supplierName).trim(),
-      source: asString(payload.source).trim(),
-      taxIncluded,
-      items,
-      note: asString(payload.note).trim(),
     },
   };
 };

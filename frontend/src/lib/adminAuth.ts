@@ -31,6 +31,9 @@ export const getApiBaseUrl = (): string => {
 // 下面幾個函式留著原本的名字，讓後台頁面不用大改。
 const ACCESS_SESSION = 'cloudflare-access';
 
+/** DPOM（星辰電腦內部管理系統）：庫存、進貨、訂單、報價單在那邊。換網域時改這裡 */
+export const INTERNAL_SYSTEM_URL = 'https://dpom.bluz.dev';
+
 /** Cloudflare Access 的登出網址 */
 export const ADMIN_LOGOUT_URL = '/cdn-cgi/access/logout';
 

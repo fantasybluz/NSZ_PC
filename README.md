@@ -3,7 +3,7 @@
 NSZPC 星辰電腦網站：
 
 - 前台：首頁、分類總覽、推薦配單、近期出機、技術文章
-- 後台：網站內容、推薦配單、分類、出機紀錄、文章、同行拿貨、公司進貨、庫存
+- 後台：網站內容、推薦配單、分類、出機紀錄、文章（庫存、進貨、同行拿貨、訂單和報價單在 DPOM（星辰電腦內部管理系統，https://dpom.bluz.dev））
 
 目前網址（給客戶 demo 用）：<https://nszpc.bluz.dev>
 
@@ -28,7 +28,7 @@ NSZPC 星辰電腦網站：
 ### 資料怎麼存
 
 所有內容是一份 JSON（跟原本 PostgreSQL 版的 `app_state` 一樣），存在 D1 的 `app_state` 表，每個集合一列
-（`categories`、`builds`、`orders`、`blogPosts`、`inventories`、`procurements`、`personalProcurements`、`siteContent`、`meta`）。
+（`categories`、`builds`、`orders`、`blogPosts`、`siteContent`、`meta`）。
 
 - 每次寫入是「整份讀出來 → 改 → 只寫回有變的集合」，同一個 D1 batch（交易）裡插入新的版本號（`state_versions`）。
   兩個人同時改時，後寫的會撞到版本號、整個重讀重做，不會蓋掉對方的修改

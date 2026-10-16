@@ -2,6 +2,8 @@
 
 本文件說明 NSZPC 專案目前的資料儲存設計（Cloudflare D1），並提供下一階段可落地的正規化資料表方案。
 
+> 2026-10：庫存、同行拿貨、公司進貨移到 DPOM（星辰電腦內部管理系統），這裡不再有 `inventories`、`procurements`、`personalProcurements`；下面舊的設計內容保留參考。
+>
 > 2026-10：從 PostgreSQL 搬到 Cloudflare D1（SQLite）。第 2 節是目前的實作；第 5 節之後的 DDL 是當初為 PostgreSQL 寫的，搬到 D1 時要把 JSONB、TIMESTAMPTZ 等型別換成 SQLite 的 TEXT / INTEGER。
 
 ## 1. 設計目標
@@ -36,9 +38,6 @@ CREATE TABLE state_versions (
 - `categories`
 - `orders`
 - `blogPosts`
-- `inventories`
-- `procurements`
-- `personalProcurements`
 - `siteContent`
 
 ### 2.1 優點

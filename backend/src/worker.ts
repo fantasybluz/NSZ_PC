@@ -76,9 +76,6 @@ const resolveCollectionName = (value?: string): ManagedCollection | null => {
   if (!value) {
     return null;
   }
-  if (value === 'personal-procurements') {
-    return 'personalProcurements';
-  }
   if (value === 'blog-posts') {
     return 'blogPosts';
   }
@@ -86,9 +83,7 @@ const resolveCollectionName = (value?: string): ManagedCollection | null => {
   if (
     direct === 'builds' ||
     direct === 'categories' ||
-    direct === 'orders' ||
-    direct === 'inventories' ||
-    direct === 'procurements'
+    direct === 'orders'
   ) {
     return direct;
   }

@@ -161,65 +161,6 @@ export interface SiteContentRecord {
   updatedAt: string;
 }
 
-export type InventoryCategory =
-  | 'cpu'
-  | 'motherboard'
-  | 'gpu'
-  | 'ram'
-  | 'ssd'
-  | 'hdd'
-  | 'cooler'
-  | 'psu'
-  | 'case';
-
-export interface InventoryRecord {
-  id: string;
-  category: InventoryCategory;
-  brand: string;
-  productName: string;
-  motherboardFormFactor: string;
-  quantity: number;
-  taxIncluded: boolean;
-  retailPrice: number;
-  costPrice: number;
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProcurementItemRecord {
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  taxIncluded: boolean;
-}
-
-export interface ProcurementRecord {
-  id: string;
-  date: string;
-  peerName: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  settledThisWeek: boolean;
-  items: ProcurementItemRecord[];
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PersonalProcurementRecord {
-  id: string;
-  date: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  items: ProcurementItemRecord[];
-  note: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface DbMeta {
   createdAt: string;
   updatedAt: string;
@@ -232,9 +173,6 @@ export interface DbSchema {
   builds: BuildRecord[];
   orders: OrderRecord[];
   blogPosts: BlogPostRecord[];
-  inventories: InventoryRecord[];
-  procurements: ProcurementRecord[];
-  personalProcurements: PersonalProcurementRecord[];
   siteContent: SiteContentRecord;
 }
 
@@ -242,10 +180,7 @@ export type CollectionName =
   | 'builds'
   | 'categories'
   | 'orders'
-  | 'blogPosts'
-  | 'inventories'
-  | 'procurements'
-  | 'personalProcurements';
+  | 'blogPosts';
 
 export type MutablePayload = Record<string, unknown>;
 
@@ -351,44 +286,5 @@ export interface SiteContentInput {
   contactAddress: string;
   contactPhone: string;
   contactLine: string;
-}
-
-export interface InventoryInput {
-  category: InventoryCategory;
-  brand: string;
-  productName: string;
-  motherboardFormFactor: string;
-  quantity: number;
-  taxIncluded: boolean;
-  retailPrice: number;
-  costPrice: number;
-  note: string;
-}
-
-export interface ProcurementItemInput {
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  taxIncluded: boolean;
-}
-
-export interface ProcurementInput {
-  date: string;
-  peerName: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  settledThisWeek: boolean;
-  items: ProcurementItemInput[];
-  note: string;
-}
-
-export interface PersonalProcurementInput {
-  date: string;
-  supplierName: string;
-  source: string;
-  taxIncluded: boolean;
-  items: ProcurementItemInput[];
-  note: string;
 }
 

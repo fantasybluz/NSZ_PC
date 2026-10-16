@@ -5,7 +5,7 @@
 ## 功能範圍
 
 - 前台公開 API：推薦配單、分類、出機紀錄、技術文章、網站內容
-- 後台 API：上面這些加上同行拿貨、公司進貨、庫存的 CRUD，以及網站內容編輯
+- 後台 API：上面這些的 CRUD，以及網站內容編輯（庫存、進貨、同行拿貨、訂單和報價單在 DPOM（星辰電腦內部管理系統，https://dpom.bluz.dev））
 - OpenAPI 文件：`/openapi.json`、Swagger UI：`/api-docs`
 
 ## 結構（DDD 分層）
@@ -40,7 +40,7 @@
 - `GET /api/admin/dashboard`
 - `GET|PUT /api/admin/site-content`
 - `GET|POST /api/admin/<collection>`、`GET|PUT|DELETE /api/admin/<collection>/:id`
-  - collection：`builds`、`categories`、`orders`、`blog-posts`、`inventories`、`procurements`、`personal-procurements`
+  - collection：`builds`、`categories`、`orders`、`blog-posts`
 
 錯誤格式：`{ "error": { "message": "...", "details": ... } }`；未登入 401、沒有權限 403、Access 還沒設定 503、輸入錯誤 422。
 
