@@ -97,7 +97,7 @@ const Home: React.FC = () => {
               查看分類總覽
             </Link>
             <Link to="/orders/tags" className="ghost-btn">
-              查看訂單管理
+              看出機紀錄
             </Link>
           </div>
         </div>
@@ -155,7 +155,7 @@ const Home: React.FC = () => {
       <section className="section-card reveal" id="recent-shipment">
         <div className="section-head">
           <p className="section-kicker">Recent Shipment</p>
-          <h2 className="section-title">{siteContent.brandHeroTitle || '訂單管理'}</h2>
+          <h2 className="section-title">{siteContent.brandHeroTitle || '出機紀錄'}</h2>
           <p className="section-sub">{siteContent.brandHeroSubtitle || '依近期實際出機案例整理，包含需求重點與配備說明。'}</p>
         </div>
 

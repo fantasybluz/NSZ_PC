@@ -107,13 +107,13 @@ export const statusLabelMap: Record<OrderStatus, string> = {
   cancelled: '已取消',
 };
 
-export const adminTabOptions: Array<{ key: AdminTabKey; label: string }> = [
-  { key: 'siteContent', label: '網站內容管理' },
-  { key: 'builds', label: '推薦配單管理' },
-  { key: 'categories', label: '分類總覽管理' },
-  { key: 'orders', label: '訂單管理' },
-];
+// 後台首頁的分頁，用網址 #hash 記住；沒有或不認得就是出機紀錄
+export const ADMIN_TAB_KEYS: AdminTabKey[] = ['orders', 'builds', 'categories', 'siteContent'];
 
+export const adminTabFromHash = (hash: string): AdminTabKey => {
+  const key = hash.replace(/^#/, '') as AdminTabKey;
+  return ADMIN_TAB_KEYS.includes(key) ? key : 'orders';
+};
 export interface BuildFormState {
   name: string;
   description: string;

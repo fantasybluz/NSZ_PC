@@ -1,0 +1,982 @@
+/* Apple 風格（DESIGN.md），疊在 index.css / App.css 上面。
+   原則：白卡、髮絲邊框、不用陰影和漸層、Action Blue 只給可以按的東西、膠囊按鈕、系統字體。 */
+
+:root {
+  --apple-blue: #0066cc;
+  --apple-blue-hover: #0071e3;
+  --apple-ink: #1d1d1f;
+  --apple-ink-2: #6e6e73;
+  --apple-ink-3: #86868b;
+  --apple-parchment: #f5f5f7;
+  --apple-hairline: #d2d2d7;
+  --apple-hairline-soft: #e8e8ed;
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang TC', 'Noto Sans TC', 'Helvetica Neue', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang TC', 'Noto Sans TC', 'Helvetica Neue', sans-serif;
+
+  --ink-900: var(--apple-ink);
+  --ink-700: #333336;
+  --ink-600: #515154;
+  --ink-500: var(--apple-ink-2);
+  --brand-500: var(--apple-blue);
+  --brand-600: var(--apple-blue);
+  --bg-muted: var(--apple-parchment);
+  --line-soft: var(--apple-hairline-soft);
+  --line-strong: var(--apple-hairline);
+  --shadow-soft: none;
+  --radius-xl: 18px;
+  --radius-lg: 14px;
+}
+
+/* ---------- 底色：拿掉動態漸層、格線、極光 ---------- */
+body {
+  background: var(--apple-parchment);
+  animation: none;
+  color: var(--apple-ink);
+  letter-spacing: -0.01em;
+}
+body::before,
+body::after {
+  display: none;
+}
+
+/* ---------- 頂欄：毛玻璃 ---------- */
+.site-header {
+  background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+}
+.site-header::before,
+.site-header::after {
+  display: none;
+}
+.header-inner {
+  min-height: 3.5rem;
+}
+.page-wrap {
+  margin-top: 5.5rem;
+}
+.brand-logo {
+  filter: none;
+  width: 2rem;
+  height: 2rem;
+}
+.brand-text strong {
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.brand-text span {
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--apple-ink-3);
+}
+.menu-link,
+.menu-trigger {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--apple-ink);
+  opacity: 0.85;
+}
+.menu-link:hover,
+.menu-trigger:hover,
+.menu-link.active {
+  color: var(--apple-ink);
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.menu-dropdown {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--apple-hairline-soft);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- 卡片：白底、髮絲邊框、沒有陰影和光澤 ---------- */
+.page-hero,
+.section-card,
+.hero-panel,
+.site-footer {
+  background: #fff;
+  border: 1px solid var(--apple-hairline-soft);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.page-hero::before,
+.page-hero::after,
+.section-card::before,
+.section-card::after,
+.hero-panel::before,
+.hero-panel::after {
+  display: none;
+}
+
+.stat-card,
+.category-card,
+.brand-portfolio-card,
+.detail-card-item,
+.product-card,
+.process-step,
+.testimonial-card,
+.timeline-item,
+.shipment-item,
+.service-item,
+.faq-item,
+.admin-user-card,
+.admin-order-item,
+.admin-category-item,
+.admin-build-item,
+.contact-link,
+.blog-card {
+  background: var(--apple-parchment);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.category-card::after,
+.brand-portfolio-card::after,
+.detail-card-item::after,
+.product-card::after,
+.process-step::after,
+.testimonial-card::after,
+.timeline-item::after,
+.shipment-item::after,
+.service-item::after,
+.faq-item::after,
+.admin-user-card::after,
+.admin-order-item::after,
+.admin-category-item::after,
+.admin-build-item::after,
+.contact-link::after,
+.tag-pill::after {
+  display: none;
+}
+.stat-card:hover,
+.category-card:hover,
+.brand-portfolio-card:hover,
+.detail-card-item:hover,
+.product-card:hover,
+.process-step:hover,
+.testimonial-card:hover,
+.timeline-item:hover,
+.shipment-item:hover,
+.service-item:hover,
+.faq-item:hover,
+.admin-order-item:hover,
+.admin-category-item:hover,
+.admin-build-item:hover,
+.contact-link:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--apple-hairline);
+}
+/* 白卡裡的卡片用淺灰，hero 右邊的數字卡也是 */
+.hero-panel .stat-card {
+  background: var(--apple-parchment);
+}
+
+/* ---------- 字 ---------- */
+.section-kicker {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--apple-blue);
+}
+.section-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--apple-ink);
+}
+.section-sub {
+  color: var(--apple-ink-2);
+}
+.hero-copy h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* ---------- 按鈕：膠囊、主要用藍、次要用灰底 ---------- */
+.solid-btn,
+.ghost-btn,
+.inline-btn {
+  font-weight: 500;
+  font-size: 0.88rem;
+  border-radius: 980px;
+  box-shadow: none;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.solid-btn::before,
+.ghost-btn::before,
+.inline-btn::before {
+  display: none;
+}
+.solid-btn,
+.inline-btn {
+  background: var(--apple-blue);
+  border: 1px solid var(--apple-blue);
+  color: #fff;
+}
+.solid-btn:hover,
+.inline-btn:hover {
+  background: var(--apple-blue-hover);
+  border-color: var(--apple-blue-hover);
+  transform: none;
+  box-shadow: none;
+}
+.ghost-btn {
+  background: transparent;
+  border: 1px solid var(--apple-blue);
+  color: var(--apple-blue);
+  backdrop-filter: none;
+}
+.ghost-btn:hover {
+  background: rgba(0, 102, 204, 0.06);
+  transform: none;
+  box-shadow: none;
+}
+.solid-btn:active,
+.ghost-btn:active,
+.inline-btn:active {
+  transform: scale(0.97);
+}
+.solid-btn:disabled,
+.ghost-btn:disabled,
+.inline-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.text-link {
+  color: var(--apple-blue);
+  font-weight: 500;
+  text-decoration: none;
+}
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 標籤 ---------- */
+.tag-pill {
+  background: #fff;
+  border: 1px solid var(--apple-hairline);
+  color: var(--apple-ink);
+  font-weight: 500;
+  box-shadow: none;
+}
+.tag-pill:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--apple-ink-3);
+}
+.tag-pill.active,
+.tag-pill[aria-pressed='true'] {
+  background: var(--apple-ink);
+  border-color: var(--apple-ink);
+  color: #fff;
+}
+
+/* ---------- 表單 ---------- */
+.auth-field {
+  color: var(--apple-ink);
+  font-weight: 500;
+}
+.auth-field input,
+.auth-field textarea,
+.auth-field select,
+.blog-search-field input,
+.admin-search-field input,
+.admin-multi-input-row input,
+.portfolio-tag-input-row input {
+  background-color: #fff;
+  border: 1px solid var(--apple-hairline);
+  border-radius: 11px;
+  font-weight: 400;
+}
+.auth-field select {
+  background-image:
+    linear-gradient(#fff, #fff),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+.auth-field input:focus,
+.auth-field textarea:focus,
+.auth-field select:focus,
+.blog-search-field input:focus,
+.admin-search-field input:focus {
+  outline: none;
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+}
+
+/* ---------- 其他 ---------- */
+.site-footer {
+  border-radius: 18px;
+}
+.order-status-badge {
+  font-weight: 500;
+}
+.admin-modal-card,
+.order-modal-card {
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  border: 0;
+}
+
+/* =====================================================================
+   官網後台（components/AdminShell.tsx）
+   桌機：左邊固定側欄 + 右邊內容；手機：上方一排可橫向捲動的分頁
+   ===================================================================== */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.admin-wrap {
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
+.admin-shell {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.admin-side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0.75rem;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-right: 1px solid var(--apple-hairline-soft);
+  overflow-y: auto;
+}
+.admin-side-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+.admin-side-brand img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+.admin-side-brand span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.admin-side-brand strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.admin-side-brand small {
+  font-size: 0.72rem;
+  color: var(--apple-ink-3);
+}
+
+.admin-side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-side-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--apple-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.admin-side-link i {
+  width: 1.1rem;
+  text-align: center;
+  color: var(--apple-ink-2);
+  font-size: 0.95rem;
+}
+.admin-side-link span {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.admin-side-link small {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--apple-ink-3);
+}
+.admin-side-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.admin-side-link.active {
+  background: var(--apple-blue);
+  color: #fff;
+}
+.admin-side-link.active i,
+.admin-side-link.active small {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-side-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--apple-hairline-soft);
+}
+.admin-side-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--apple-ink);
+}
+.admin-side-links a:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.admin-side-links a > i:first-child {
+  width: 1.1rem;
+  text-align: center;
+  color: var(--apple-ink-2);
+}
+.admin-side-links .admin-ext {
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: var(--apple-ink-3);
+}
+
+.admin-side-foot {
+  margin-top: auto;
+  padding: 0.75rem 0.7rem 0;
+  border-top: 1px solid var(--apple-hairline-soft);
+  font-size: 0.78rem;
+  color: var(--apple-ink-2);
+}
+.admin-side-foot p {
+  margin: 0 0 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-side-foot div {
+  display: flex;
+  gap: 1rem;
+}
+.admin-side-foot a,
+.admin-side-foot button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--apple-blue);
+  cursor: pointer;
+}
+
+.admin-main {
+  min-width: 0;
+  padding: 2rem clamp(1rem, 3vw, 2.5rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 1280px;
+}
+.admin-main > .section-card {
+  padding: 1.5rem;
+  /* section-card 原本 overflow: hidden，會讓裡面的 sticky（快速跳轉、儲存列）失效 */
+  overflow: visible;
+}
+
+/* 每頁的標題列：左邊標題說明、右邊動作 */
+.admin-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.admin-page-head h1 {
+  margin: 0 0 0.3rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.admin-page-head p {
+  margin: 0;
+  max-width: 46rem;
+  color: var(--apple-ink-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.admin-page-head .text-link {
+  margin: 0 0 0 0.4rem;
+}
+.admin-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.admin-page-actions .solid-btn {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-icon-only {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--apple-hairline);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--apple-ink);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 0.15s ease;
+}
+.admin-icon-only::-webkit-details-marker {
+  display: none;
+}
+.admin-icon-only:hover {
+  background: var(--apple-parchment);
+}
+.admin-icon-only:disabled {
+  opacity: 0.4;
+}
+
+.admin-list-tools {
+  margin-bottom: 0.25rem;
+}
+.admin-search-field {
+  flex: 1;
+}
+
+/* 出機紀錄表格 */
+.admin-order-table-wrap {
+  border: 1px solid var(--apple-hairline-soft);
+  border-radius: 14px;
+}
+.admin-order-table {
+  font-size: 0.85rem;
+}
+.admin-order-table thead th {
+  background: var(--apple-parchment);
+  color: var(--apple-ink-2);
+  font-weight: 500;
+  font-size: 0.78rem;
+  padding: 0.6rem 0.75rem;
+}
+.admin-order-table td {
+  padding: 0.75rem;
+  color: var(--apple-ink);
+  border-bottom-color: var(--apple-hairline-soft);
+}
+.admin-order-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.admin-order-table tbody tr:hover td {
+  background: #fafafc;
+}
+.admin-order-item-cell p {
+  font-weight: 600;
+}
+.admin-order-table-specs span {
+  color: var(--apple-ink-2);
+}
+.admin-order-table-actions {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.admin-order-table td:nth-child(-n + 2),
+.admin-order-table td:nth-child(4) {
+  white-space: nowrap;
+}
+.admin-order-table-actions .ghost-btn {
+  white-space: nowrap;
+  padding: 0.35rem 0.9rem;
+  border-color: var(--apple-blue);
+}
+.admin-order-table .tag-pill {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--apple-parchment);
+  border-color: transparent;
+}
+
+/* 「更多」選單 */
+.admin-more {
+  position: relative;
+}
+.admin-more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  min-width: 11rem;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--apple-hairline-soft);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.admin-more-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--apple-ink);
+  font-size: 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-more-menu button:hover {
+  background: var(--apple-parchment);
+}
+.admin-more-menu button.danger {
+  color: #d70015;
+}
+.admin-more-menu i {
+  width: 1rem;
+  text-align: center;
+  color: inherit;
+  opacity: 0.75;
+}
+
+/* 售價區間 */
+.admin-order-distribution-card {
+  background: var(--apple-parchment);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: none;
+}
+.admin-order-distribution-track {
+  background: #e8e8ed;
+}
+.admin-order-distribution-fill {
+  background: var(--apple-blue);
+}
+
+/* 推薦配單、分類、文章的卡片列表 */
+.admin-build-item,
+.admin-category-item {
+  border-radius: 14px;
+}
+
+/* 網站文字：上方快速跳轉 + 下方固定的儲存列 */
+.admin-jump {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 -1.5rem 1rem;
+  padding: 0.6rem 1.5rem;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--apple-hairline-soft);
+  scrollbar-width: none;
+}
+.admin-jump a {
+  flex-shrink: 0;
+  padding: 0.3rem 0.8rem;
+  border-radius: 980px;
+  background: var(--apple-parchment);
+  color: var(--apple-ink);
+  font-size: 0.82rem;
+}
+.admin-jump a:hover {
+  background: #e8e8ed;
+}
+.admin-content-block {
+  scroll-margin-top: 4rem;
+  background: #fff;
+  border: 1px solid var(--apple-hairline-soft);
+  border-radius: 14px;
+  box-shadow: none;
+}
+.admin-content-block h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.admin-site-array-item {
+  background: var(--apple-parchment);
+  border: 0;
+  border-radius: 12px;
+}
+.admin-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 1rem -1.5rem -1.5rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--apple-hairline-soft);
+  border-radius: 0 0 18px 18px;
+}
+
+/* 後台彈窗 */
+.admin-modal-card {
+  background: #fff;
+  padding: 1.5rem;
+}
+.admin-modal-overlay {
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(4px);
+}
+.admin-modal-head h3 {
+  font-weight: 600;
+}
+.admin-modal-close {
+  border-radius: 980px;
+}
+
+/* ---------- 平板：側欄只留圖示 ---------- */
+@media (max-width: 1080px) {
+  .admin-shell {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+  .admin-side {
+    padding: 1rem 0.5rem;
+    align-items: center;
+  }
+  .admin-side-brand span,
+  .admin-side-link span,
+  .admin-side-links a,
+  .admin-side-foot p {
+    display: none;
+  }
+  .admin-side-link {
+    justify-content: center;
+    padding: 0.7rem;
+  }
+  .admin-side-link i {
+    font-size: 1.1rem;
+  }
+  .admin-side-links {
+    display: none;
+  }
+  .admin-side-foot {
+    padding: 0.75rem 0 0;
+    font-size: 0.75rem;
+  }
+  .admin-side-foot a {
+    display: none;
+  }
+}
+
+/* ---------- 手機：上方頂欄 + 可橫向捲動的分頁 ---------- */
+@media (max-width: 720px) {
+  .admin-shell {
+    display: block;
+  }
+  .admin-side {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    padding: 0.5rem 0.75rem 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--apple-hairline-soft);
+    overflow: visible;
+  }
+  .admin-side-brand {
+    padding: 0.25rem 0;
+  }
+  .admin-side-brand span {
+    display: flex;
+  }
+  .admin-side-brand small {
+    display: none;
+  }
+  .admin-side-foot {
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+  }
+  .admin-side-foot div {
+    gap: 0.9rem;
+    font-size: 0.82rem;
+  }
+  .admin-side-foot a {
+    display: inline;
+  }
+  .admin-side-nav {
+    order: 3;
+    flex-direction: row;
+    width: calc(100% + 1.5rem);
+    margin: 0 -0.75rem;
+    padding: 0.25rem 0.75rem 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-side-link {
+    width: auto;
+    flex-shrink: 0;
+    padding: 0.4rem 0.85rem;
+    border-radius: 980px;
+  }
+  .admin-side-link span {
+    display: flex;
+    font-size: 0.85rem;
+  }
+  .admin-side-link small,
+  .admin-side-link i {
+    display: none;
+  }
+
+  .admin-main {
+    padding: 1rem 0.75rem 3rem;
+  }
+  .admin-main > .section-card {
+    padding: 1.1rem;
+  }
+  .admin-page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .admin-page-head h1 {
+    font-size: 1.35rem;
+  }
+  .admin-page-actions {
+    justify-content: flex-end;
+  }
+  .admin-jump {
+    top: var(--admin-side-h, 96px);
+    margin: 0 -1.1rem 1rem;
+    padding: 0.5rem 1.1rem;
+  }
+  .admin-save-bar {
+    margin: 1rem -1.1rem -1.1rem;
+    padding: 0.75rem 1.1rem;
+  }
+  .admin-save-bar {
+    flex-wrap: nowrap;
+  }
+  .admin-save-bar .solid-btn {
+    flex: 1;
+  }
+  .admin-save-bar .ghost-btn {
+    width: auto;
+    flex: 0 0 auto;
+  }
+  /* 售價區間是看統計用的，手機上先收起來，列表比較快看到 */
+  .admin-order-distribution-card {
+    display: none;
+  }
+
+  /* 出機紀錄：手機改成一筆一張卡片，不用左右滑 */
+  .admin-order-table-wrap {
+    border: 0;
+    overflow: visible;
+  }
+  .admin-order-table {
+    min-width: 0;
+  }
+  .admin-order-table thead {
+    display: none;
+  }
+  .admin-order-table,
+  .admin-order-table tbody,
+  .admin-order-table tr,
+  .admin-order-table td {
+    display: block;
+    width: 100%;
+  }
+  .admin-order-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.2rem 0.75rem;
+    padding: 0.9rem;
+    margin-bottom: 0.6rem;
+    border: 1px solid var(--apple-hairline-soft);
+    border-radius: 14px;
+    background: #fff;
+  }
+  .admin-order-table td {
+    padding: 0;
+    border: 0;
+  }
+  .admin-order-table tbody tr:hover td {
+    background: none;
+  }
+  /* 日期 / 地區 / 品項 / 售價 / 狀態 / 規格 / 操作 */
+  .admin-order-table td:nth-child(1) {
+    grid-column: 1;
+    font-size: 0.78rem;
+    color: var(--apple-ink-2);
+  }
+  .admin-order-table td:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 0.78rem;
+    color: var(--apple-ink-2);
+    text-align: right;
+  }
+  .admin-order-table td:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .admin-order-table td:nth-child(4) {
+    grid-column: 1;
+    font-weight: 600;
+  }
+  .admin-order-table td:nth-child(5) {
+    grid-column: 2;
+    text-align: right;
+  }
+  .admin-order-table td:nth-child(6) {
+    display: none;
+  }
+  .admin-order-table td:nth-child(7) {
+    grid-column: 1 / -1;
+    margin-top: 0.4rem;
+  }
+
+  .admin-modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  .admin-modal-card {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+}

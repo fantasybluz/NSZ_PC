@@ -161,7 +161,7 @@
   padding: 0.45rem;
   border: 1px solid var(--line-strong);
   border-radius: 0.9rem;
-  background: linear-gradient(155deg, #ffffff, #f4f9ff);
+  background: #fff;
   box-shadow: var(--shadow-soft);
   opacity: 0;
   transform: translateY(0.4rem);
@@ -413,7 +413,7 @@
 .stat-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--line-strong);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   box-shadow: 0 8px 16px rgba(8, 26, 40, 0.08);
   padding: 1.1rem 1rem;
   display: flex;
@@ -646,7 +646,7 @@
 
 .category-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   border-radius: var(--radius-lg);
   padding: 1rem;
 }
@@ -730,7 +730,7 @@
 .portfolio-group-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #fff);
   border-radius: 0.75rem;
-  background: linear-gradient(160deg, #fff, #f4f9ff);
+  background: #fff;
   padding: 0.58rem 0.68rem;
 }
 
@@ -747,7 +747,7 @@
 
 .brand-portfolio-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   border-radius: var(--radius-lg);
   padding: 1rem;
 }
@@ -847,7 +847,7 @@
 .detail-card-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.9rem;
   display: flex;
   gap: 0.6rem;
@@ -929,7 +929,7 @@
 .blog-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
   overflow: hidden;
 }
 
@@ -1011,7 +1011,7 @@
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
 }
 
 .blog-detail-cover {
@@ -1048,7 +1048,7 @@
 .product-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(165deg, #ffffff 0%, #f4f9ff 100%);
+  background: #fff;
   box-shadow: 0 10px 18px rgba(8, 26, 40, 0.09);
   overflow: hidden;
 }
@@ -1173,7 +1173,7 @@
 .build-video-placeholder {
   border: 1px dashed color-mix(in srgb, var(--line-strong) 80%, #fff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 1rem;
   color: var(--ink-600);
 }
@@ -1202,7 +1202,7 @@
 .process-step {
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.9rem;
 }
 
@@ -1260,7 +1260,7 @@
 .map-panel {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 1rem;
 }
 
@@ -1309,7 +1309,7 @@
 .timeline-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: 0.9rem;
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.85rem;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1382,7 +1382,7 @@
   height: 2.1rem;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
-  background: linear-gradient(145deg, #ffffff, #f4f9ff);
+  background: #fff;
   color: var(--ink-700);
   display: inline-flex;
   align-items: center;
@@ -1423,7 +1423,7 @@
 .shipment-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.85rem;
 }
 
@@ -1485,7 +1485,7 @@
 .service-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(150deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.9rem;
   display: flex;
   align-items: flex-start;
@@ -1581,7 +1581,7 @@
 .faq-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(155deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.85rem;
 }
 
@@ -1762,7 +1762,7 @@
 .procurement-item-row select {
   width: 100%;
   border: 1px solid var(--line-strong);
-  background: linear-gradient(145deg, #ffffff, #f4f9ff);
+  background: #fff;
   border-radius: 0.75rem;
   padding: 0.68rem 0.74rem;
   color: var(--ink-900);
@@ -1839,7 +1839,7 @@
 .admin-user-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   box-shadow: 0 8px 16px rgba(8, 26, 40, 0.08);
   padding: 0.85rem;
   display: grid;
@@ -1921,7 +1921,7 @@
 .admin-content-block {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
   padding: 0.85rem;
   display: grid;
   gap: 0.7rem;
@@ -2122,21 +2122,21 @@
 .admin-order-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.8rem;
 }
 
 .admin-category-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.8rem;
 }
 
 .admin-build-item {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.8rem;
 }
 
@@ -2326,7 +2326,7 @@
 .admin-procurement-kpi-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.78rem;
   display: grid;
   gap: 0.28rem;
@@ -2359,7 +2359,7 @@
 .admin-procurement-chart-card {
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.78rem;
   display: grid;
   gap: 0.65rem;
@@ -2454,7 +2454,7 @@
   margin-top: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.78rem;
   display: grid;
   gap: 0.55rem;
@@ -2503,7 +2503,7 @@
   margin-top: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.78rem;
   display: grid;
   gap: 0.55rem;
@@ -2703,7 +2703,7 @@
   margin-top: 0.9rem;
   border: 1px solid color-mix(in srgb, var(--line-strong) 72%, #ffffff);
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, #ffffff, #f4f9ff);
+  background: #fff;
   padding: 0.82rem;
   display: grid;
   gap: 0.62rem;
@@ -2994,7 +2994,7 @@
   overflow-y: auto;
   border: 1px solid color-mix(in srgb, var(--line-strong) 76%, #ffffff);
   border-radius: var(--radius-xl);
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
   box-shadow: var(--shadow-soft);
   padding: 1rem;
 }
@@ -3015,7 +3015,7 @@
 
 .admin-modal-close {
   border: 1px solid var(--line-strong);
-  background: linear-gradient(145deg, #ffffff, #f4f9ff);
+  background: #fff;
   color: var(--ink-700);
   border-radius: 0.65rem;
   padding: 0.38rem 0.6rem;
@@ -3125,7 +3125,7 @@
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   padding: 0.85rem 0.9rem;
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
 }
 
 .order-modal-text {
@@ -3178,7 +3178,7 @@
   width: min(92vw, 860px);
   max-height: calc(100dvh - 3rem);
   overflow-y: auto;
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
   border: 1px solid color-mix(in srgb, var(--line-strong) 76%, #ffffff);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-strong);
@@ -3227,7 +3227,7 @@
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   padding: 0.85rem 0.9rem;
-  background: linear-gradient(160deg, #ffffff, #f5f9ff);
+  background: #fff;
   margin-bottom: 0.9rem;
 }
 

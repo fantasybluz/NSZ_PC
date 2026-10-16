@@ -1,5 +1,7 @@
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+
+import AdminShell from '../components/AdminShell';
 
 import {
   logoutAdmin,
@@ -539,40 +541,26 @@ const AdminBlogManager: React.FC = () => {
   const pagedPosts = filteredPosts.slice((safePage - 1) * BLOG_PAGE_SIZE, safePage * BLOG_PAGE_SIZE);
 
   return (
-    <div className="page admin-page">
+    <AdminShell active="blog" onLogout={handleLogout}>
       <section className="section-card reveal">
-        <p className="section-kicker">Tech Blog Manager</p>
-        <h1 className="section-title">技術文章管理</h1>
-        <p className="section-sub">集中管理每篇文章內容、標籤、段落與 YouTube 影片嵌入欄位。</p>
+        <header className="admin-page-head">
+          <div>
+            <h1>技術文章</h1>
+            <p>文章內容、標籤、段落和 YouTube 影片。<a className="text-link" href="/blog" target="_blank" rel="noreferrer">看前台文章頁</a></p>
+          </div>
+          <div className="admin-page-actions">
+            <button type="button" className="admin-icon-only" onClick={() => loadBlogPosts()} disabled={loading} title="重新載入" aria-label="重新載入">
+              <i className="fa-solid fa-rotate-right" />
+            </button>
+            <button type="button" className="solid-btn" onClick={openCreateModal}>
+              <i className="fa-solid fa-plus" /> 新增
+            </button>
+          </div>
+        </header>
 
-        <div className="admin-actions">
-          <button type="button" className="solid-btn" onClick={openCreateModal}>
-            新增技術文章
-          </button>
-          <button type="button" className="ghost-btn" onClick={() => loadBlogPosts()} disabled={loading}>
-            重新載入
-          </button>
-          <button type="button" className="ghost-btn" onClick={handleLogout}>
-            登出
-          </button>
-        </div>
-
-        <div className="admin-links">
-          <Link to="/admin" className="text-link">
-            回後台控制台
-            <i className="fa-solid fa-arrow-right" />
-          </Link>
-          <Link to="/blog" className="text-link">
-            看前台文章頁
-            <i className="fa-solid fa-arrow-right" />
-          </Link>
-        </div>
-      </section>
-
-      <section className="section-card reveal">
         <div className="admin-list-tools">
           <label className="auth-field admin-search-field" htmlFor="blog-admin-search">
-            查詢技術文章
+            <span className="visually-hidden">搜尋</span>
             <input
               id="blog-admin-search"
               type="text"
@@ -850,7 +838,7 @@ const AdminBlogManager: React.FC = () => {
           </section>
         </div>
       ) : null}
-    </div>
+    </AdminShell>
   );
 };
 

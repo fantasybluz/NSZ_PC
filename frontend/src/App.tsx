@@ -1,4 +1,6 @@
 import './App.css';
+// Apple 風格（DESIGN.md）疊在最上面
+import './styles/apple.css';
 
 import React from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -54,6 +56,36 @@ const RouteSeoDefaults: React.FC = () => {
   return null;
 };
 
+// 後台（登入頁以外）有自己的側邊選單，不顯示官網的頂欄和 footer
+const AppFrame: React.FC<{ footerAddress: string; footerSlogan: string; children: React.ReactNode }> = ({
+  footerAddress,
+  footerSlogan,
+  children,
+}) => {
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login');
+
+  if (isAdmin) {
+    return <main className="admin-wrap">{children}</main>;
+  }
+
+  return (
+    <div className="app-shell">
+      <Menu />
+
+      <main className="page-wrap">{children}</main>
+
+      <footer className="site-footer">
+        <div>
+          <strong>NSZPC 星辰電腦</strong>
+          <span>{footerAddress}</span>
+        </div>
+        <p>{footerSlogan}</p>
+      </footer>
+    </div>
+  );
+};
+
 function App() {
   const [siteContent, setSiteContent] = React.useState(defaultPublicSiteContent);
 
@@ -70,38 +102,26 @@ function App() {
 
   return (
     <Router>
-      <div className="app-shell">
-        <RouteSeoDefaults />
-        <Menu />
+      <RouteSeoDefaults />
+      <AppFrame footerAddress={siteContent.footerAddress} footerSlogan={siteContent.footerSlogan}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/brand" element={<Navigate to="/categories" replace />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/categories/item/:id" element={<CategoryDetail />} />
+          <Route path="/builds/item/:id" element={<BuildDetail />} />
+          <Route path="/orders/tags" element={<OrderTagOverview />} />
+          <Route path="/orders/item/:id" element={<OrderDetail />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/blog" element={<AdminBlogManager />} />
 
-        <main className="page-wrap">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogDetail />} />
-            <Route path="/brand" element={<Navigate to="/categories" replace />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/categories/item/:id" element={<CategoryDetail />} />
-            <Route path="/builds/item/:id" element={<BuildDetail />} />
-            <Route path="/orders/tags" element={<OrderTagOverview />} />
-            <Route path="/orders/item/:id" element={<OrderDetail />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/blog" element={<AdminBlogManager />} />
-
-            <Route path="/cases/*" element={<Navigate to="/categories#case-portfolio" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-
-        <footer className="site-footer">
-          <div>
-            <strong>NSZPC 星辰電腦</strong>
-            <span>{siteContent.footerAddress}</span>
-          </div>
-          <p>{siteContent.footerSlogan}</p>
-        </footer>
-      </div>
+          <Route path="/cases/*" element={<Navigate to="/categories#case-portfolio" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AppFrame>
     </Router>
   );
 }

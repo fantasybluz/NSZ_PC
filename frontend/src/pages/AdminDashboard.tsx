@@ -1,9 +1,9 @@
 import React from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+
+import AdminShell from '../components/AdminShell';
 
 import {
-  ADMIN_LOGOUT_URL,
-  INTERNAL_SYSTEM_URL,
   clearAuth,
   getApiBaseUrl,
   getStoredToken,
@@ -16,7 +16,6 @@ import {
   BUILD_PAGE_SIZE,
   CATEGORY_PAGE_SIZE,
   ORDER_PAGE_SIZE,
-  adminTabOptions,
   createDefaultOrderStorageFields,
   createEmptyBrandPortfolio,
   createEmptyContactChannel,
@@ -54,6 +53,7 @@ import {
   type AdminOrder,
   type AdminShippingStep,
   type AdminSiteStat,
+  adminTabFromHash,
   type AdminTabKey,
   type AdminTestimonial,
   type BuildFormState,
@@ -67,6 +67,17 @@ import {
   type SiteContentFormState,
   type SiteContentResponse,
 } from './adminDashboard/shared';
+
+// 網站文字頁上方的快速跳轉（id 對到各區塊的 sc-<id>）
+const SITE_CONTENT_SECTIONS: Array<[string, string]> = [
+  ['home', '首頁'],
+  ['categories', '分類總覽'],
+  ['orders', '出機紀錄'],
+  ['process', '流程與服務'],
+  ['testimonials', '客戶回饋'],
+  ['contact', '聯絡管道'],
+  ['footer', 'Footer'],
+];
 
 const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -119,7 +130,12 @@ const AdminDashboard: React.FC = () => {
   const [siteContentError, setSiteContentError] = React.useState('');
   const [siteContentSuccess, setSiteContentSuccess] = React.useState('');
   const [isSavingSiteContent, setIsSavingSiteContent] = React.useState(false);
-  const [activeAdminTab, setActiveAdminTab] = React.useState<AdminTabKey>('siteContent');
+  const [activeAdminTab, setActiveAdminTabState] = React.useState<AdminTabKey>(() => adminTabFromHash(window.location.hash));
+  const setActiveAdminTab = React.useCallback((key: AdminTabKey) => {
+    setActiveAdminTabState(key);
+    window.history.replaceState(null, '', `#${key}`);
+    window.scrollTo({ top: 0 });
+  }, []);
 
   const token = getStoredToken();
   const apiBaseUrl = getApiBaseUrl();
@@ -194,7 +210,7 @@ const AdminDashboard: React.FC = () => {
 
       const payload = (await response.json()) as OrdersResponse | unknown;
       if (!response.ok) {
-        throw new Error(toApiErrorMessage(payload, '讀取訂單管理失敗'));
+        throw new Error(toApiErrorMessage(payload, '讀取出機紀錄失敗'));
       }
 
       const list = (payload as OrdersResponse).data;
@@ -205,7 +221,7 @@ const AdminDashboard: React.FC = () => {
         : [];
       setOrders(normalized);
     } catch (err) {
-      const message = err instanceof Error ? err.message : '讀取訂單管理失敗';
+      const message = err instanceof Error ? err.message : '讀取出機紀錄失敗';
       setOrdersError(message);
     } finally {
       setOrdersLoading(false);
@@ -533,7 +549,7 @@ const AdminDashboard: React.FC = () => {
   const handleSyncShipmentTagCatalogFromOrders = () => {
     const orderTags = allExistingOrderTags;
     if (orderTags.length === 0) {
-      setSiteContentError('目前沒有可同步的訂單管理標籤');
+      setSiteContentError('目前沒有可同步的出機紀錄標籤');
       return;
     }
 
@@ -791,8 +807,8 @@ const AdminDashboard: React.FC = () => {
       { value: siteContentForm.categoriesHeroSubtitle, label: '分類總覽說明' },
       { value: siteContentForm.categoriesPortfolioTitle, label: '分類總覽品牌作品集標題' },
       { value: siteContentForm.categoriesPortfolioSubtitle, label: '分類總覽品牌作品集說明' },
-      { value: siteContentForm.brandHeroTitle, label: '訂單管理區塊標題' },
-      { value: siteContentForm.brandHeroSubtitle, label: '訂單管理區塊說明' },
+      { value: siteContentForm.brandHeroTitle, label: '出機紀錄區塊標題' },
+      { value: siteContentForm.brandHeroSubtitle, label: '出機紀錄區塊說明' },
       { value: siteContentForm.footerAddress, label: 'Footer 地址' },
       { value: siteContentForm.footerSlogan, label: 'Footer 標語' },
       { value: siteContentForm.contactAddress, label: '聯絡地址' },
@@ -891,7 +907,7 @@ const AdminDashboard: React.FC = () => {
     }
 
     if (shipmentTagCatalog.length === 0) {
-      setSiteContentError('訂單管理標籤庫至少需要一筆');
+      setSiteContentError('出機紀錄標籤庫至少需要一筆');
       return;
     }
 
@@ -1165,11 +1181,11 @@ const AdminDashboard: React.FC = () => {
         throw new Error(toApiErrorMessage(payload, isEdit ? '更新失敗' : '新增失敗'));
       }
 
-      setOrdersSuccess(isEdit ? '訂單管理已更新' : '訂單管理已新增');
+      setOrdersSuccess(isEdit ? '出機紀錄已更新' : '出機紀錄已新增');
       resetOrderForm();
       await loadOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '儲存訂單管理失敗';
+      const message = err instanceof Error ? err.message : '儲存出機紀錄失敗';
       setOrdersError(message);
     } finally {
       setIsSavingOrder(false);
@@ -1651,7 +1667,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
       <p class="quote-note">
-        此估價單由後台「訂單管理」資料自動產出，僅供報價與規格確認使用；實際交期與付款方式請以雙方最終確認為準。
+        此估價單由後台「出機紀錄」資料自動產出，僅供報價與規格確認使用；實際交期與付款方式請以雙方最終確認為準。
       </p>
     </section>
   </body>
@@ -2299,10 +2315,10 @@ const AdminDashboard: React.FC = () => {
         resetOrderForm();
       }
 
-      setOrdersSuccess('訂單管理已刪除');
+      setOrdersSuccess('出機紀錄已刪除');
       await loadOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '刪除訂單管理失敗';
+      const message = err instanceof Error ? err.message : '刪除出機紀錄失敗';
       setOrdersError(message);
     } finally {
       setDeletingOrderId(null);
@@ -2505,88 +2521,33 @@ const AdminDashboard: React.FC = () => {
 
 
   return (
-    <div className="page admin-page">
-      <section className="section-card reveal">
-        <p className="section-kicker">Admin Console</p>
-        <h1 className="section-title">後台控制台</h1>
-        <p className="section-sub">管理網站內容、推薦配單、分類總覽、出貨、拿貨與庫存，並檢查 API 文件。</p>
-      
-        {!isLoading && loginUsername ? <p className="admin-note">Hi，{loginUsername}</p> : null}
-
-        {isLoading ? <p className="admin-note">正在驗證登入狀態...</p> : null}
-        {error ? <p className="auth-error">{error}</p> : null}
-
-        <div className="admin-actions">
-          <a
-            className="solid-btn"
-            href={`${apiBaseUrl}/api-docs`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            開啟 Swagger
-          </a>
-          <a className="ghost-btn" href={`${apiBaseUrl}/openapi.json`} target="_blank" rel="noreferrer">
-            查看 OpenAPI JSON
-          </a>
-          <button type="button" className="ghost-btn" onClick={handleLogout}>
-            登出
-          </button>
-        </div>
-
-        <div className="admin-links">
-          <Link to="/admin/blog" className="text-link">
-            技術文章管理
-            <i className="fa-solid fa-arrow-right" />
-          </Link>
-          {/* 庫存、進貨、訂單、報價單在 DPOM（星辰電腦內部管理系統） */}
-          <a href={INTERNAL_SYSTEM_URL} className="text-link" target="_blank" rel="noopener noreferrer">
-            內部管理系統（庫存、訂單）
-            <i className="fa-solid fa-arrow-up-right-from-square" />
-          </a>
-          <a href={ADMIN_LOGOUT_URL} className="text-link">
-            切換帳號
-            <i className="fa-solid fa-arrow-right" />
-          </a>
-          <Link to="/" className="text-link">
-            回首頁
-            <i className="fa-solid fa-arrow-right" />
-          </Link>
-        </div>
-      </section>
-
-      <section className="section-card reveal">
-        <div className="section-head">
-          <p className="section-kicker">Admin Workspace</p>
-          <h2 className="section-title">管理分頁</h2>
-          <p className="section-sub">使用分頁切換不同管理模組，降低單頁資訊密度。</p>
-        </div>
-        <div className="admin-tab-list" role="tablist" aria-label="後台管理分頁">
-          {adminTabOptions.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              role="tab"
-              aria-selected={activeAdminTab === option.key}
-              className={`admin-tab-button ${activeAdminTab === option.key ? 'active' : ''}`}
-              onClick={() => setActiveAdminTab(option.key)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </section>
+    <AdminShell active={activeAdminTab} onSelect={setActiveAdminTab} email={loginUsername} onLogout={handleLogout}>
+      {isLoading ? <p className="admin-note">正在驗證登入狀態...</p> : null}
+      {error ? <p className="auth-error">{error}</p> : null}
 
       {activeAdminTab === 'siteContent' ? (
         <section className="section-card reveal">
-          <div className="section-head">
-            <p className="section-kicker">Site Content Manager</p>
-            <h2 className="section-title">網站內容管理</h2>
-            <p className="section-sub">拆成多張卡片，可分區編輯首頁、分類、流程與共用資訊。</p>
-          </div>
+          <header className="admin-page-head">
+            <div>
+              <h1>網站文字</h1>
+              <p>首頁標語、各區塊說明、流程、客戶回饋、聯絡方式。改完按最下面的「儲存」，前台馬上更新。</p>
+            </div>
+          </header>
+
+          <nav className="admin-jump" aria-label="跳到區塊">
+            {SITE_CONTENT_SECTIONS.map(([id, label]) => (
+              <a key={id} href={`#sc-${id}`} onClick={(event) => {
+                event.preventDefault();
+                document.getElementById(`sc-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}>
+                {label}
+              </a>
+            ))}
+          </nav>
 
           <form className="admin-site-content-form" onSubmit={handleSaveSiteContent}>
             <div className="admin-site-content-grid">
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-home">
                 <h3>首頁主視覺</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field" htmlFor="content-home-kicker">
@@ -2706,7 +2667,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-categories">
                 <h3>分類總覽：主描述與標籤</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field admin-field-wide" htmlFor="content-categories-hero-sub">
@@ -2855,11 +2816,11 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
-                <h3>訂單管理區塊：標題與描述</h3>
+              <div className="admin-content-block" id="sc-orders">
+                <h3>出機紀錄區塊：標題與描述</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field" htmlFor="content-brand-hero-title">
-                    訂單管理區塊標題
+                    出機紀錄區塊標題
                     <input
                       id="content-brand-hero-title"
                       type="text"
@@ -2869,7 +2830,7 @@ const AdminDashboard: React.FC = () => {
                   </label>
 
                   <label className="auth-field" htmlFor="content-brand-hero-subtitle">
-                    訂單管理區塊描述
+                    出機紀錄區塊描述
                     <input
                       id="content-brand-hero-subtitle"
                       type="text"
@@ -2881,7 +2842,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="admin-content-block">
-                <h3>訂單管理：統一標籤庫</h3>
+                <h3>出機紀錄：統一標籤庫</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field admin-field-wide" htmlFor="content-shipment-tag-catalog">
                     標籤庫（每行一個）
@@ -2896,20 +2857,20 @@ const AdminDashboard: React.FC = () => {
                     />
                   </label>
                 </div>
-                <p className="admin-note">訂單管理編輯彈窗會優先提供這份標籤供快速勾選。</p>
+                <p className="admin-note">出機紀錄編輯彈窗會優先提供這份標籤供快速勾選。</p>
                 <div className="admin-site-tag-actions">
                   <button
                     type="button"
                     className="ghost-btn"
                     onClick={handleSyncShipmentTagCatalogFromOrders}
                   >
-                    從訂單管理同步標籤
+                    從出機紀錄同步標籤
                   </button>
                   <span className="admin-note">目前標籤數：{managedShipmentTagCatalog.length}</span>
                 </div>
               </div>
 
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-process">
                 <h3>流程與服務內容</h3>
                 <div className="admin-form-grid">
                   <div className="auth-field admin-field-wide">
@@ -2972,7 +2933,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-testimonials">
                 <h3>共用：客戶回饋</h3>
                 <div className="admin-multi-input-list">
                   {siteContentForm.testimonials.map((testimonial, index) => (
@@ -3028,7 +2989,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-contact">
                 <h3>共用：聯絡管道</h3>
                 <div className="admin-multi-input-list">
                   {siteContentForm.contactChannels.map((channel, index) => (
@@ -3095,7 +3056,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
+              <div className="admin-content-block" id="sc-footer">
                 <h3>共用：Footer 與聯絡資訊</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field" htmlFor="content-footer-address">
@@ -3155,9 +3116,9 @@ const AdminDashboard: React.FC = () => {
             {siteContentError ? <p className="auth-error">{siteContentError}</p> : null}
             {siteContentSuccess ? <p className="admin-success">{siteContentSuccess}</p> : null}
 
-            <div className="admin-order-form-actions">
+            <div className="admin-order-form-actions admin-save-bar">
               <button type="submit" className="solid-btn" disabled={isSavingSiteContent}>
-                {isSavingSiteContent ? '儲存中...' : '儲存網站內容'}
+                {isSavingSiteContent ? '儲存中...' : '儲存網站文字'}
               </button>
               <button
                 type="button"
@@ -3165,7 +3126,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => loadSiteContent()}
                 disabled={siteContentLoading}
               >
-                重新載入內容
+                放棄修改
               </button>
             </div>
           </form>
@@ -3174,24 +3135,24 @@ const AdminDashboard: React.FC = () => {
 
       {activeAdminTab === 'builds' ? (
         <section className="section-card reveal">
-          <div className="section-head">
-            <p className="section-kicker">Build Manager</p>
-            <h2 className="section-title">推薦配單管理</h2>
-            <p className="section-sub">新增或維護首頁「推薦配單」內容，前台會直接同步最新資料。</p>
-          </div>
-
-          <div className="admin-order-form-actions">
-            <button type="button" className="solid-btn" onClick={openCreateBuildModal}>
-              新增推薦配單
-            </button>
-            <button type="button" className="ghost-btn" onClick={() => loadBuilds()} disabled={buildsLoading}>
-              重新載入
-            </button>
-          </div>
+          <header className="admin-page-head">
+            <div>
+              <h1>推薦配單</h1>
+              <p>首頁「推薦配單」區塊的內容，存了前台馬上更新。</p>
+            </div>
+            <div className="admin-page-actions">
+              <button type="button" className="admin-icon-only" onClick={() => loadBuilds()} disabled={buildsLoading} title="重新載入" aria-label="重新載入">
+                <i className="fa-solid fa-rotate-right" />
+              </button>
+              <button type="button" className="solid-btn" onClick={openCreateBuildModal}>
+                <i className="fa-solid fa-plus" /> 新增
+              </button>
+            </div>
+          </header>
 
           <div className="admin-list-tools">
             <label className="auth-field admin-search-field" htmlFor="build-search">
-              查詢推薦配單
+              <span className="visually-hidden">搜尋</span>
               <input
                 id="build-search"
                 type="text"
@@ -3312,27 +3273,27 @@ const AdminDashboard: React.FC = () => {
 
       {activeAdminTab === 'categories' ? (
         <section className="section-card reveal">
-          <div className="section-head">
-            <p className="section-kicker">Category Manager</p>
-            <h2 className="section-title">分類總覽管理</h2>
-            <p className="section-sub">新增後會自動出現在首頁與分類總覽，且會有獨立的前往分類介紹頁。</p>
-          </div>
-
-          <div className="admin-order-form-actions">
-            <button type="button" className="solid-btn" onClick={openCreateCategoryModal}>
-              新增分類總覽
-            </button>
-            <button type="button" className="ghost-btn" onClick={() => loadCategories()} disabled={categoriesLoading}>
-              重新載入
-            </button>
-          </div>
+          <header className="admin-page-head">
+            <div>
+              <h1>分類總覽</h1>
+              <p>會出現在首頁和「分類總覽」頁，每個分類都有自己的介紹頁。</p>
+            </div>
+            <div className="admin-page-actions">
+              <button type="button" className="admin-icon-only" onClick={() => loadCategories()} disabled={categoriesLoading} title="重新載入" aria-label="重新載入">
+                <i className="fa-solid fa-rotate-right" />
+              </button>
+              <button type="button" className="solid-btn" onClick={openCreateCategoryModal}>
+                <i className="fa-solid fa-plus" /> 新增
+              </button>
+            </div>
+          </header>
 
           {categoriesError ? <p className="auth-error">{categoriesError}</p> : null}
           {categoriesSuccess ? <p className="admin-success">{categoriesSuccess}</p> : null}
 
           <div className="admin-list-tools">
             <label className="auth-field admin-search-field" htmlFor="category-search">
-              查詢分類總覽
+              <span className="visually-hidden">搜尋</span>
               <input
                 id="category-search"
                 type="text"
@@ -3442,27 +3403,27 @@ const AdminDashboard: React.FC = () => {
 
       {activeAdminTab === 'orders' ? (
         <section className="section-card reveal">
-          <div className="section-head">
-            <p className="section-kicker">Recent Shipment</p>
-            <h2 className="section-title">訂單管理</h2>
-            <p className="section-sub">可新增、編輯、刪除訂單管理資料，並可一鍵產出估價單與出機檢查單。</p>
-          </div>
-
-          <div className="admin-order-form-actions">
-            <button type="button" className="solid-btn" onClick={openCreateOrderModal}>
-              新增訂單管理
-            </button>
-            <button type="button" className="ghost-btn" onClick={() => loadOrders()} disabled={ordersLoading}>
-              重新載入
-            </button>
-          </div>
+          <header className="admin-page-head">
+            <div>
+              <h1>出機紀錄</h1>
+              <p>官網上的出機案例。通常從內部管理系統的訂單按「發布到官網」帶過來，這裡可以修改文字或手動新增。</p>
+            </div>
+            <div className="admin-page-actions">
+              <button type="button" className="admin-icon-only" onClick={() => loadOrders()} disabled={ordersLoading} title="重新載入" aria-label="重新載入">
+                <i className="fa-solid fa-rotate-right" />
+              </button>
+              <button type="button" className="solid-btn" onClick={openCreateOrderModal}>
+                <i className="fa-solid fa-plus" /> 新增
+              </button>
+            </div>
+          </header>
 
           {ordersError ? <p className="auth-error">{ordersError}</p> : null}
           {ordersSuccess ? <p className="admin-success">{ordersSuccess}</p> : null}
 
           <div className="admin-list-tools">
             <label className="auth-field admin-search-field" htmlFor="order-search">
-              查詢訂單管理
+              <span className="visually-hidden">搜尋</span>
               <input
                 id="order-search"
                 type="text"
@@ -3478,11 +3439,11 @@ const AdminDashboard: React.FC = () => {
             ) : null}
           </div>
 
-          {ordersLoading ? <p className="admin-note">讀取訂單管理中...</p> : null}
+          {ordersLoading ? <p className="admin-note">讀取出機紀錄中...</p> : null}
 
-          {!ordersLoading && orders.length === 0 ? <p className="admin-note">目前沒有訂單管理資料。</p> : null}
+          {!ordersLoading && orders.length === 0 ? <p className="admin-note">目前沒有出機紀錄。可以到內部管理系統的訂單按「發布到官網」，或按右上角「新增」。</p> : null}
           {!ordersLoading && orders.length > 0 && filteredOrders.length === 0 ? (
-            <p className="admin-note">查無符合條件的訂單管理。</p>
+            <p className="admin-note">找不到符合的出機紀錄。</p>
           ) : null}
 
           {!ordersLoading && orders.length > 0 ? (
@@ -3562,26 +3523,33 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td>
                         <div className="admin-order-table-actions">
-                          <a className="ghost-btn" href={getOrderDetailPath(order.id)} target="_blank" rel="noreferrer">
-                            查看頁面
-                          </a>
-                          <button type="button" className="ghost-btn" onClick={() => handleGenerateOrderQuotation(order)}>
-                            產出估價單
-                          </button>
-                          <button type="button" className="ghost-btn" onClick={() => handleGenerateOrderChecklist(order)}>
-                            產出出機檢查單
-                          </button>
                           <button type="button" className="ghost-btn" onClick={() => startEditOrder(order)}>
                             編輯
                           </button>
-                          <button
-                            type="button"
-                            className="ghost-btn order-delete-btn"
-                            onClick={() => handleDeleteOrder(order)}
-                            disabled={deletingOrderId === order.id}
-                          >
-                            {deletingOrderId === order.id ? '刪除中...' : '刪除'}
-                          </button>
+                          <a className="admin-icon-only" href={getOrderDetailPath(order.id)} target="_blank" rel="noreferrer" title="在官網上看" aria-label="在官網上看">
+                            <i className="fa-solid fa-arrow-up-right-from-square" />
+                          </a>
+                          <details className="admin-more">
+                            <summary className="admin-icon-only" title="更多" aria-label="更多">
+                              <i className="fa-solid fa-ellipsis" />
+                            </summary>
+                            <div className="admin-more-menu">
+                              <button type="button" onClick={() => handleGenerateOrderQuotation(order)}>
+                                <i className="fa-regular fa-file-lines" /> 產出估價單
+                              </button>
+                              <button type="button" onClick={() => handleGenerateOrderChecklist(order)}>
+                                <i className="fa-regular fa-square-check" /> 產出出機檢查單
+                              </button>
+                              <button
+                                type="button"
+                                className="danger"
+                                onClick={() => handleDeleteOrder(order)}
+                                disabled={deletingOrderId === order.id}
+                              >
+                                <i className="fa-regular fa-trash-can" /> {deletingOrderId === order.id ? '刪除中...' : '刪除'}
+                              </button>
+                            </div>
+                          </details>
                         </div>
                       </td>
                     </tr>
@@ -4019,7 +3987,7 @@ const AdminDashboard: React.FC = () => {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="admin-modal-head">
-              <h3 id="edit-order-title">{editingOrderId ? '編輯訂單管理' : '新增訂單管理'}</h3>
+              <h3 id="edit-order-title">{editingOrderId ? '編輯出機紀錄' : '新增出機紀錄'}</h3>
               <button type="button" className="admin-modal-close" onClick={resetOrderForm}>
                 關閉
               </button>
@@ -4285,7 +4253,7 @@ const AdminDashboard: React.FC = () => {
 
               <div className="admin-modal-actions">
                 <button type="submit" className="solid-btn" disabled={isSavingOrder}>
-                  {isSavingOrder ? '儲存中...' : editingOrderId ? '儲存變更' : '新增訂單管理'}
+                  {isSavingOrder ? '儲存中...' : editingOrderId ? '儲存變更' : '新增出機紀錄'}
                 </button>
                 <button type="button" className="ghost-btn" onClick={resetOrderForm}>
                   取消
@@ -4295,7 +4263,7 @@ const AdminDashboard: React.FC = () => {
           </section>
         </div>
       ) : null}
-    </div>
+    </AdminShell>
   );
 };
 

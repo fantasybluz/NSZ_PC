@@ -208,7 +208,7 @@ const CategoryDetail: React.FC = () => {
               回分類總覽
             </Link>
             <Link to="/orders/tags" className="ghost-btn">
-              查看訂單管理
+              看出機紀錄
             </Link>
           </div>
         </div>
