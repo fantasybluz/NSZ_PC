@@ -21,6 +21,9 @@ import { useDatabase } from './lib/store.ts';
 import type { MutablePayload, PublicUser } from './lib/types.ts';
 import { createServiceContainer } from './interfaces/http/serviceContainer.ts';
 
+// DPOM 發布出機紀錄用的內部介面（只有綁定的 Worker 叫得到）
+export { WebsiteAPI } from './rpc.ts';
+
 // wrangler types 有讀到 .dev.vars 時會把 DEV_ADMIN_EMAIL 寫成必填，這裡統一當成選填
 type WorkerEnv = Omit<Env, 'DEV_ADMIN_EMAIL'> & {
   /** 只在本機開發用（.dev.vars）：localhost 上不經過 Access，直接當這個 email 登入 */
@@ -184,6 +187,26 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
     return new Response(buildSwaggerHtml('/openapi.json'), {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': SWAGGER_CSP },
     });
+  }
+
+  // 出機照片（DPOM 發布時存進 R2）：公開讀取，檔名有時間戳記，可以長期快取
+  if (parts[0] === 'media') {
+    if (method !== 'GET' && method !== 'HEAD') {
+      return methodNotAllowed(['GET']);
+    }
+    const key = decodeURIComponent(url.pathname.slice('/media/'.length));
+    if (!/^orders\/[A-Za-z0-9-]+\/[A-Za-z0-9.-]+$/.test(key)) {
+      return notFound();
+    }
+    const object = await env.MEDIA.get(key);
+    if (!object) {
+      return notFound();
+    }
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
+    return new Response(method === 'HEAD' ? null : object.body, { headers });
   }
 
   if (parts[0] !== 'api') {

@@ -9,7 +9,7 @@
     // 網址不是檔案（例如 /categories/item/xxx）就回 index.html，交給前端的路由
     "not_found_handling": "single-page-application",
     // API 和 API 文件先給 Worker，其他都是前端的檔案
-    "run_worker_first": ["/api/*", "/openapi.json", "/api-docs", "/api-docs/*", "/docs"]
+    "run_worker_first": ["/api/*", "/openapi.json", "/api-docs", "/api-docs/*", "/docs", "/media/*"]
   },
   // 先用 bluz.dev 的子網域給客戶 demo；客戶買了自己的網域再加一筆、換掉這筆
   "routes": [{ "pattern": "nszpc.bluz.dev", "custom_domain": true }],
@@ -24,6 +24,13 @@
     // 可以進後台的 email，逗號分隔
     "ADMIN_EMAILS": "fantasybluz@gmail.com,bluzstudio2020@gmail.com"
   },
+  "r2_buckets": [
+    {
+      // 出機照片（DPOM 發布出機紀錄時上傳），網址 /media/orders/...
+      "binding": "MEDIA",
+      "bucket_name": "nszpc-media"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
