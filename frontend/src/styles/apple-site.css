@@ -619,8 +619,7 @@ body {
 
 /* ================= 其他頁：原本的卡片區塊改成滿版區塊 ================= */
 .page > .page-hero,
-.page > .section-card,
-.page > .hero-panel {
+.page > .section-card {
   margin: 0;
   padding: 72px var(--gutter);
   border: 0;
@@ -661,35 +660,26 @@ body {
 }
 /* 區塊裡的卡片：灰底區塊上用白卡，白底區塊上用灰卡 */
 .page > .section-card .category-card,
-.page > .section-card .brand-portfolio-card,
 .page > .section-card .detail-card-item,
 .page > .section-card .product-card,
 .page > .section-card .shipment-item,
 .page > .section-card .blog-card,
-.page > .section-card .faq-item,
-.page > .section-card .timeline-item,
-.page > .section-card .process-step,
-.page > .section-card .service-item {
+.page > .section-card .faq-item {
   border: 0;
   border-radius: 18px;
   background: var(--apple-parchment);
 }
 .page > .section-card:nth-child(even) .category-card,
-.page > .section-card:nth-child(even) .brand-portfolio-card,
 .page > .section-card:nth-child(even) .detail-card-item,
 .page > .section-card:nth-child(even) .product-card,
 .page > .section-card:nth-child(even) .shipment-item,
 .page > .section-card:nth-child(even) .blog-card,
-.page > .section-card:nth-child(even) .faq-item,
-.page > .section-card:nth-child(even) .timeline-item,
-.page > .section-card:nth-child(even) .process-step,
-.page > .section-card:nth-child(even) .service-item {
+.page > .section-card:nth-child(even) .faq-item {
   background: #fff;
 }
 .blog-card-cover,
 .product-image,
-.category-detail-media img,
-.gallery-item img {
+.category-detail-media img {
   border-radius: 0;
 }
 .blog-card,
@@ -713,13 +703,11 @@ body {
 
 /* 卡片裡的標籤：跟卡片反過來的底色 */
 .page > .section-card .category-card .tag-pill,
-.page > .section-card .brand-portfolio-card .tag-pill,
 .page > .section-card .shipment-item .tag-pill,
 .page > .section-card .blog-card .tag-pill {
   background: #fff;
 }
 .page > .section-card:nth-child(even) .category-card .tag-pill,
-.page > .section-card:nth-child(even) .brand-portfolio-card .tag-pill,
 .page > .section-card:nth-child(even) .shipment-item .tag-pill,
 .page > .section-card:nth-child(even) .blog-card .tag-pill {
   background: var(--apple-parchment);
@@ -885,8 +873,7 @@ body {
     height: 260px;
   }
   .page > .page-hero,
-  .page > .section-card,
-  .page > .hero-panel {
+  .page > .section-card {
     padding-top: 56px;
     padding-bottom: 56px;
   }

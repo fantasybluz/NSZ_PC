@@ -1,12 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 
 import AdminShell from '../components/AdminShell';
 
 import {
   logoutAdmin,
   getApiBaseUrl,
-  getStoredToken,
   toApiErrorMessage,
 } from '../lib/adminAuth';
 import { getBlogDetailPath } from '../lib/publicBlogPosts';
@@ -209,7 +207,6 @@ const formatDate = (value: string): string => {
 };
 
 const AdminBlogManager: React.FC = () => {
-  const token = getStoredToken();
   const apiBaseUrl = getApiBaseUrl();
 
   const [posts, setPosts] = React.useState<AdminBlogPost[]>([]);
@@ -233,19 +230,12 @@ const AdminBlogManager: React.FC = () => {
   };
 
   const loadBlogPosts = React.useCallback(async () => {
-    if (!token) {
-      return;
-    }
 
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/blog-posts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${apiBaseUrl}/api/admin/blog-posts`);
 
       const payload = (await response.json()) as BlogPostsResponse | unknown;
       if (!response.ok) {
@@ -267,17 +257,14 @@ const AdminBlogManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl]);
 
   React.useEffect(() => {
-    if (!token) {
-      return;
-    }
 
     loadBlogPosts().catch(() => {
       setError('讀取技術文章失敗');
     });
-  }, [loadBlogPosts, token]);
+  }, [loadBlogPosts]);
 
   React.useEffect(() => {
     if (!isModalOpen) {
@@ -300,9 +287,6 @@ const AdminBlogManager: React.FC = () => {
     setPage(1);
   }, [searchKeyword]);
 
-  if (!token) {
-    return <Navigate to="/admin/login" replace />;
-  }
 
   const handleLogout = () => {
     logoutAdmin();
@@ -418,7 +402,6 @@ const AdminBlogManager: React.FC = () => {
       const response = await fetch(endpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -492,9 +475,6 @@ const AdminBlogManager: React.FC = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/admin/blog-posts/${post.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const payload = await response.json();

@@ -1,12 +1,9 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 
 import AdminShell from '../components/AdminShell';
 
 import {
-  clearAuth,
   getApiBaseUrl,
-  getStoredToken,
   logoutAdmin,
   toApiErrorMessage,
 } from '../lib/adminAuth';
@@ -17,7 +14,6 @@ import {
   CATEGORY_PAGE_SIZE,
   ORDER_PAGE_SIZE,
   createDefaultOrderStorageFields,
-  createEmptyBrandPortfolio,
   createEmptyContactChannel,
   createEmptyShippingStep,
   createEmptySiteStat,
@@ -27,9 +23,7 @@ import {
   defaultCategoryForm,
   defaultOrderForm,
   defaultSiteContentForm,
-  escapeHtml,
   formatCurrency,
-  getQuoteNumber,
   isDealDateFormat,
   normalizeAdminCategory,
   normalizeAdminOrder,
@@ -40,9 +34,7 @@ import {
   parseYyyyMmDdDate,
   serializeCategoryFaqs,
   serializeOrderStorageFields,
-  splitCommaList,
   splitLineList,
-  splitStorageItems,
   splitTextList,
   statusLabelMap,
   statusOptions,
@@ -73,7 +65,7 @@ const SITE_CONTENT_SECTIONS: Array<[string, string]> = [
   ['home', '首頁'],
   ['categories', '分類總覽'],
   ['orders', '出機紀錄'],
-  ['process', '流程與服務'],
+  ['process', '出貨流程'],
   ['testimonials', '客戶回饋'],
   ['contact', '聯絡管道'],
   ['footer', 'Footer'],
@@ -137,7 +129,6 @@ const AdminDashboard: React.FC = () => {
     window.scrollTo({ top: 0 });
   }, []);
 
-  const token = getStoredToken();
   const apiBaseUrl = getApiBaseUrl();
 
   const resetBuildForm = () => {
@@ -164,19 +155,12 @@ const AdminDashboard: React.FC = () => {
   };
 
   const loadBuilds = React.useCallback(async () => {
-    if (!token) {
-      return;
-    }
 
     setBuildsLoading(true);
     setBuildsError('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/builds`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${apiBaseUrl}/api/admin/builds`);
 
       const payload = (await response.json()) as BuildsResponse | unknown;
       if (!response.ok) {
@@ -191,22 +175,15 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setBuildsLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl]);
 
   const loadOrders = React.useCallback(async () => {
-    if (!token) {
-      return;
-    }
 
     setOrdersLoading(true);
     setOrdersError('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/orders`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${apiBaseUrl}/api/admin/orders`);
 
       const payload = (await response.json()) as OrdersResponse | unknown;
       if (!response.ok) {
@@ -226,25 +203,18 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setOrdersLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl]);
 
 
 
 
   const loadCategories = React.useCallback(async () => {
-    if (!token) {
-      return;
-    }
 
     setCategoriesLoading(true);
     setCategoriesError('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/categories`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${apiBaseUrl}/api/admin/categories`);
 
       const payload = (await response.json()) as CategoriesResponse | unknown;
       if (!response.ok) {
@@ -264,22 +234,15 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setCategoriesLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl]);
 
   const loadSiteContent = React.useCallback(async () => {
-    if (!token) {
-      return;
-    }
 
     setSiteContentLoading(true);
     setSiteContentError('');
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/site-content`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${apiBaseUrl}/api/admin/site-content`);
 
       const payload = (await response.json()) as SiteContentResponse | unknown;
       if (!response.ok) {
@@ -288,12 +251,7 @@ const AdminDashboard: React.FC = () => {
 
       const data = (payload as SiteContentResponse).data;
       setSiteContentForm({
-        homeHeroKicker: data.homeHeroKicker,
         homeHeroTitle: data.homeHeroTitle,
-        homeHeroSubtitle: data.homeHeroSubtitle,
-        homeCategorySubtitle: data.homeCategorySubtitle,
-        homeBuildSubtitle: data.homeBuildSubtitle,
-        homeWorkflowSubtitle: data.homeWorkflowSubtitle,
         homeContactSubtitle: data.homeContactSubtitle,
         homeStats: data.homeStats.map((item) => ({
           value: item.value,
@@ -301,18 +259,7 @@ const AdminDashboard: React.FC = () => {
         })),
         categoriesHeroSubtitle: data.categoriesHeroSubtitle,
         categoriesQuickTagsText: data.categoriesQuickTags.join('\n'),
-        categoriesPortfolioTitle: data.categoriesPortfolioTitle,
-        categoriesPortfolioSubtitle: data.categoriesPortfolioSubtitle,
-        categoriesBrandPortfolios: data.categoriesBrandPortfolios.map((item) => ({
-          id: item.id,
-          name: item.name,
-          tagline: item.tagline,
-          focus: [...item.focus],
-          tags: [...item.tags],
-          images: [...item.images],
-        })),
         brandHeroTitle: data.brandHeroTitle,
-        brandHeroSubtitle: data.brandHeroSubtitle,
         shipmentTagCatalogText: Array.isArray(data.shipmentTagCatalog)
           ? data.shipmentTagCatalog.join('\n')
           : '',
@@ -320,7 +267,6 @@ const AdminDashboard: React.FC = () => {
           title: item.title,
           description: item.description,
         })),
-        serviceHighlightsText: data.serviceHighlights.join('\n'),
         testimonials: data.testimonials.map((item) => ({
           quote: item.quote,
           name: item.name,
@@ -334,9 +280,6 @@ const AdminDashboard: React.FC = () => {
         })),
         footerAddress: data.footerAddress,
         footerSlogan: data.footerSlogan,
-        contactAddress: data.contactAddress,
-        contactPhone: data.contactPhone,
-        contactLine: data.contactLine,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : '讀取網站內容失敗';
@@ -344,21 +287,13 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setSiteContentLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl]);
 
   React.useEffect(() => {
     const bootstrap = async () => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
 
       try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`);
 
         const payload = (await response.json()) as MeResponse | unknown;
         if (!response.ok) {
@@ -377,7 +312,6 @@ const AdminDashboard: React.FC = () => {
         const message = err instanceof Error ? err.message : '讀取帳號資訊失敗';
         setError(message);
         setLoginUsername('');
-        clearAuth();
       } finally {
         setIsLoading(false);
       }
@@ -386,7 +320,6 @@ const AdminDashboard: React.FC = () => {
     bootstrap().catch(() => {
       setIsLoading(false);
       setError('系統錯誤，請重新登入');
-      clearAuth();
     });
   }, [
     apiBaseUrl,
@@ -394,7 +327,6 @@ const AdminDashboard: React.FC = () => {
     loadCategories,
     loadOrders,
     loadSiteContent,
-    token,
   ]);
 
   React.useEffect(() => {
@@ -452,9 +384,6 @@ const AdminDashboard: React.FC = () => {
     setOrderPage(1);
   }, [orderSearchKeyword]);
 
-  if (!token) {
-    return <Navigate to="/admin/login" replace />;
-  }
 
   const handleLogout = () => {
     logoutAdmin();
@@ -717,47 +646,6 @@ const AdminDashboard: React.FC = () => {
     }));
   };
 
-  const handleBrandPortfolioTextFieldChange = (
-    index: number,
-    key: 'id' | 'name' | 'tagline',
-    value: string,
-  ) => {
-    setSiteContentForm((prev) => ({
-      ...prev,
-      categoriesBrandPortfolios: prev.categoriesBrandPortfolios.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [key]: value } : item,
-      ),
-    }));
-  };
-
-  const handleBrandPortfolioListFieldChange = (
-    index: number,
-    key: 'focus' | 'images' | 'tags',
-    value: string,
-  ) => {
-    const nextList = splitCommaList(value);
-    setSiteContentForm((prev) => ({
-      ...prev,
-      categoriesBrandPortfolios: prev.categoriesBrandPortfolios.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [key]: nextList } : item,
-      ),
-    }));
-  };
-
-  const addBrandPortfolio = () => {
-    setSiteContentForm((prev) => ({
-      ...prev,
-      categoriesBrandPortfolios: [...prev.categoriesBrandPortfolios, createEmptyBrandPortfolio()],
-    }));
-  };
-
-  const removeBrandPortfolio = (index: number) => {
-    setSiteContentForm((prev) => ({
-      ...prev,
-      categoriesBrandPortfolios: prev.categoriesBrandPortfolios.filter((_, itemIndex) => itemIndex !== index),
-    }));
-  };
-
   const openCreateBuildModal = () => {
     setBuildsError('');
     setBuildsSuccess('');
@@ -791,29 +679,14 @@ const AdminDashboard: React.FC = () => {
     event.preventDefault();
     setSiteContentSuccess('');
 
-    if (!token) {
-      setSiteContentError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     const requiredFields: Array<{ value: string; label: string }> = [
-      { value: siteContentForm.homeHeroKicker, label: '首頁主標題標籤' },
       { value: siteContentForm.homeHeroTitle, label: '首頁主標題' },
-      { value: siteContentForm.homeHeroSubtitle, label: '首頁主標題描述' },
-      { value: siteContentForm.homeCategorySubtitle, label: '首頁熱門分類描述' },
-      { value: siteContentForm.homeBuildSubtitle, label: '首頁推薦配單描述' },
-      { value: siteContentForm.homeWorkflowSubtitle, label: '首頁出貨流程描述' },
       { value: siteContentForm.homeContactSubtitle, label: '首頁聯絡我們描述' },
       { value: siteContentForm.categoriesHeroSubtitle, label: '分類總覽說明' },
-      { value: siteContentForm.categoriesPortfolioTitle, label: '分類總覽品牌作品集標題' },
-      { value: siteContentForm.categoriesPortfolioSubtitle, label: '分類總覽品牌作品集說明' },
-      { value: siteContentForm.brandHeroTitle, label: '出機紀錄區塊標題' },
-      { value: siteContentForm.brandHeroSubtitle, label: '出機紀錄區塊說明' },
+      { value: siteContentForm.brandHeroTitle, label: '首頁近期出機標題' },
       { value: siteContentForm.footerAddress, label: 'Footer 地址' },
       { value: siteContentForm.footerSlogan, label: 'Footer 標語' },
-      { value: siteContentForm.contactAddress, label: '聯絡地址' },
-      { value: siteContentForm.contactPhone, label: '聯絡電話' },
-      { value: siteContentForm.contactLine, label: '聯絡 LINE' },
     ];
 
     const missing = requiredFields.find((item) => !item.value.trim());
@@ -873,33 +746,8 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    const categoriesBrandPortfolios = siteContentForm.categoriesBrandPortfolios
-      .map((item) => ({
-        id: item.id.trim(),
-        name: item.name.trim(),
-        tagline: item.tagline.trim(),
-        focus: item.focus.map((value) => value.trim()).filter(Boolean),
-        images: item.images.map((value) => value.trim()).filter(Boolean),
-        tags: item.tags.map((value) => value.trim()).filter(Boolean),
-      }))
-      .filter((item) => item.id && item.name && item.tagline);
-
-    if (categoriesBrandPortfolios.length === 0) {
-      setSiteContentError('品牌作品集至少需要一筆');
-      return;
-    }
-
-    const invalidPortfolio = categoriesBrandPortfolios.find(
-      (item) => item.focus.length === 0 || item.images.length === 0 || item.tags.length === 0,
-    );
-    if (invalidPortfolio) {
-      setSiteContentError(`品牌作品集「${invalidPortfolio.name}」需至少一個重點、一張圖片與一個標籤`);
-      return;
-    }
-
     const categoriesQuickTags = splitLineList(siteContentForm.categoriesQuickTagsText);
     const shipmentTagCatalog = parseTagTextValue(siteContentForm.shipmentTagCatalogText);
-    const serviceHighlights = splitLineList(siteContentForm.serviceHighlightsText);
 
     if (categoriesQuickTags.length === 0) {
       setSiteContentError('分類總覽熱門標籤至少需要一筆');
@@ -911,11 +759,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (serviceHighlights.length === 0) {
-      setSiteContentError('服務項目至少需要一筆');
-      return;
-    }
-
     setIsSavingSiteContent(true);
     setSiteContentError('');
 
@@ -923,35 +766,22 @@ const AdminDashboard: React.FC = () => {
       const response = await fetch(`${apiBaseUrl}/api/admin/site-content`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        // 前台已經不顯示的舊欄位（作品集、聯絡電話等）不用送，後端會沿用資料庫裡原本的值
         body: JSON.stringify({
-          homeHeroKicker: siteContentForm.homeHeroKicker.trim(),
           homeHeroTitle: siteContentForm.homeHeroTitle.trim(),
-          homeHeroSubtitle: siteContentForm.homeHeroSubtitle.trim(),
-          homeCategorySubtitle: siteContentForm.homeCategorySubtitle.trim(),
-          homeBuildSubtitle: siteContentForm.homeBuildSubtitle.trim(),
-          homeWorkflowSubtitle: siteContentForm.homeWorkflowSubtitle.trim(),
           homeContactSubtitle: siteContentForm.homeContactSubtitle.trim(),
           homeStats,
           categoriesHeroSubtitle: siteContentForm.categoriesHeroSubtitle.trim(),
           categoriesQuickTags,
-          categoriesPortfolioTitle: siteContentForm.categoriesPortfolioTitle.trim(),
-          categoriesPortfolioSubtitle: siteContentForm.categoriesPortfolioSubtitle.trim(),
-          categoriesBrandPortfolios,
           brandHeroTitle: siteContentForm.brandHeroTitle.trim(),
-          brandHeroSubtitle: siteContentForm.brandHeroSubtitle.trim(),
           shipmentTagCatalog,
           shippingSteps,
-          serviceHighlights,
           testimonials,
           contactChannels,
           footerAddress: siteContentForm.footerAddress.trim(),
           footerSlogan: siteContentForm.footerSlogan.trim(),
-          contactAddress: siteContentForm.contactAddress.trim(),
-          contactPhone: siteContentForm.contactPhone.trim(),
-          contactLine: siteContentForm.contactLine.trim(),
         }),
       });
 
@@ -1024,10 +854,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setBuildsError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setIsSavingBuild(true);
     setBuildsError('');
@@ -1041,7 +867,6 @@ const AdminDashboard: React.FC = () => {
       const response = await fetch(endpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -1134,10 +959,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setOrdersError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setIsSavingOrder(true);
     setOrdersError('');
@@ -1151,7 +972,6 @@ const AdminDashboard: React.FC = () => {
       const response = await fetch(endpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -1236,10 +1056,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setCategoriesError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setIsSavingCategory(true);
     setCategoriesError('');
@@ -1253,7 +1069,6 @@ const AdminDashboard: React.FC = () => {
       const response = await fetch(endpoint, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -1343,885 +1158,6 @@ const AdminDashboard: React.FC = () => {
     setOrderStorageFields(normalizeOrderStorageFields(order.storage || ''));
   };
 
-  const handleGenerateOrderQuotation = (order: AdminOrder) => {
-    setOrdersError('');
-    setOrdersSuccess('');
-
-    const quoteWindow = window.open('', 'nszpc-quotation', 'popup=yes,width=980,height=860');
-    if (!quoteWindow) {
-      setOrdersError('無法開啟估價單視窗，請確認瀏覽器沒有封鎖彈出視窗');
-      return;
-    }
-
-    // Keep the new window detached from current page while still allowing document write.
-    try {
-      quoteWindow.opener = null;
-    } catch {
-      // Ignore when browser does not allow assigning opener.
-    }
-
-    const quoteNumber = getQuoteNumber(order);
-    const generatedAt = new Date().toLocaleString('zh-TW', { hour12: false });
-    const storageItems = splitStorageItems(order.storage || '');
-    const quoteTotal = order.salePrice + (order.serviceFee || 0);
-    const storageLabel =
-      storageItems.length > 0
-        ? Object.entries(
-            storageItems.reduce<Record<string, number>>((acc, item) => {
-              const key = item.trim();
-              if (!key) {
-                return acc;
-              }
-              acc[key] = (acc[key] || 0) + 1;
-              return acc;
-            }, {}),
-          )
-            .map(([item, count]) => (count > 1 ? `${item} x${count}` : item))
-            .join(', ')
-        : order.storage || '待補充';
-    const storageQty = storageItems.length > 0 ? String(storageItems.length) : '1';
-    const quoteSpecs = [
-      { part: 'CPU', spec: order.cpu || '待補充', qty: '1', unit: '-' },
-      { part: '主機板', spec: order.motherboard || '待補充', qty: '1', unit: '-' },
-      { part: 'RAM', spec: order.ram || '待補充', qty: '1', unit: '-' },
-      { part: '硬碟', spec: storageLabel, qty: storageQty, unit: '-' },
-      { part: '顯示卡', spec: order.gpu || '待補充', qty: '1', unit: '-' },
-      { part: '散熱器', spec: order.cooler || '待補充', qty: '1', unit: '-' },
-      { part: '電源供應器', spec: order.psu || '待補充', qty: '1', unit: '-' },
-      { part: '機殼', spec: order.pcCase || '待補充', qty: '1', unit: '-' },
-      { part: '服務費用', spec: formatCurrency(order.serviceFee || 0), qty: '1', unit: formatCurrency(order.serviceFee || 0) },
-    ];
-    const quoteSpecsRows = quoteSpecs
-      .map(
-        (item) =>
-          `<tr>
-            <td>${escapeHtml(item.part)}</td>
-            <td>${escapeHtml(item.spec)}</td>
-            <td class="quote-qty">${escapeHtml(item.qty)}</td>
-            <td class="quote-qty">${escapeHtml(item.unit)}</td>
-          </tr>`,
-      )
-      .join('');
-
-    const quoteHtml = `<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <title>估價單 ${escapeHtml(quoteNumber)}</title>
-    <style>
-      :root { color-scheme: light; }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        padding: 24px;
-        font-family: "Noto Sans TC", "PingFang TC", sans-serif;
-        color: #1f2d3d;
-        background: #f4f7fb;
-      }
-      .quote-page {
-        max-width: 900px;
-        margin: 0 auto;
-        background: #fff;
-        border: 1px solid #d5deea;
-        border-radius: 12px;
-        box-shadow: 0 10px 24px rgba(17, 39, 66, 0.08);
-        padding: 28px;
-      }
-      .quote-actions {
-        margin-bottom: 16px;
-        display: flex;
-        gap: 10px;
-      }
-      .quote-actions button {
-        border: 1px solid #b5c6dd;
-        border-radius: 8px;
-        background: #fff;
-        color: #1f2d3d;
-        padding: 8px 14px;
-        cursor: pointer;
-      }
-      .quote-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        border-bottom: 2px solid #12324d;
-        padding-bottom: 12px;
-      }
-      .quote-title {
-        margin: 0;
-        font-size: 28px;
-        letter-spacing: 0.06em;
-      }
-      .quote-sub {
-        margin: 6px 0 0;
-        color: #35506f;
-      }
-      .quote-grid {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .quote-box {
-        border: 1px solid #d5deea;
-        border-radius: 10px;
-        padding: 12px;
-        background: #f9fcff;
-      }
-      .quote-box h3 {
-        margin: 0 0 8px;
-        font-size: 14px;
-        color: #12324d;
-      }
-      .quote-box p {
-        margin: 4px 0;
-        line-height: 1.45;
-      }
-      .quote-table {
-        margin-top: 18px;
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .quote-table th,
-      .quote-table td {
-        border: 1px solid #d5deea;
-        padding: 10px 12px;
-        text-align: left;
-        vertical-align: top;
-      }
-      .quote-table thead th {
-        background: #f0f5fb;
-        font-weight: 600;
-      }
-      .quote-table tbody td:first-child {
-        width: 150px;
-        background: #f7fafc;
-        font-weight: 600;
-      }
-      .quote-table tbody td:last-child {
-        width: 90px;
-        text-align: center;
-      }
-      .quote-table tbody td:nth-child(3) {
-        width: 70px;
-        text-align: center;
-      }
-      .quote-footer {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 18px;
-        align-items: end;
-      }
-      .quote-stamp {
-        width: 210px;
-        height: 140px;
-        border: 2px dashed #b8c7dc;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #8aa0b8;
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        text-align: center;
-        background: #fbfdff;
-      }
-      .quote-totals {
-        display: grid;
-        gap: 6px;
-      }
-      .quote-total {
-        margin-top: 16px;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 10px;
-      }
-      .quote-total strong {
-        font-size: 22px;
-        color: #12324d;
-      }
-      .quote-note {
-        margin-top: 14px;
-        color: #4e637d;
-        line-height: 1.5;
-      }
-      @page {
-        size: A4;
-        margin: 0;
-      }
-      @media print {
-        body {
-          background: #fff;
-          padding: 0;
-        }
-        .quote-page {
-          border: 0;
-          box-shadow: none;
-          border-radius: 0;
-          max-width: none;
-          width: 210mm;
-          height: 297mm;
-          padding: 12mm 10mm 40mm;
-        }
-        .quote-footer {
-          position: fixed;
-          bottom: 10mm;
-          left: 10mm;
-          right: 10mm;
-        }
-        .quote-title {
-          font-size: 24px;
-        }
-        .quote-grid {
-          margin-top: 12px;
-          gap: 10px;
-        }
-        .quote-box {
-          padding: 10px;
-        }
-        .quote-box p {
-          margin: 3px 0;
-        }
-        .quote-table {
-          font-size: 12px;
-        }
-        .quote-table th,
-        .quote-table td {
-          padding: 6px 8px;
-        }
-        .quote-total strong {
-          font-size: 20px;
-        }
-        .quote-note {
-          margin-top: 10px;
-          font-size: 12px;
-        }
-        .quote-table,
-        .quote-table tr {
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-        .quote-actions {
-          display: none;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <section class="quote-page">
-      <div class="quote-actions">
-        <button type="button" onclick="window.print()">列印 / 另存 PDF</button>
-        <button type="button" onclick="window.close()">關閉</button>
-      </div>
-      <header class="quote-head">
-        <div>
-          <h1 class="quote-title">估價單</h1>
-          <p class="quote-sub">星辰電腦 NSZPC</p>
-        </div>
-        <div>
-          <p>估價單號：${escapeHtml(quoteNumber)}</p>
-          <p>建立時間：${escapeHtml(generatedAt)}</p>
-          <p>交付狀態：${escapeHtml(statusLabelMap[order.status])}</p>
-        </div>
-      </header>
-      <div class="quote-grid">
-        <article class="quote-box">
-          <h3>客戶需求</h3>
-          <p>品項：${escapeHtml(order.item)}</p>
-          <p>需求地區：${escapeHtml(order.location)}</p>
-          <p>出貨日期：${escapeHtml(order.date)}</p>
-        </article>
-        <article class="quote-box">
-          <h3>店家資訊</h3>
-          <p>地址：${escapeHtml(siteContentForm.contactAddress || '待補充')}</p>
-          <p>電話：${escapeHtml(siteContentForm.contactPhone || '待補充')}</p>
-          <p>LINE：${escapeHtml(siteContentForm.contactLine || '待補充')}</p>
-        </article>
-      </div>
-      <table class="quote-table">
-        <thead>
-          <tr>
-            <th>品項</th>
-            <th>名稱</th>
-            <th>數量</th>
-            <th>單價</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${quoteSpecsRows}
-        </tbody>
-      </table>
-      <div class="quote-footer">
-        <div class="quote-stamp">發票章／公司章</div>
-        <div class="quote-totals">
-          <div class="quote-total">
-            <span>主機售價(未稅)</span>
-            <strong>${escapeHtml(formatCurrency(order.salePrice))}</strong>
-          </div>
-          <div class="quote-total">
-            <span>估價總額(含稅價格)</span>
-            <strong>${escapeHtml(formatCurrency(quoteTotal))}</strong>
-          </div>
-        </div>
-      </div>
-      <p class="quote-note">
-        此估價單由後台「出機紀錄」資料自動產出，僅供報價與規格確認使用；實際交期與付款方式請以雙方最終確認為準。
-      </p>
-    </section>
-  </body>
-</html>`;
-
-    try {
-      quoteWindow.document.open();
-      quoteWindow.document.write(quoteHtml);
-      quoteWindow.document.close();
-      quoteWindow.focus();
-      setOrdersSuccess(`已為「${order.item}」產出估價單`);
-    } catch {
-      quoteWindow.close();
-      setOrdersError('估價單產生失敗，請再試一次。');
-    }
-  };
-
-  const handleGenerateOrderChecklist = (order: AdminOrder) => {
-    setOrdersError('');
-    setOrdersSuccess('');
-
-    const checklistWindow = window.open('', 'nszpc-checklist', 'popup=yes,width=980,height=920');
-    if (!checklistWindow) {
-      setOrdersError('無法開啟出機檢查單視窗，請確認瀏覽器沒有封鎖彈出視窗');
-      return;
-    }
-
-    try {
-      checklistWindow.opener = null;
-    } catch {
-      // Ignore when browser does not allow assigning opener.
-    }
-
-    const checklistNumber = getQuoteNumber(order).replace('QT-', 'QC-');
-    const generatedAt = new Date().toLocaleString('zh-TW', { hour12: false });
-    const storageItems = splitStorageItems(order.storage || '');
-    const storageLabel =
-      storageItems.length > 0
-        ? Object.entries(
-            storageItems.reduce<Record<string, number>>((acc, item) => {
-              const key = item.trim();
-              if (!key) {
-                return acc;
-              }
-              acc[key] = (acc[key] || 0) + 1;
-              return acc;
-            }, {}),
-          )
-            .map(([item, count]) => (count > 1 ? `${item} x${count}` : item))
-            .join(', ')
-        : order.storage || '待補充';
-    const checklistSpecs = [
-      { part: 'CPU', spec: order.cpu || '待補充' },
-      { part: '主機板', spec: order.motherboard || '待補充' },
-      { part: 'RAM', spec: order.ram || '待補充' },
-      { part: '硬碟', spec: storageLabel },
-      { part: '顯示卡', spec: order.gpu || '待補充' },
-      { part: '散熱器', spec: order.cooler || '待補充' },
-      { part: '電源供應器', spec: order.psu || '待補充' },
-      { part: '機殼', spec: order.pcCase || '待補充' },
-    ];
-    const checklistSpecsRows = (() => {
-      const rows: string[] = [];
-      for (let index = 0; index < checklistSpecs.length; index += 2) {
-        const left = checklistSpecs[index];
-        const right = checklistSpecs[index + 1];
-        rows.push(
-          `<tr>
-            <th>${escapeHtml(left.part)}</th>
-            <td>${escapeHtml(left.spec)}</td>
-            ${
-              right
-                ? `<th>${escapeHtml(right.part)}</th><td>${escapeHtml(right.spec)}</td>`
-                : '<th></th><td></td>'
-            }
-          </tr>`,
-        );
-      }
-      return rows.join('');
-    })();
-
-    const checklistHtml = `<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8" />
-    <title>出機檢查單 ${escapeHtml(checklistNumber)}</title>
-    <style>
-      :root { color-scheme: light; }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        padding: 24px;
-        font-family: "Noto Sans TC", "PingFang TC", sans-serif;
-        color: #1f2d3d;
-        background: #f4f7fb;
-      }
-      .checklist-page {
-        max-width: 900px;
-        margin: 0 auto;
-        background: #fff;
-        border: 1px solid #d5deea;
-        border-radius: 12px;
-        box-shadow: 0 10px 24px rgba(17, 39, 66, 0.08);
-        padding: 28px;
-      }
-      .checklist-actions {
-        margin-bottom: 16px;
-        display: flex;
-        gap: 10px;
-      }
-      .checklist-actions button {
-        border: 1px solid #b5c6dd;
-        border-radius: 8px;
-        background: #fff;
-        color: #1f2d3d;
-        padding: 8px 14px;
-        cursor: pointer;
-      }
-      .checklist-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        border-bottom: 2px solid #12324d;
-        padding-bottom: 12px;
-      }
-      .checklist-kicker {
-        margin: 0;
-        font-size: 12px;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: #5c7694;
-      }
-      .checklist-title {
-        margin: 6px 0 0;
-        font-size: 28px;
-        letter-spacing: 0.06em;
-      }
-      .checklist-sub {
-        margin: 6px 0 0;
-        color: #35506f;
-      }
-      .checklist-meta p {
-        margin: 4px 0;
-        text-align: right;
-      }
-      .checklist-grid {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .checklist-box {
-        border: 1px solid #d5deea;
-        border-radius: 10px;
-        padding: 12px;
-        background: #f9fcff;
-      }
-      .checklist-box h3 {
-        margin: 0 0 8px;
-        font-size: 14px;
-        color: #12324d;
-      }
-      .checklist-box p {
-        margin: 4px 0;
-        line-height: 1.45;
-      }
-      .checklist-section-title {
-        margin: 12px 0 6px;
-        font-size: 16px;
-        color: #12324d;
-      }
-      .checklist-specs {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12.5px;
-      }
-      .checklist-specs th,
-      .checklist-specs td {
-        border: 1px solid #d5deea;
-        padding: 6px 8px;
-        text-align: left;
-        vertical-align: top;
-        line-height: 1.35;
-      }
-      .checklist-specs th {
-        width: 110px;
-        background: #f0f5fb;
-      }
-      .checklist-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-size: 12.5px;
-        border: 1px solid #d5deea;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-      .checklist-table th,
-      .checklist-table td {
-        border: 1px solid #d5deea;
-        padding: 7px 9px;
-        text-align: left;
-        vertical-align: middle;
-      }
-      .checklist-table th {
-        background: #f0f5fb;
-        color: #12324d;
-        font-weight: 600;
-      }
-      .checklist-table .section {
-        background: #e9f2fb;
-        color: #12324d;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-      }
-      .checklist-table .key-cell {
-        background: #f7faff;
-        font-weight: 600;
-        color: #2a3f5c;
-        width: 120px;
-      }
-      .checklist-table .fill-cell {
-        height: 28px;
-      }
-      .checklist-table .fill-line {
-        display: block;
-        width: 100%;
-        height: 16px;
-        border-bottom: 1px solid #7b8da3;
-      }
-      .checklist-table .muted {
-        color: #5f7187;
-        font-size: 12px;
-      }
-      .checklist-table .center {
-        text-align: center;
-      }
-      .line {
-        border-bottom: 1px solid #7b8da3;
-        display: inline-block;
-        min-width: 140px;
-        height: 1em;
-        vertical-align: baseline;
-      }
-      .checklist-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 24px;
-        margin-top: 16px;
-        font-size: 13px;
-      }
-      .checklist-date {
-        font-weight: 500;
-        color: #22364f;
-      }
-      .checklist-signature {
-        font-weight: 500;
-        color: #22364f;
-      }
-      .checklist-social {
-        text-align: right;
-        line-height: 1.6;
-        white-space: nowrap;
-      }
-      .checklist-note {
-        margin-top: 12px;
-        text-align: left;
-        font-size: 13px;
-        color: #4e637d;
-      }
-      @page {
-        size: A4;
-        margin: 0;
-      }
-      @media print {
-        body {
-          background: #fff;
-          padding: 0;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .checklist-page {
-          border: 0;
-          box-shadow: none;
-          border-radius: 0;
-          max-width: none;
-          width: 210mm;
-          min-height: 297mm;
-          height: auto;
-          padding: 16mm 10mm 18mm;
-          overflow: visible;
-        }
-        .checklist-grid {
-          display: block;
-        }
-        .checklist-box {
-          margin-bottom: 8px;
-          page-break-inside: avoid;
-        }
-        .checklist-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-        .checklist-title {
-          font-size: 24px;
-        }
-        .checklist-head {
-          margin-top: 6mm;
-        }
-        .checklist-grid {
-          margin-top: 12px;
-          gap: 10px;
-        }
-        .checklist-box {
-          padding: 10px;
-        }
-        .checklist-box p {
-          margin: 3px 0;
-        }
-        .checklist-section-title {
-          margin: 12px 0 6px;
-          font-size: 14px;
-        }
-        .checklist-specs,
-        .checklist-table {
-          font-size: 10.5px;
-        }
-        .checklist-specs th,
-        .checklist-specs td,
-        .checklist-table th,
-        .checklist-table td {
-          padding: 4px 6px;
-        }
-        .checklist-table {
-          border-radius: 0;
-          overflow: visible;
-        }
-        .checklist-table th,
-        .checklist-table td {
-          border-color: #a8b8cc;
-        }
-        .checklist-table .muted {
-          font-size: 10px;
-        }
-        .checklist-footer {
-          margin-top: 12px;
-          gap: 16px;
-        }
-        .checklist-note {
-          margin-top: 8px;
-          font-size: 12px;
-        }
-        .checklist-date {
-          position: fixed;
-          bottom: 8mm;
-          left: 10mm;
-          font-size: 12px;
-        }
-        .checklist-signature {
-          position: fixed;
-          bottom: 8mm;
-          right: 10mm;
-          font-size: 12px;
-        }
-        .checklist-table,
-        .checklist-table tr,
-        .checklist-specs,
-        .checklist-specs tr {
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-        .checklist-actions {
-          display: none;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <section class="checklist-page">
-      <div class="checklist-actions">
-        <button type="button" onclick="window.print()">列印 / 另存 PDF</button>
-        <button type="button" onclick="window.close()">關閉</button>
-      </div>
-      <header class="checklist-head">
-        <div>
-          <p class="checklist-kicker">Shipping QC</p>
-          <h1 class="checklist-title">出機檢查單</h1>
-          <p class="checklist-sub">星辰電腦 NSZPC</p>
-        </div>
-        <div class="checklist-meta">
-          <p>檢查單號：${escapeHtml(checklistNumber)}</p>
-          <p>建立時間：${escapeHtml(generatedAt)}</p>
-          <p>交付狀態：${escapeHtml(statusLabelMap[order.status])}</p>
-        </div>
-      </header>
-
-      <div class="checklist-grid">
-        <article class="checklist-box">
-          <h3>出機資訊</h3>
-          <p>品項：${escapeHtml(order.item)}</p>
-          <p>需求地區：${escapeHtml(order.location)}</p>
-          <p>出貨日期：${escapeHtml(order.date)}</p>
-        </article>
-        <article class="checklist-box">
-          <h3>店家資訊</h3>
-          <p>地址：${escapeHtml(siteContentForm.contactAddress || '待補充')}</p>
-          <p>電話：${escapeHtml(siteContentForm.contactPhone || '待補充')}</p>
-          <p>LINE：${escapeHtml(siteContentForm.contactLine || '待補充')}</p>
-        </article>
-      </div>
-
-      <h3 class="checklist-section-title">本機配置</h3>
-      <table class="checklist-specs">
-        <colgroup>
-          <col style="width: 110px;" />
-          <col />
-          <col style="width: 110px;" />
-          <col />
-        </colgroup>
-        <tbody>
-          ${checklistSpecsRows}
-        </tbody>
-      </table>
-
-      <h3 class="checklist-section-title">出貨前測試檢測表</h3>
-      <table class="checklist-table">
-        <tr>
-          <th class="section" colspan="6">Windows 系統 (OS)（Windows / Bios）</th>
-        </tr>
-        <tr>
-          <td>系統安裝</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>BIOS 優化</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>零組件相關驅動程式</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>主板驅動安裝</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>顯卡驅動安裝</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>主板(燈光/音效等)</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>水冷螢幕驅動</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>硬碟4K對齊</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td colspan="2"></td>
-        </tr>
-
-        <tr>
-          <th class="section" colspan="6">測試 OCCT（30M/1H）</th>
-        </tr>
-        <tr>
-          <td>CPU + RAM</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>CPU</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>RAM</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>LINPACK</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>3D ADA</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>VRAM</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>POWER</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td colspan="4" class="fill-cell"><span class="fill-line"></span></td>
-        </tr>
-
-        <tr>
-          <th class="section" colspan="6">測試 R23（測 CPU）</th>
-        </tr>
-        <tr>
-          <td>Multi Core</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>Single Core</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td colspan="2" class="fill-cell"><span class="fill-line"></span></td>
-        </tr>
-
-        <tr>
-          <th class="section" colspan="6">測試 AIDA64 + FURMARK（測 CPU / GPU）3H</th>
-        </tr>
-        <tr>
-          <td>CPU 滿載功耗/溫度</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>GPU 滿載功耗/溫度</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td colspan="2" class="fill-cell"><span class="fill-line"></span></td>
-        </tr>
-
-        <tr>
-          <th class="section" colspan="6">其他測試/配件檢查 AS SSD Benchmark</th>
-        </tr>
-        <tr>
-          <td>待機瓦數</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>滿載瓦數</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>整體穩定性</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>WIFI/藍芽</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>前後音源孔</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>前後USB</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-        <tr>
-          <td>燈光同步</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>電源線</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-          <td>WIFI天線</td>
-          <td class="center fill-cell"><span class="fill-line"></span></td>
-        </tr>
-      </table>
-
-      <div class="checklist-footer">
-        <div class="checklist-date">出貨日期：${escapeHtml(order.date || '')}</div>
-        <div class="checklist-signature">出貨確認簽章：<span class="line"></span></div>
-      </div>
-    </section>
-  </body>
-</html>`;
-
-    try {
-      checklistWindow.document.open();
-      checklistWindow.document.write(checklistHtml);
-      checklistWindow.document.close();
-      checklistWindow.focus();
-      setOrdersSuccess(`已為「${order.item}」產出出機檢查單`);
-    } catch {
-      checklistWindow.close();
-      setOrdersError('出機檢查單產生失敗，請再試一次。');
-    }
-  };
-
-
-
-
   const startEditCategory = (category: AdminCategory) => {
     setCategoriesSuccess('');
     setCategoriesError('');
@@ -2247,10 +1183,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setBuildsError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setDeletingBuildId(build.id);
     setBuildsError('');
@@ -2259,9 +1191,6 @@ const AdminDashboard: React.FC = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/admin/builds/${build.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const payload = await response.json();
@@ -2289,10 +1218,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setOrdersError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setDeletingOrderId(order.id);
     setOrdersError('');
@@ -2301,9 +1226,6 @@ const AdminDashboard: React.FC = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/admin/orders/${order.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const payload = await response.json();
@@ -2335,10 +1257,6 @@ const AdminDashboard: React.FC = () => {
       return;
     }
 
-    if (!token) {
-      setCategoriesError('登入狀態已失效，請重新登入');
-      return;
-    }
 
     setDeletingCategoryId(category.id);
     setCategoriesError('');
@@ -2347,9 +1265,6 @@ const AdminDashboard: React.FC = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/admin/categories/${category.id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const payload = await response.json();
@@ -2548,18 +1463,8 @@ const AdminDashboard: React.FC = () => {
           <form className="admin-site-content-form" onSubmit={handleSaveSiteContent}>
             <div className="admin-site-content-grid">
               <div className="admin-content-block" id="sc-home">
-                <h3>首頁主視覺</h3>
+                <h3>首頁</h3>
                 <div className="admin-form-grid">
-                  <label className="auth-field" htmlFor="content-home-kicker">
-                    首頁主標籤（Kicker）
-                    <input
-                      id="content-home-kicker"
-                      type="text"
-                      value={siteContentForm.homeHeroKicker}
-                      onChange={(event) => handleSiteContentFieldChange('homeHeroKicker', event.target.value)}
-                    />
-                  </label>
-
                   <label className="auth-field admin-field-wide" htmlFor="content-home-title">
                     首頁主標題
                     <input
@@ -2570,48 +1475,13 @@ const AdminDashboard: React.FC = () => {
                     />
                   </label>
 
-                  <label className="auth-field admin-field-wide" htmlFor="content-home-subtitle">
-                    首頁主標題描述
-                    <textarea
-                      id="content-home-subtitle"
-                      rows={3}
-                      value={siteContentForm.homeHeroSubtitle}
-                      onChange={(event) => handleSiteContentFieldChange('homeHeroSubtitle', event.target.value)}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="admin-content-block">
-                <h3>首頁各區塊描述</h3>
-                <div className="admin-form-grid">
-                  <label className="auth-field" htmlFor="content-home-category-sub">
-                    熱門分類描述
+                  <label className="auth-field" htmlFor="content-brand-hero-title">
+                    首頁近期出機標題
                     <input
-                      id="content-home-category-sub"
+                      id="content-brand-hero-title"
                       type="text"
-                      value={siteContentForm.homeCategorySubtitle}
-                      onChange={(event) => handleSiteContentFieldChange('homeCategorySubtitle', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-home-build-sub">
-                    推薦配單描述
-                    <input
-                      id="content-home-build-sub"
-                      type="text"
-                      value={siteContentForm.homeBuildSubtitle}
-                      onChange={(event) => handleSiteContentFieldChange('homeBuildSubtitle', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-home-workflow-sub">
-                    出貨流程描述
-                    <input
-                      id="content-home-workflow-sub"
-                      type="text"
-                      value={siteContentForm.homeWorkflowSubtitle}
-                      onChange={(event) => handleSiteContentFieldChange('homeWorkflowSubtitle', event.target.value)}
+                      value={siteContentForm.brandHeroTitle}
+                      onChange={(event) => handleSiteContentFieldChange('brandHeroTitle', event.target.value)}
                     />
                   </label>
 
@@ -2692,156 +1562,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-content-block">
-                <h3>分類總覽：品牌作品集標題</h3>
-                <div className="admin-form-grid">
-                  <label className="auth-field" htmlFor="content-categories-portfolio-title">
-                    品牌作品集標題
-                    <input
-                      id="content-categories-portfolio-title"
-                      type="text"
-                      value={siteContentForm.categoriesPortfolioTitle}
-                      onChange={(event) =>
-                        handleSiteContentFieldChange('categoriesPortfolioTitle', event.target.value)
-                      }
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-categories-portfolio-sub">
-                    品牌作品集描述
-                    <input
-                      id="content-categories-portfolio-sub"
-                      type="text"
-                      value={siteContentForm.categoriesPortfolioSubtitle}
-                      onChange={(event) =>
-                        handleSiteContentFieldChange('categoriesPortfolioSubtitle', event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="admin-content-block admin-content-block-full">
-                <h3>分類總覽：品牌作品集資料</h3>
-                <div className="admin-multi-input-list">
-                  {siteContentForm.categoriesBrandPortfolios.map((portfolio, index) => (
-                    <div key={`brand-portfolio-${index}`} className="admin-site-array-item">
-                      <div className="admin-form-grid">
-                        <label className="auth-field" htmlFor={`content-portfolio-id-${index}`}>
-                          ID
-                          <input
-                            id={`content-portfolio-id-${index}`}
-                            type="text"
-                            value={portfolio.id}
-                            onChange={(event) =>
-                              handleBrandPortfolioTextFieldChange(index, 'id', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label className="auth-field" htmlFor={`content-portfolio-name-${index}`}>
-                          名稱
-                          <input
-                            id={`content-portfolio-name-${index}`}
-                            type="text"
-                            value={portfolio.name}
-                            onChange={(event) =>
-                              handleBrandPortfolioTextFieldChange(index, 'name', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label className="auth-field admin-field-wide" htmlFor={`content-portfolio-tagline-${index}`}>
-                          標語（tagline）
-                          <input
-                            id={`content-portfolio-tagline-${index}`}
-                            type="text"
-                            value={portfolio.tagline}
-                            onChange={(event) =>
-                              handleBrandPortfolioTextFieldChange(index, 'tagline', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label className="auth-field admin-field-wide" htmlFor={`content-portfolio-focus-${index}`}>
-                          作品重點（以逗號分隔）
-                          <input
-                            id={`content-portfolio-focus-${index}`}
-                            type="text"
-                            value={portfolio.focus.join(', ')}
-                            onChange={(event) =>
-                              handleBrandPortfolioListFieldChange(index, 'focus', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label className="auth-field admin-field-wide" htmlFor={`content-portfolio-images-${index}`}>
-                          圖片路徑（以逗號分隔）
-                          <input
-                            id={`content-portfolio-images-${index}`}
-                            type="text"
-                            value={portfolio.images.join(', ')}
-                            onChange={(event) =>
-                              handleBrandPortfolioListFieldChange(index, 'images', event.target.value)
-                            }
-                          />
-                        </label>
-
-                        <label className="auth-field admin-field-wide" htmlFor={`content-portfolio-tags-${index}`}>
-                          標籤（以逗號分隔）
-                          <input
-                            id={`content-portfolio-tags-${index}`}
-                            type="text"
-                            value={portfolio.tags.join(', ')}
-                            onChange={(event) =>
-                              handleBrandPortfolioListFieldChange(index, 'tags', event.target.value)
-                            }
-                          />
-                        </label>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="ghost-btn admin-icon-btn"
-                        onClick={() => removeBrandPortfolio(index)}
-                      >
-                        移除
-                      </button>
-                    </div>
-                  ))}
-
-                  <button type="button" className="ghost-btn admin-add-storage-btn" onClick={addBrandPortfolio}>
-                    + 新增品牌作品集
-                  </button>
-                </div>
-              </div>
-
               <div className="admin-content-block" id="sc-orders">
-                <h3>出機紀錄區塊：標題與描述</h3>
-                <div className="admin-form-grid">
-                  <label className="auth-field" htmlFor="content-brand-hero-title">
-                    出機紀錄區塊標題
-                    <input
-                      id="content-brand-hero-title"
-                      type="text"
-                      value={siteContentForm.brandHeroTitle}
-                      onChange={(event) => handleSiteContentFieldChange('brandHeroTitle', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-brand-hero-subtitle">
-                    出機紀錄區塊描述
-                    <input
-                      id="content-brand-hero-subtitle"
-                      type="text"
-                      value={siteContentForm.brandHeroSubtitle}
-                      onChange={(event) => handleSiteContentFieldChange('brandHeroSubtitle', event.target.value)}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="admin-content-block">
                 <h3>出機紀錄：統一標籤庫</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field admin-field-wide" htmlFor="content-shipment-tag-catalog">
@@ -2871,7 +1592,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="admin-content-block" id="sc-process">
-                <h3>流程與服務內容</h3>
+                <h3>出貨流程</h3>
                 <div className="admin-form-grid">
                   <div className="auth-field admin-field-wide">
                     <span>流程細節</span>
@@ -2920,16 +1641,6 @@ const AdminDashboard: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
-                  <label className="auth-field admin-field-wide" htmlFor="content-brand-service">
-                    服務項目（每行一個）
-                    <textarea
-                      id="content-brand-service"
-                      rows={5}
-                      value={siteContentForm.serviceHighlightsText}
-                      onChange={(event) => handleSiteContentFieldChange('serviceHighlightsText', event.target.value)}
-                    />
-                  </label>
                 </div>
               </div>
 
@@ -3057,7 +1768,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="admin-content-block" id="sc-footer">
-                <h3>共用：Footer 與聯絡資訊</h3>
+                <h3>共用：Footer</h3>
                 <div className="admin-form-grid">
                   <label className="auth-field" htmlFor="content-footer-address">
                     Footer 地址
@@ -3076,36 +1787,6 @@ const AdminDashboard: React.FC = () => {
                       type="text"
                       value={siteContentForm.footerSlogan}
                       onChange={(event) => handleSiteContentFieldChange('footerSlogan', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-contact-address">
-                    聯絡地址
-                    <input
-                      id="content-contact-address"
-                      type="text"
-                      value={siteContentForm.contactAddress}
-                      onChange={(event) => handleSiteContentFieldChange('contactAddress', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-contact-phone">
-                    聯絡電話
-                    <input
-                      id="content-contact-phone"
-                      type="text"
-                      value={siteContentForm.contactPhone}
-                      onChange={(event) => handleSiteContentFieldChange('contactPhone', event.target.value)}
-                    />
-                  </label>
-
-                  <label className="auth-field" htmlFor="content-contact-line">
-                    LINE ID
-                    <input
-                      id="content-contact-line"
-                      type="text"
-                      value={siteContentForm.contactLine}
-                      onChange={(event) => handleSiteContentFieldChange('contactLine', event.target.value)}
                     />
                   </label>
                 </div>
@@ -3534,12 +2215,6 @@ const AdminDashboard: React.FC = () => {
                               <i className="fa-solid fa-ellipsis" />
                             </summary>
                             <div className="admin-more-menu">
-                              <button type="button" onClick={() => handleGenerateOrderQuotation(order)}>
-                                <i className="fa-regular fa-file-lines" /> 產出估價單
-                              </button>
-                              <button type="button" onClick={() => handleGenerateOrderChecklist(order)}>
-                                <i className="fa-regular fa-square-check" /> 產出出機檢查單
-                              </button>
                               <button
                                 type="button"
                                 className="danger"

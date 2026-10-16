@@ -16,7 +16,6 @@ import OrderDetail from './pages/OrderDetail';
 import OrderTagOverview from './pages/OrderTagOverview';
 import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
-import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminBlogManager from './pages/AdminBlogManager';
 import {
@@ -59,10 +58,10 @@ const RouteSeoDefaults: React.FC = () => {
   return null;
 };
 
-// 後台（登入頁以外）有自己的側邊選單，不顯示官網的頂欄和 footer
+// 後台有自己的側邊選單，不顯示官網的頂欄和 footer
 const AppFrame: React.FC<{ siteContent: PublicSiteContent; children: React.ReactNode }> = ({ siteContent, children }) => {
   const { pathname, hash } = useLocation();
-  const isAdmin = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login');
+  const isAdmin = pathname.startsWith('/admin');
 
   // 換頁回到最上面；有 #（例如 /#contact）就捲到那一段。後台的分頁自己處理 #
   React.useEffect(() => {
@@ -149,11 +148,12 @@ function App() {
           <Route path="/builds/item/:id" element={<BuildDetail />} />
           <Route path="/orders/tags" element={<OrderTagOverview />} />
           <Route path="/orders/item/:id" element={<OrderDetail />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* 舊的登入網址：登入交給 Cloudflare Access，直接轉到後台 */}
+          <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/blog" element={<AdminBlogManager />} />
 
-          <Route path="/cases/*" element={<Navigate to="/categories#case-portfolio" replace />} />
+          <Route path="/cases/*" element={<Navigate to="/categories" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppFrame>

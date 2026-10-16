@@ -24,10 +24,11 @@ export class PublicContentQueryService {
     return snapshot.categories;
   }
 
-  // 公開的出機紀錄不給服務費（只給售價）；後台的 /api/admin/orders 照舊有
+  // 公開的出機紀錄不給服務費（只給售價）；後台的 /api/admin/orders 照舊有。
+  // 最多 100 筆：出機紀錄頁、標籤頁要用全部的紀錄找（sitemap 也列出全部）
   async listOrders(limit: number): Promise<Omit<OrderRecord, 'serviceFee'>[]> {
     const snapshot = await this.repository.getPublicContent();
-    const safeLimit = Math.max(1, Math.min(Number.isFinite(limit) ? Math.trunc(limit) : 5, 20));
+    const safeLimit = Math.max(1, Math.min(Number.isFinite(limit) ? Math.trunc(limit) : 5, 100));
     return snapshot.orders.slice(0, safeLimit).map(({ serviceFee: _serviceFee, ...order }) => order);
   }
 

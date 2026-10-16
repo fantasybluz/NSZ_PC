@@ -1446,6 +1446,3 @@ export const mutateDb = async <T>(mutator: (draft: DbSchema) => T | Promise<T>):
 
   throw new Error('store: too many concurrent writes, please retry');
 };
-
-/** 匯入／匯出用（scripts/state.mjs 產生的 JSON 走這裡正規化） */
-export const normalizeImportedState = (value: unknown): DbSchema => normalizeDbSnapshot(value);

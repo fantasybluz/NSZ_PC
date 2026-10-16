@@ -188,9 +188,3 @@ export const authenticateAdmin = async (request: Request, config: AccessConfig):
   }
   return { ok: true, user: adminUser(email) };
 };
-
-/** 測試用：清掉公鑰快取 */
-export const resetAccessKeyCache = (): void => {
-  keys = new Map();
-  fetchedAt = 0;
-};

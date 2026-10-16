@@ -1,6 +1,3 @@
-export const ADMIN_TOKEN_KEY = 'nszpc_admin_token';
-export const ADMIN_USER_KEY = 'nszpc_admin_user';
-
 export interface AdminUser {
   id: string;
   username: string;
@@ -27,19 +24,13 @@ export const getApiBaseUrl = (): string => {
 };
 
 // 後台登入交給 Cloudflare Access：進 /admin 時 Cloudflare 先要你登入，之後瀏覽器帶著 Access 的 cookie，
-// API 那邊驗 Access 加上的 JWT（backend/src/lib/access.ts）。前端不再存 token，
-// 下面幾個函式留著原本的名字，讓後台頁面不用大改。
-const ACCESS_SESSION = 'cloudflare-access';
+// API 那邊驗 Access 加上的 JWT（backend/src/lib/access.ts）。前端不存 token，也不用帶 Authorization。
 
 /** DPOM（星辰電腦內部管理系統）：庫存、進貨、訂單、報價單在那邊。換網域時改這裡 */
 export const INTERNAL_SYSTEM_URL = 'https://dpom.bluz.dev';
 
 /** Cloudflare Access 的登出網址 */
 export const ADMIN_LOGOUT_URL = '/cdn-cgi/access/logout';
-
-export const getStoredToken = (): string => ACCESS_SESSION;
-
-export const clearAuth = (): void => {};
 
 /** 登出 Cloudflare Access（整頁跳轉） */
 export const logoutAdmin = (): void => {

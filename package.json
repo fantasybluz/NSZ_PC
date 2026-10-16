@@ -14,9 +14,6 @@
     "state:export": "node scripts/state.mjs export",
     "state:import": "node scripts/state.mjs import"
   },
-  "dependencies": {
-    "bootstrap": "^5.3.7"
-  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "wrangler": "^4.151.0"

@@ -12,16 +12,6 @@ export type ManagedCollection = CollectionName;
 export type ManagedEntity = DbSchema[CollectionName][number];
 export type ManagedEntityPayload = Record<string, unknown>;
 
-export interface DashboardOverview {
-  totals: {
-    builds: number;
-    categories: number;
-    orders: number;
-  };
-  recentOrders: OrderRecord[];
-  lastUpdatedAt: string;
-}
-
 export interface PublicContentSnapshot {
   builds: BuildRecord[];
   categories: CategoryRecord[];
@@ -31,7 +21,6 @@ export interface PublicContentSnapshot {
 }
 
 export interface ContentRepository {
-  getDashboardOverview(): Promise<DashboardOverview>;
   getPublicContent(): Promise<PublicContentSnapshot>;
   getSiteContent(): Promise<SiteContentRecord>;
   replaceSiteContent(next: SiteContentRecord): Promise<void>;

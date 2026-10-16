@@ -37,8 +37,11 @@ export class SiteContentService {
       };
     }
 
+    // 沒帶的舊欄位沿用原本的值（types.ts 的 RetiredSiteContentKey）
+    const current = await this.repository.getSiteContent();
     const updatedAt = new Date().toISOString();
     const next: SiteContentRecord = {
+      ...current,
       ...validation.value,
       updatedAt,
     };

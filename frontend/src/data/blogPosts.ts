@@ -166,11 +166,3 @@ export const blogPosts: BlogPost[] = [
     ],
   },
 ];
-
-export const getBlogDetailPath = (slug: string): string => {
-  return `/blog/${encodeURIComponent(slug)}`;
-};
-
-export const getBlogPostBySlug = (slug: string): BlogPost | undefined => {
-  return blogPosts.find((post) => post.slug === slug);
-};

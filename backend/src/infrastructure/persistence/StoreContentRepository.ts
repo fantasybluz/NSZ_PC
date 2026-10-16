@@ -1,6 +1,5 @@
 import type {
   ContentRepository,
-  DashboardOverview,
   ManagedCollection,
   ManagedEntity,
   ManagedEntityPayload,
@@ -10,19 +9,6 @@ import type { SiteContentRecord } from '../../lib/types.ts';
 import { mutateDb, readDb } from '../../lib/store.ts';
 
 export class StoreContentRepository implements ContentRepository {
-  async getDashboardOverview(): Promise<DashboardOverview> {
-    const db = await readDb();
-    return {
-      totals: {
-        builds: db.builds.length,
-        categories: db.categories.length,
-        orders: db.orders.length,
-      },
-      recentOrders: db.orders.slice(0, 5),
-      lastUpdatedAt: db.meta.updatedAt,
-    };
-  }
-
   async getPublicContent(): Promise<PublicContentSnapshot> {
     const db = await readDb();
     return {

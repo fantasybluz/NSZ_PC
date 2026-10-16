@@ -30,14 +30,13 @@
 - `GET /api/health`
 - `GET /api/public/builds`
 - `GET /api/public/categories`
-- `GET /api/public/orders?limit=5`（最多 20）
+- `GET /api/public/orders?limit=5`（最多 100）
 - `GET /api/public/blog-posts`
 - `GET /api/public/site-content`
 
 ### 後台（Cloudflare Access）
 
 - `GET /api/auth/me`：目前登入的人（email）
-- `GET /api/admin/dashboard`
 - `GET|PUT /api/admin/site-content`
 - `GET|POST /api/admin/<collection>`、`GET|PUT|DELETE /api/admin/<collection>/:id`
   - collection：`builds`、`categories`、`orders`、`blog-posts`

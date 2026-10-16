@@ -15,7 +15,6 @@ frontend/.env
 frontend/.env.*
 backend/.env
 backend/.env.*
-!backend/.env.example
 
 # local databases and generated data
 backend/data/db.sqlite
@@ -39,9 +38,6 @@ pnpm-debug.log*
 .idea/
 *.suo
 *.swp
-
-# local scratch files
-主要分類管理
 
 # Cloudflare（wrangler）
 .wrangler/

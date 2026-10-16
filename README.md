@@ -108,7 +108,7 @@ npm run state:import -- backup.json
 
 - 後台 API：Cloudflare Access + Worker 驗 JWT（見上面）
 - API 回應：`X-Content-Type-Options`、`X-Frame-Options: DENY`、HSTS、最嚴格的 CSP（`backend/src/lib/http.ts`）
-- 前端靜態檔案：CSP 只開 Google Fonts、YouTube / Google 地圖 iframe、https 圖片（`frontend/public/_headers`）
+- 前端靜態檔案：CSP 只開 YouTube / Google 地圖 iframe、https 圖片（`frontend/public/_headers`）
 - `workers.dev` 和預覽網址關掉，只留正式網址
 
 ## 分享縮圖（LINE、FB、Discord）

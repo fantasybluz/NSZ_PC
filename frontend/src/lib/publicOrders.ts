@@ -241,7 +241,7 @@ export const getOrderTagOverviewPath = (tags: string | string[]): string => {
 };
 
 export const fetchPublicOrders = async (limit = 20): Promise<PublicOrder[]> => {
-  const safeLimit = Math.max(1, Math.min(Math.trunc(limit) || 20, 50));
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit) || 20, 100));
 
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/public/orders?limit=${safeLimit}`);

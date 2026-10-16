@@ -71,7 +71,7 @@ const OrderTagOverview: React.FC = () => {
 
   React.useEffect(() => {
     const loadOrders = async () => {
-      const next = await fetchPublicOrders(50);
+      const next = await fetchPublicOrders(100);
       setOrders(next);
       setIsLoading(false);
     };

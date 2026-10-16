@@ -28,16 +28,11 @@
   --radius-lg: 14px;
 }
 
-/* ---------- 底色：拿掉動態漸層、格線、極光 ---------- */
+/* ---------- 底色 ---------- */
 body {
   background: var(--apple-parchment);
-  animation: none;
   color: var(--apple-ink);
   letter-spacing: -0.01em;
-}
-body::before,
-body::after {
-  display: none;
 }
 
 /* ---------- 頂欄：毛玻璃 ---------- */
@@ -47,10 +42,6 @@ body::after {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: none;
-}
-.site-header::before,
-.site-header::after {
-  display: none;
 }
 .header-inner {
   min-height: 3.5rem;
@@ -63,24 +54,13 @@ body::after {
   width: 2rem;
   height: 2rem;
 }
-.brand-text strong {
-  letter-spacing: 0;
-  font-weight: 600;
-}
-.brand-text span {
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--apple-ink-3);
-}
-.menu-link,
-.menu-trigger {
+.menu-link {
   font-size: 0.82rem;
   font-weight: 400;
   color: var(--apple-ink);
   opacity: 0.85;
 }
 .menu-link:hover,
-.menu-trigger:hover,
 .menu-link.active {
   color: var(--apple-ink);
   opacity: 1;
@@ -89,94 +69,39 @@ body::after {
   box-shadow: none;
   transform: none;
 }
-.menu-dropdown {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--apple-hairline-soft);
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-}
 
 /* ---------- 卡片：白底、髮絲邊框、沒有陰影和光澤 ---------- */
 .page-hero,
 .section-card,
-.hero-panel,
 .site-footer {
   background: #fff;
   border: 1px solid var(--apple-hairline-soft);
   box-shadow: none;
   backdrop-filter: none;
 }
-.page-hero::before,
-.page-hero::after,
-.section-card::before,
-.section-card::after,
-.hero-panel::before,
-.hero-panel::after {
-  display: none;
-}
 
-.stat-card,
 .category-card,
-.brand-portfolio-card,
 .detail-card-item,
 .product-card,
-.process-step,
-.testimonial-card,
-.timeline-item,
 .shipment-item,
-.service-item,
 .faq-item,
-.admin-user-card,
-.admin-order-item,
 .admin-category-item,
 .admin-build-item,
-.contact-link,
 .blog-card {
   background: var(--apple-parchment);
   border: 1px solid transparent;
   box-shadow: none;
 }
-.category-card::after,
-.brand-portfolio-card::after,
-.detail-card-item::after,
-.product-card::after,
-.process-step::after,
-.testimonial-card::after,
-.timeline-item::after,
-.shipment-item::after,
-.service-item::after,
-.faq-item::after,
-.admin-user-card::after,
-.admin-order-item::after,
-.admin-category-item::after,
-.admin-build-item::after,
-.contact-link::after,
-.tag-pill::after {
-  display: none;
-}
-.stat-card:hover,
 .category-card:hover,
-.brand-portfolio-card:hover,
 .detail-card-item:hover,
 .product-card:hover,
-.process-step:hover,
-.testimonial-card:hover,
-.timeline-item:hover,
 .shipment-item:hover,
-.service-item:hover,
 .faq-item:hover,
-.admin-order-item:hover,
 .admin-category-item:hover,
-.admin-build-item:hover,
-.contact-link:hover {
+.admin-build-item:hover {
   transform: none;
   box-shadow: none;
   border-color: var(--apple-hairline);
-}
-/* 白卡裡的卡片用淺灰，hero 右邊的數字卡也是 */
-.hero-panel .stat-card {
-  background: var(--apple-parchment);
 }
 
 /* ---------- 字 ---------- */
@@ -196,10 +121,6 @@ body::after {
 .section-sub {
   color: var(--apple-ink-2);
 }
-.hero-copy h1 {
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
 
 /* ---------- 按鈕：膠囊、主要用藍、次要用灰底 ---------- */
 .solid-btn,
@@ -210,11 +131,6 @@ body::after {
   border-radius: 980px;
   box-shadow: none;
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
-}
-.solid-btn::before,
-.ghost-btn::before,
-.inline-btn::before {
-  display: none;
 }
 .solid-btn,
 .inline-btn {
@@ -290,8 +206,7 @@ body::after {
 .auth-field select,
 .blog-search-field input,
 .admin-search-field input,
-.admin-multi-input-row input,
-.portfolio-tag-input-row input {
+.admin-multi-input-row input {
   background-color: #fff;
   border: 1px solid var(--apple-hairline);
   border-radius: 11px;
@@ -319,8 +234,7 @@ body::after {
 .order-status-badge {
   font-weight: 500;
 }
-.admin-modal-card,
-.order-modal-card {
+.admin-modal-card {
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   border: 0;

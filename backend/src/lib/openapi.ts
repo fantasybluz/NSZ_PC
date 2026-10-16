@@ -47,6 +47,9 @@ const idPathParam = {
 // 後台 API 由 Cloudflare Access 保護：通過 Access 的請求會帶 Cf-Access-Jwt-Assertion
 const authSecurity = [{ CloudflareAccess: [] }];
 
+// 網站文字裡前台已經不顯示的舊欄位
+const RETIRED_FIELD = '舊欄位，前台不顯示、不必填；沒帶就沿用原本的值';
+
 export const getOpenApiDocument = (origin: string): OpenApiObject => ({
   openapi: '3.0.3',
   info: {
@@ -147,7 +150,7 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
             name: 'limit',
             in: 'query',
             required: false,
-            schema: { type: 'integer', minimum: 1, maximum: 20, default: 5 },
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 5 },
           },
         ],
         responses: {
@@ -171,23 +174,6 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
           200: {
             description: 'Site content',
             content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/SiteContent' })),
-          },
-        },
-      },
-    },
-    '/api/admin/dashboard': {
-      get: {
-        tags: ['Admin'],
-        summary: 'Get dashboard summary',
-        security: authSecurity,
-        responses: {
-          200: {
-            description: 'Dashboard summary',
-            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/Dashboard' })),
-          },
-          401: {
-            description: 'Unauthorized',
-            content: jsonContent(errorEnvelope),
           },
         },
       },
@@ -983,12 +969,12 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
       SiteContentUpdateRequest: {
         type: 'object',
         properties: {
-          homeHeroKicker: { type: 'string' },
+          homeHeroKicker: { type: 'string', description: RETIRED_FIELD },
           homeHeroTitle: { type: 'string' },
-          homeHeroSubtitle: { type: 'string' },
-          homeCategorySubtitle: { type: 'string' },
-          homeBuildSubtitle: { type: 'string' },
-          homeWorkflowSubtitle: { type: 'string' },
+          homeHeroSubtitle: { type: 'string', description: RETIRED_FIELD },
+          homeCategorySubtitle: { type: 'string', description: RETIRED_FIELD },
+          homeBuildSubtitle: { type: 'string', description: RETIRED_FIELD },
+          homeWorkflowSubtitle: { type: 'string', description: RETIRED_FIELD },
           homeContactSubtitle: { type: 'string' },
           homeStats: {
             type: 'array',
@@ -999,14 +985,15 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
             type: 'array',
             items: { type: 'string' },
           },
-          categoriesPortfolioTitle: { type: 'string' },
-          categoriesPortfolioSubtitle: { type: 'string' },
+          categoriesPortfolioTitle: { type: 'string', description: RETIRED_FIELD },
+          categoriesPortfolioSubtitle: { type: 'string', description: RETIRED_FIELD },
           categoriesBrandPortfolios: {
             type: 'array',
+            description: RETIRED_FIELD,
             items: { $ref: '#/components/schemas/BrandPortfolio' },
           },
           brandHeroTitle: { type: 'string' },
-          brandHeroSubtitle: { type: 'string' },
+          brandHeroSubtitle: { type: 'string', description: RETIRED_FIELD },
           shipmentTagCatalog: {
             type: 'array',
             items: { type: 'string' },
@@ -1017,6 +1004,7 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
           },
           serviceHighlights: {
             type: 'array',
+            description: RETIRED_FIELD,
             items: { type: 'string' },
           },
           testimonials: {
@@ -1029,58 +1017,24 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
           },
           footerAddress: { type: 'string' },
           footerSlogan: { type: 'string' },
-          contactAddress: { type: 'string' },
-          contactPhone: { type: 'string' },
-          contactLine: { type: 'string' },
+          contactAddress: { type: 'string', description: RETIRED_FIELD },
+          contactPhone: { type: 'string', description: RETIRED_FIELD },
+          contactLine: { type: 'string', description: RETIRED_FIELD },
         },
         required: [
-          'homeHeroKicker',
           'homeHeroTitle',
-          'homeHeroSubtitle',
-          'homeCategorySubtitle',
-          'homeBuildSubtitle',
-          'homeWorkflowSubtitle',
           'homeContactSubtitle',
           'homeStats',
           'categoriesHeroSubtitle',
           'categoriesQuickTags',
-          'categoriesPortfolioTitle',
-          'categoriesPortfolioSubtitle',
-          'categoriesBrandPortfolios',
           'brandHeroTitle',
-          'brandHeroSubtitle',
           'shipmentTagCatalog',
           'shippingSteps',
-          'serviceHighlights',
           'testimonials',
           'contactChannels',
           'footerAddress',
           'footerSlogan',
-          'contactAddress',
-          'contactPhone',
-          'contactLine',
         ],
-      },
-      Dashboard: {
-        type: 'object',
-        properties: {
-          totals: {
-            type: 'object',
-            properties: {
-              builds: { type: 'integer' },
-              categories: { type: 'integer' },
-              orders: { type: 'integer' },
-              users: { type: 'integer' },
-            },
-            required: ['builds', 'categories', 'orders', 'users'],
-          },
-          recentOrders: {
-            type: 'array',
-            items: { $ref: '#/components/schemas/Order' },
-          },
-          lastUpdatedAt: { type: 'string', format: 'date-time' },
-        },
-        required: ['totals', 'recentOrders', 'lastUpdatedAt'],
       },
     },
   },

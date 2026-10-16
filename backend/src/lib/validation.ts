@@ -378,8 +378,6 @@ export const validateCategoryInput = (
 
 export const ORDER_STATUS: OrderStatus[] = ['pending', 'shipping', 'delivered', 'cancelled'];
 
-const INVENTORY_MOTHERBOARD_FORM_FACTORS = ['ATX', 'MATX', 'ITX', 'E-ATX', 'SSI-EEB', '其他'];
-
 export const validateOrderInput = (payload: MutablePayload): ValidationResult<OrderInput> => {
   const errors: string[] = [];
   const item = asString(payload.item).trim();
@@ -565,28 +563,8 @@ export const validateSiteContentInput = (
 ): ValidationResult<SiteContentInput> => {
   const errors: string[] = [];
 
-  if (!isNonEmptyString(payload.homeHeroKicker)) {
-    errors.push('homeHeroKicker is required');
-  }
-
   if (!isNonEmptyString(payload.homeHeroTitle)) {
     errors.push('homeHeroTitle is required');
-  }
-
-  if (!isNonEmptyString(payload.homeHeroSubtitle)) {
-    errors.push('homeHeroSubtitle is required');
-  }
-
-  if (!isNonEmptyString(payload.homeCategorySubtitle)) {
-    errors.push('homeCategorySubtitle is required');
-  }
-
-  if (!isNonEmptyString(payload.homeBuildSubtitle)) {
-    errors.push('homeBuildSubtitle is required');
-  }
-
-  if (!isNonEmptyString(payload.homeWorkflowSubtitle)) {
-    errors.push('homeWorkflowSubtitle is required');
   }
 
   if (!isNonEmptyString(payload.homeContactSubtitle)) {
@@ -597,20 +575,8 @@ export const validateSiteContentInput = (
     errors.push('categoriesHeroSubtitle is required');
   }
 
-  if (!isNonEmptyString(payload.categoriesPortfolioTitle)) {
-    errors.push('categoriesPortfolioTitle is required');
-  }
-
-  if (!isNonEmptyString(payload.categoriesPortfolioSubtitle)) {
-    errors.push('categoriesPortfolioSubtitle is required');
-  }
-
   if (!isNonEmptyString(payload.brandHeroTitle)) {
     errors.push('brandHeroTitle is required');
-  }
-
-  if (!isNonEmptyString(payload.brandHeroSubtitle)) {
-    errors.push('brandHeroSubtitle is required');
   }
 
   if (!isNonEmptyString(payload.footerAddress)) {
@@ -619,18 +585,6 @@ export const validateSiteContentInput = (
 
   if (!isNonEmptyString(payload.footerSlogan)) {
     errors.push('footerSlogan is required');
-  }
-
-  if (!isNonEmptyString(payload.contactAddress)) {
-    errors.push('contactAddress is required');
-  }
-
-  if (!isNonEmptyString(payload.contactPhone)) {
-    errors.push('contactPhone is required');
-  }
-
-  if (!isNonEmptyString(payload.contactLine)) {
-    errors.push('contactLine is required');
   }
 
   const homeStats = parseSiteStats(payload.homeStats);
@@ -643,11 +597,6 @@ export const validateSiteContentInput = (
     errors.push('categoriesQuickTags must contain at least one item');
   }
 
-  const categoriesBrandPortfolios = parseBrandPortfolios(payload.categoriesBrandPortfolios);
-  if (categoriesBrandPortfolios.length === 0) {
-    errors.push('categoriesBrandPortfolios must contain at least one item');
-  }
-
   const shipmentTagCatalog = uniqueTrimmedStrings(payload.shipmentTagCatalog);
   if (shipmentTagCatalog.length === 0) {
     errors.push('shipmentTagCatalog must contain at least one item');
@@ -656,11 +605,6 @@ export const validateSiteContentInput = (
   const shippingSteps = parseShippingSteps(payload.shippingSteps);
   if (shippingSteps.length === 0) {
     errors.push('shippingSteps must contain at least one item');
-  }
-
-  const serviceHighlights = uniqueTrimmedStrings(payload.serviceHighlights);
-  if (serviceHighlights.length === 0) {
-    errors.push('serviceHighlights must contain at least one item');
   }
 
   const testimonials = parseTestimonials(payload.testimonials);
@@ -673,35 +617,44 @@ export const validateSiteContentInput = (
     errors.push('contactChannels must contain at least one item');
   }
 
+  const value: SiteContentInput = {
+    homeHeroTitle: asString(payload.homeHeroTitle).trim(),
+    homeContactSubtitle: asString(payload.homeContactSubtitle).trim(),
+    homeStats,
+    categoriesHeroSubtitle: asString(payload.categoriesHeroSubtitle).trim(),
+    categoriesQuickTags,
+    brandHeroTitle: asString(payload.brandHeroTitle).trim(),
+    shipmentTagCatalog,
+    shippingSteps,
+    testimonials,
+    contactChannels,
+    footerAddress: asString(payload.footerAddress).trim(),
+    footerSlogan: asString(payload.footerSlogan).trim(),
+  };
+
+  // 舊欄位（types.ts 的 RetiredSiteContentKey）不再必填：有帶、而且有內容才更新，沒帶就沿用資料庫原本的值
+  for (const key of ['homeHeroKicker', 'homeHeroSubtitle', 'homeCategorySubtitle', 'homeBuildSubtitle',
+    'homeWorkflowSubtitle', 'categoriesPortfolioTitle', 'categoriesPortfolioSubtitle', 'brandHeroSubtitle',
+    'contactAddress', 'contactPhone', 'contactLine'] as const) {
+    const text = asString(payload[key]).trim();
+    if (text) {
+      value[key] = text;
+    }
+  }
+
+  const categoriesBrandPortfolios = parseBrandPortfolios(payload.categoriesBrandPortfolios);
+  if (categoriesBrandPortfolios.length > 0) {
+    value.categoriesBrandPortfolios = categoriesBrandPortfolios;
+  }
+
+  const serviceHighlights = uniqueTrimmedStrings(payload.serviceHighlights);
+  if (serviceHighlights.length > 0) {
+    value.serviceHighlights = serviceHighlights;
+  }
+
   return {
     ok: errors.length === 0,
     errors,
-    value: {
-      homeHeroKicker: asString(payload.homeHeroKicker).trim(),
-      homeHeroTitle: asString(payload.homeHeroTitle).trim(),
-      homeHeroSubtitle: asString(payload.homeHeroSubtitle).trim(),
-      homeCategorySubtitle: asString(payload.homeCategorySubtitle).trim(),
-      homeBuildSubtitle: asString(payload.homeBuildSubtitle).trim(),
-      homeWorkflowSubtitle: asString(payload.homeWorkflowSubtitle).trim(),
-      homeContactSubtitle: asString(payload.homeContactSubtitle).trim(),
-      homeStats,
-      categoriesHeroSubtitle: asString(payload.categoriesHeroSubtitle).trim(),
-      categoriesQuickTags,
-      categoriesPortfolioTitle: asString(payload.categoriesPortfolioTitle).trim(),
-      categoriesPortfolioSubtitle: asString(payload.categoriesPortfolioSubtitle).trim(),
-      categoriesBrandPortfolios,
-      brandHeroTitle: asString(payload.brandHeroTitle).trim(),
-      brandHeroSubtitle: asString(payload.brandHeroSubtitle).trim(),
-      shipmentTagCatalog,
-      shippingSteps,
-      serviceHighlights,
-      testimonials,
-      contactChannels,
-      footerAddress: asString(payload.footerAddress).trim(),
-      footerSlogan: asString(payload.footerSlogan).trim(),
-      contactAddress: asString(payload.contactAddress).trim(),
-      contactPhone: asString(payload.contactPhone).trim(),
-      contactLine: asString(payload.contactLine).trim(),
-    },
+    value,
   };
 };

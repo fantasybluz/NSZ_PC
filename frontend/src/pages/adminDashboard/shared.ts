@@ -193,41 +193,19 @@ export interface AdminContactChannel {
   href: string;
 }
 
-export interface AdminBrandPortfolio {
-  id: string;
-  name: string;
-  tagline: string;
-  focus: string[];
-  tags: string[];
-  images: string[];
-}
-
 export interface AdminSiteContent {
-  homeHeroKicker: string;
   homeHeroTitle: string;
-  homeHeroSubtitle: string;
-  homeCategorySubtitle: string;
-  homeBuildSubtitle: string;
-  homeWorkflowSubtitle: string;
   homeContactSubtitle: string;
   homeStats: AdminSiteStat[];
   categoriesHeroSubtitle: string;
   categoriesQuickTags: string[];
-  categoriesPortfolioTitle: string;
-  categoriesPortfolioSubtitle: string;
-  categoriesBrandPortfolios: AdminBrandPortfolio[];
   brandHeroTitle: string;
-  brandHeroSubtitle: string;
   shipmentTagCatalog: string[];
   shippingSteps: AdminShippingStep[];
-  serviceHighlights: string[];
   testimonials: AdminTestimonial[];
   contactChannels: AdminContactChannel[];
   footerAddress: string;
   footerSlogan: string;
-  contactAddress: string;
-  contactPhone: string;
-  contactLine: string;
   updatedAt: string;
 }
 
@@ -236,31 +214,18 @@ export interface SiteContentResponse {
 }
 
 export interface SiteContentFormState {
-  homeHeroKicker: string;
   homeHeroTitle: string;
-  homeHeroSubtitle: string;
-  homeCategorySubtitle: string;
-  homeBuildSubtitle: string;
-  homeWorkflowSubtitle: string;
   homeContactSubtitle: string;
   homeStats: AdminSiteStat[];
   categoriesHeroSubtitle: string;
   categoriesQuickTagsText: string;
-  categoriesPortfolioTitle: string;
-  categoriesPortfolioSubtitle: string;
-  categoriesBrandPortfolios: AdminBrandPortfolio[];
   brandHeroTitle: string;
-  brandHeroSubtitle: string;
   shipmentTagCatalogText: string;
   shippingSteps: AdminShippingStep[];
-  serviceHighlightsText: string;
   testimonials: AdminTestimonial[];
   contactChannels: AdminContactChannel[];
   footerAddress: string;
   footerSlogan: string;
-  contactAddress: string;
-  contactPhone: string;
-  contactLine: string;
 }
 
 export const defaultBuildForm: BuildFormState = {
@@ -320,31 +285,18 @@ export const defaultCategoryForm: CategoryFormState = {
 };
 
 export const defaultSiteContentForm: SiteContentFormState = {
-  homeHeroKicker: '',
   homeHeroTitle: '',
-  homeHeroSubtitle: '',
-  homeCategorySubtitle: '',
-  homeBuildSubtitle: '',
-  homeWorkflowSubtitle: '',
   homeContactSubtitle: '',
   homeStats: [],
   categoriesHeroSubtitle: '',
   categoriesQuickTagsText: '',
-  categoriesPortfolioTitle: '',
-  categoriesPortfolioSubtitle: '',
-  categoriesBrandPortfolios: [],
   brandHeroTitle: '',
-  brandHeroSubtitle: '',
   shipmentTagCatalogText: '',
   shippingSteps: [],
-  serviceHighlightsText: '',
   testimonials: [],
   contactChannels: [],
   footerAddress: '',
   footerSlogan: '',
-  contactAddress: '',
-  contactPhone: '',
-  contactLine: '',
 };
 
 export const createEmptySiteStat = (): AdminSiteStat => ({
@@ -370,15 +322,6 @@ export const createEmptyContactChannel = (): AdminContactChannel => ({
   href: '',
 });
 
-export const createEmptyBrandPortfolio = (): AdminBrandPortfolio => ({
-  id: '',
-  name: '',
-  tagline: '',
-  focus: [],
-  tags: [],
-  images: [],
-});
-
 export const BUILD_PAGE_SIZE = 9;
 export const CATEGORY_PAGE_SIZE = 9;
 export const ORDER_PAGE_SIZE = 9;
@@ -393,13 +336,6 @@ export const orderPriceDistributionRanges: Array<{ key: string; label: string; m
 export const splitLineList = (input: string): string[] => {
   return input
     .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
-};
-
-export const splitCommaList = (input: string): string[] => {
-  return input
-    .split(/[,，]/)
     .map((item) => item.trim())
     .filter(Boolean);
 };
@@ -456,7 +392,7 @@ export const parseTagTextValue = (input: string): string[] => {
 
 export const createDefaultOrderStorageFields = (): string[] => [''];
 
-export const splitStorageItems = (input: string): string[] => {
+const splitStorageItems = (input: string): string[] => {
   return input
     .split(/\s\/\s|[\n,，+、]/)
     .map((item) => item.trim())
@@ -726,15 +662,6 @@ export const formatCurrency = (value: number): string => {
   return `NT$ ${value.toLocaleString('zh-TW')}`;
 };
 
-export const escapeHtml = (value: string): string => {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-};
-
 export const parseYyyyMmDdDate = (value: string): Date | null => {
   const matched = value.trim().match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
   if (!matched) {
@@ -759,14 +686,6 @@ export const parseYyyyMmDdDate = (value: string): Date | null => {
 
   parsed.setHours(0, 0, 0, 0);
   return parsed;
-};
-
-export const getQuoteNumber = (order: AdminOrder): string => {
-  const quoteDate = order.date.replace(/\D/g, '').slice(0, 8);
-  const fallbackDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const safeDate = quoteDate || fallbackDate;
-  const safeId = order.id.replace(/[^a-z0-9]/gi, '').slice(-6).toUpperCase() || '000000';
-  return `QT-${safeDate}-${safeId}`;
 };
 
 export const isDealDateFormat = (value: string): boolean => {

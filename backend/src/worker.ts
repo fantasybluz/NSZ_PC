@@ -39,8 +39,12 @@ const isCrossSiteWrite = (request: Request, url: URL): boolean => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return false;
   if (request.headers.get('Sec-Fetch-Site') === 'cross-site') return true;
   const origin = request.headers.get('Origin');
-  return !!origin && origin !== url.origin;
+  if (!origin || origin === url.origin) return false;
+  // 本機開發：前端開發伺服器（另一個 port）把 /api 代理過來，Origin 是 localhost:5173 之類的，不算跨站
+  return !(isLocalhost(url.hostname) && isLocalhost(new URL(origin).hostname));
 };
+
+const isLocalhost = (host: string): boolean => host === 'localhost' || host === '127.0.0.1';
 
 const now = (): string => new Date().toISOString();
 
@@ -264,12 +268,6 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
     const user = await requireAdmin(request, env, url);
     if (user instanceof Response) {
       return user;
-    }
-
-    if (parts[2] === 'dashboard') {
-      return method === 'GET'
-        ? json(200, { data: await services.dashboardService.getOverview() })
-        : methodNotAllowed(['GET']);
     }
 
     if (parts[2] === 'site-content') {

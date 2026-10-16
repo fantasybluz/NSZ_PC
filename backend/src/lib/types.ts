@@ -260,31 +260,22 @@ export interface BlogPostInput {
   sections: BlogArticleSectionRecord[];
 }
 
-export interface SiteContentInput {
-  homeHeroKicker: string;
-  homeHeroTitle: string;
-  homeHeroSubtitle: string;
-  homeCategorySubtitle: string;
-  homeBuildSubtitle: string;
-  homeWorkflowSubtitle: string;
-  homeContactSubtitle: string;
-  homeStats: SiteStatRecord[];
-  categoriesHeroSubtitle: string;
-  categoriesQuickTags: string[];
-  categoriesPortfolioTitle: string;
-  categoriesPortfolioSubtitle: string;
-  categoriesBrandPortfolios: BrandPortfolioRecord[];
-  brandHeroTitle: string;
-  brandHeroSubtitle: string;
-  shipmentTagCatalog: string[];
-  shippingSteps: ShippingStepRecord[];
-  serviceHighlights: string[];
-  testimonials: TestimonialRecord[];
-  contactChannels: ContactChannelRecord[];
-  footerAddress: string;
-  footerSlogan: string;
-  contactAddress: string;
-  contactPhone: string;
-  contactLine: string;
-}
+// 前台已經不顯示、後台也不再編輯的舊欄位。資料庫裡的值照樣保留：更新網站文字時沒帶就沿用原本的
+export type RetiredSiteContentKey =
+  | 'homeHeroKicker'
+  | 'homeHeroSubtitle'
+  | 'homeCategorySubtitle'
+  | 'homeBuildSubtitle'
+  | 'homeWorkflowSubtitle'
+  | 'categoriesPortfolioTitle'
+  | 'categoriesPortfolioSubtitle'
+  | 'categoriesBrandPortfolios'
+  | 'brandHeroSubtitle'
+  | 'serviceHighlights'
+  | 'contactAddress'
+  | 'contactPhone'
+  | 'contactLine';
+
+export type SiteContentInput = Omit<SiteContentRecord, 'updatedAt' | RetiredSiteContentKey> &
+  Partial<Pick<SiteContentRecord, RetiredSiteContentKey>>;
 
