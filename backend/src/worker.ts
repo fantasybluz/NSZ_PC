@@ -4,6 +4,7 @@
 //   - /api/auth/me、/api/admin/*：要有 Access 的 JWT，而且 email 在 ADMIN_EMAILS（lib/access.ts）
 // 原本的 /api/auth/login、/api/auth/password 拿掉了（網站不再存密碼）。
 
+import versionFile from '../../VERSION';
 import type { ManagedCollection } from './domain/content/ContentRepository.ts';
 import { adminUser, authenticateAdmin, type AccessConfig } from './lib/access.ts';
 import {
@@ -31,6 +32,9 @@ type WorkerEnv = Omit<Env, 'DEV_ADMIN_EMAIL'> & {
   /** 只在本機開發用（.dev.vars）：localhost 上不經過 Access，直接當這個 email 登入 */
   DEV_ADMIN_EMAIL?: string;
 };
+
+// 版號只寫在 repo 根目錄的 VERSION（前端 vite.config.ts 也讀它，見 RELEASING.md）
+const APP_VERSION = versionFile.trim();
 
 const services = createServiceContainer();
 
@@ -228,7 +232,7 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
   }
 
   if (parts[1] === 'health' && method === 'GET') {
-    return json(200, { status: 'ok', timestamp: now() });
+    return json(200, { status: 'ok', version: APP_VERSION, timestamp: now() });
   }
 
   if (parts[1] === 'public') {

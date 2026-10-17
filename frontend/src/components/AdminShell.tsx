@@ -5,11 +5,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { ADMIN_LOGOUT_URL, INTERNAL_SYSTEM_URL } from '../lib/adminAuth';
+import { APP_VERSION, versionSeen } from '../lib/version';
 import type { AdminTabKey } from '../pages/adminDashboard/shared';
 
-export type AdminSection = AdminTabKey | 'blog';
+export type AdminSection = AdminTabKey | 'blog' | 'changelog';
 
-const NAV: Array<{ key: AdminSection; label: string; icon: string; hint: string }> = [
+// 「更新紀錄」不在選單裡（點側欄最下面的版號進去）
+const NAV: Array<{ key: AdminTabKey | 'blog'; label: string; icon: string; hint: string }> = [
   { key: 'orders', label: '出機紀錄', icon: 'fa-solid fa-truck-fast', hint: '官網上的出機案例' },
   { key: 'builds', label: '推薦配單', icon: 'fa-solid fa-desktop', hint: '首頁的推薦配單' },
   { key: 'categories', label: '分類總覽', icon: 'fa-solid fa-layer-group', hint: '分類介紹頁' },
@@ -28,6 +30,8 @@ interface AdminShellProps {
 
 const AdminShell: React.FC<AdminShellProps> = ({ active, onSelect, email, onLogout, children }) => {
   const navRef = React.useRef<HTMLElement>(null);
+  // 有沒看過的新版就在版號旁邊顯示 NEW
+  const unseen = React.useSyncExternalStore(versionSeen.subscribe, versionSeen.hasUnseen);
 
   // 手機上分頁是一排橫向捲動，目前這頁要捲到看得到
   React.useEffect(() => {
@@ -93,6 +97,10 @@ const AdminShell: React.FC<AdminShellProps> = ({ active, onSelect, email, onLogo
 
         <div className="admin-side-foot">
           {email ? <p title={email}>{email}</p> : null}
+          <Link to="/admin/changelog" className="admin-side-version" title="看更新紀錄">
+            v{APP_VERSION}
+            {unseen ? <span className="admin-side-version-new">NEW</span> : null}
+          </Link>
           <div>
             <a href={ADMIN_LOGOUT_URL}>切換帳號</a>
             <button type="button" onClick={onLogout}>登出</button>

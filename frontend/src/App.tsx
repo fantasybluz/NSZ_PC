@@ -18,6 +18,7 @@ import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminBlogManager from './pages/AdminBlogManager';
+import AdminChangelog from './pages/AdminChangelog';
 import {
   defaultPublicSiteContent,
   fetchPublicSiteContent,
@@ -152,6 +153,7 @@ function App() {
           <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/blog" element={<AdminBlogManager />} />
+          <Route path="/admin/changelog" element={<AdminChangelog />} />
 
           <Route path="/cases/*" element={<Navigate to="/categories" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />

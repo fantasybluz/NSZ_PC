@@ -3,6 +3,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nszpc",
   "main": "backend/src/worker.ts",
+  // VERSION 當成文字打包進 Worker（/api/health 回版號；版號只寫在 VERSION 一個地方）
+  "rules": [{ "type": "Text", "globs": ["**/VERSION"], "fallthrough": true }],
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "frontend/dist",
