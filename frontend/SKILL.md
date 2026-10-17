@@ -1,51 +1,16 @@
 # Frontend Skill Guide
 
-Purpose
-This is the React + Vite frontend that includes the public site and the admin UI.
+React + Vite frontend for the NSZPC website: public pages and the admin UI at `/admin`. The docs live in `docs/` and are written in Traditional Chinese; this file only points there.
 
-Quick Start
-1. Install deps: `npm install`
-2. From the repo root, run `npm run dev:api` (Worker + local D1 on 8787) and `npm run dev:web` (Vite proxies `/api` to 8787)
+- Start here: [CLAUDE.md](../CLAUDE.md) (commands, conventions, which docs to update)
+- Pages, admin tabs, layout (Apple style, `Shelf`, `AdminShell`): [docs/architecture.md](../docs/architecture.md#前端)
+- What each page should do and the public-page rules: [docs/requirements.md](../docs/requirements.md)
+- Design spec: [DESIGN.md](../DESIGN.md)
 
-Key Commands
-- `npm run dev`: Vite dev server
-- `npm run build`: production build
-- `npm run lint`: ESLint
-- `npm run preview`: preview build
+Quick reminders:
 
-Core Routes
-- `/`: Home
-- `/categories`: Category list
-- `/categories/item/:id`: Category detail
-- `/builds/item/:id`: Build detail
-- `/orders/tags`: Order tags overview
-- `/orders/item/:id`: Order detail
-- `/blog`: Blog list
-- `/blog/:slug`: Blog detail
-- `/admin/login`: Legacy URL, redirects to `/admin` (Cloudflare Access handles login)
-- `/admin`: Admin dashboard
-- `/admin/blog`: Admin blog manager
-
-Core Paths
-- `src/App.tsx`: routing and SEO defaults
-- `src/pages/*`: page implementations
-- `src/components/*`: shared UI components
-- `src/lib/*`: API calls, auth helpers, SEO helpers
-- `src/data/*`: local fallback data
-
-Data Sources
-- Public data is fetched from backend `GET /api/public/*`.
-- Admin data is fetched from `GET/POST/PUT/DELETE /api/admin/*`.
-- Admin auth is Cloudflare Access (cookie set by Cloudflare); the frontend stores no token. Logout is `/cdn-cgi/access/logout`.
-- API calls use same-origin relative paths (`getApiBaseUrl()` returns '' unless `VITE_API_BASE_URL` is set).
-
-Conventions
-- Use `src/lib/seo.ts` for page SEO.
-- Always provide fallback data for public pages to avoid blank states.
-- Keep tag filtering logic consistent with backend tag catalog rules.
-
-When Editing
-- If you add a new page, register route in `src/App.tsx`.
-- If you add new admin data fields, align with backend validators and types.
-- Keep UI copy in sync with `siteContent` where applicable.
-
+- Run `npm run dev:api` and `npm run dev:web` from the repo root (Vite proxies `/api` and `/media` to 8787)
+- New routes go in `src/App.tsx`; admin pages are wrapped in `components/AdminShell.tsx`
+- Public pages must not show admin-facing text, service fees or the app version; hide empty fields instead of showing placeholders
+- Check new pages at 393px and 1440px wide
+- Page SEO goes through `src/lib/seo.ts` and must match the titles in `backend/src/lib/sharePreview.ts`

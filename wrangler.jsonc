@@ -26,7 +26,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "vars": {
-    // 後台登入用 Cloudflare Access（見 README「後台登入」）
+    // 後台登入用 Cloudflare Access（見 docs/setup.md「Cloudflare Access」）
     "ACCESS_TEAM_DOMAIN": "old-fog-9482.cloudflareaccess.com",
     // Access 應用的 Application Audience (AUD) Tag；沒設的話後台 API 一律拒絕
     "ACCESS_AUD": "c639447ae6611fa1b40eff615fb1e7618c8a470dfc9041fd01e3b9782e4be0f6",

@@ -8,7 +8,7 @@
     "build": "npm --prefix frontend run build",
     "typecheck": "tsc -p backend/tsconfig.json",
     "lint": "npm --prefix frontend run lint",
-    "check": "node scripts/check-version.mjs && npm run typecheck && npm run lint && npm run build",
+    "check": "node scripts/check-docs.mjs && npm run typecheck && npm run lint && npm run build",
     "deploy": "npm run check && wrangler d1 migrations apply nszpc --remote && wrangler deploy",
     "cf-typegen": "wrangler types",
     "state:export": "node scripts/state.mjs export",
