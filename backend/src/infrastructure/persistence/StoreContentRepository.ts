@@ -1,5 +1,7 @@
 import type {
   ContentRepository,
+  EntityGuard,
+  EntityWriteResult,
   ManagedCollection,
   ManagedEntity,
   ManagedEntityPayload,
@@ -25,9 +27,13 @@ export class StoreContentRepository implements ContentRepository {
     return db.siteContent;
   }
 
-  async replaceSiteContent(next: SiteContentRecord): Promise<void> {
-    await mutateDb((draft) => {
-      draft.siteContent = next;
+  async updateSiteContent(
+    build: (current: SiteContentRecord) => SiteContentRecord,
+  ): Promise<SiteContentRecord> {
+    // 讀和寫在同一個 mutateDb 裡：別人同時存了的話版本號會對不上，整個重讀重做，不會蓋掉別人的改動
+    return mutateDb((draft) => {
+      draft.siteContent = build(draft.siteContent);
+      return draft.siteContent;
     });
   }
 
@@ -42,10 +48,19 @@ export class StoreContentRepository implements ContentRepository {
     return list.find((item) => item.id === entityId) || null;
   }
 
-  async createManagedEntity(collection: ManagedCollection, entity: ManagedEntity): Promise<void> {
-    await mutateDb((draft) => {
+  async createManagedEntity(
+    collection: ManagedCollection,
+    entity: ManagedEntity,
+    guard?: EntityGuard,
+  ): Promise<EntityWriteResult> {
+    return mutateDb((draft): EntityWriteResult => {
       const list = draft[collection] as ManagedEntity[];
+      const errors = guard?.(list) ?? [];
+      if (errors.length > 0) {
+        return { kind: 'conflict', errors };
+      }
       list.unshift(entity);
+      return { kind: 'ok', data: entity };
     });
   }
 
@@ -54,41 +69,39 @@ export class StoreContentRepository implements ContentRepository {
     entityId: string,
     payload: ManagedEntityPayload,
     updatedAt: string,
-  ): Promise<ManagedEntity | null> {
-    let updated: ManagedEntity | null = null;
-
-    await mutateDb((draft) => {
+    guard?: EntityGuard,
+  ): Promise<EntityWriteResult> {
+    return mutateDb((draft): EntityWriteResult => {
       const list = draft[collection] as ManagedEntity[];
       const index = list.findIndex((item) => item.id === entityId);
       if (index === -1) {
-        return;
+        return { kind: 'not_found' };
       }
 
-      updated = {
+      const errors = guard?.(list) ?? [];
+      if (errors.length > 0) {
+        return { kind: 'conflict', errors };
+      }
+
+      const updated = {
         ...list[index],
         ...payload,
         updatedAt,
       } as ManagedEntity;
-
       list[index] = updated;
+      return { kind: 'ok', data: updated };
     });
-
-    return updated;
   }
 
   async removeManagedEntity(collection: ManagedCollection, entityId: string): Promise<ManagedEntity | null> {
-    let removed: ManagedEntity | null = null;
-
-    await mutateDb((draft) => {
+    return mutateDb((draft) => {
       const list = draft[collection] as ManagedEntity[];
       const index = list.findIndex((item) => item.id === entityId);
       if (index === -1) {
-        return;
+        return null;
       }
-
-      [removed] = list.splice(index, 1);
+      const [removed] = list.splice(index, 1);
+      return removed;
     });
-
-    return removed;
   }
 }

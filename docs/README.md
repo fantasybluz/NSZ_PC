@@ -29,6 +29,7 @@
 | [0006](decisions/0006-remove-admin-generators.md) | 拿掉後台的估價單、出機檢查單；網站文字的舊欄位從後台拿掉但資料保留 |
 | [0007](decisions/0007-security.md) | 資安：擋跨站請求、套件漏洞清零、公開出機紀錄上限 100 |
 | [0008](decisions/0008-version-in-admin-only.md) | 版號和更新紀錄只放後台，VERSION 是唯一來源 |
+| [0009](decisions/0009-public-order-by-id-and-no-fake-data.md) | 出機紀錄用 id 查一筆、出機紀錄頁拿全部；前台讀不到資料時不顯示假的出機紀錄和推薦配單，沒照片顯示空白格 |
 
 ## 維護規則
 

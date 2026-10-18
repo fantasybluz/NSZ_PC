@@ -4,7 +4,6 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { carouselImages } from '../data/siteData';
 import {
-  fallbackPublicBuilds,
   fetchPublicBuilds,
   getBuildDetailPath,
   type PublicBuild,
@@ -122,7 +121,7 @@ const CategoryDetail: React.FC = () => {
   }, [id]);
 
   const [categories, setCategories] = React.useState<PublicCategory[]>(fallbackPublicCategories);
-  const [builds, setBuilds] = React.useState<PublicBuild[]>(fallbackPublicBuilds);
+  const [builds, setBuilds] = React.useState<PublicBuild[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -132,7 +131,7 @@ const CategoryDetail: React.FC = () => {
     };
 
     loadBuilds().catch(() => {
-      // Keep fallback builds when request fails.
+      // 讀不到：這個分類的推薦配單不顯示（不拿範例配單充數）
     });
   }, []);
 

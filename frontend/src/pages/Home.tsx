@@ -1,16 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import OrderPhoto from '../components/OrderPhoto';
 import Shelf from '../components/Shelf';
 import { carouselImages } from '../data/siteData';
 import {
-  fallbackPublicBuilds,
   fetchPublicBuilds,
   getBuildDetailPath,
   type PublicBuild,
 } from '../lib/publicBuilds';
 import {
-  fallbackPublicOrders,
   fetchPublicOrders,
   getOrderTagOverviewPath,
   type PublicOrder,
@@ -48,8 +47,9 @@ const statusLabelMap: Record<PublicOrder['status'], string> = {
 };
 
 const Home: React.FC = () => {
-  const [builds, setBuilds] = React.useState<PublicBuild[]>(fallbackPublicBuilds);
-  const [recentOrders, setRecentOrders] = React.useState<PublicOrder[]>(fallbackPublicOrders);
+  // 推薦配單、近期出機：讀到才顯示那一段；讀不到或沒有資料就整段不顯示（不拿範例資料充數）
+  const [builds, setBuilds] = React.useState<PublicBuild[]>([]);
+  const [recentOrders, setRecentOrders] = React.useState<PublicOrder[]>([]);
   const [siteContent, setSiteContent] = React.useState(defaultPublicSiteContent);
   const [activeOrder, setActiveOrder] = React.useState<PublicOrder | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = React.useState(0);
@@ -74,7 +74,7 @@ const Home: React.FC = () => {
     };
 
     loadBuilds().catch(() => {
-      // Keep fallback builds when backend request fails.
+      // 讀不到：推薦配單整段不顯示
     });
   }, []);
 
@@ -85,7 +85,7 @@ const Home: React.FC = () => {
     };
 
     loadOrders().catch(() => {
-      // Keep fallback recent orders when backend request fails.
+      // 讀不到：近期出機整段不顯示
     });
   }, []);
 
@@ -102,14 +102,16 @@ const Home: React.FC = () => {
 
   // 「LINE 詢問」用聯絡管道裡的 LINE，沒有就跳到聯絡我們
   const lineChannel = siteContent.contactChannels.find((channel) => /line/i.test(channel.label));
-  const orderImage = (order: PublicOrder, index: number): string =>
-    order.images[0] || carouselImages[(index * 3) % carouselImages.length];
 
   // 版面參考 apple.com/tw/mac：大標＋分類列 → 推薦配單（橫向卡片）→ 近期出機（直式照片卡）
   // → 跟星辰買電腦（服務流程）→ 客戶回饋 → 聯絡我們
+  // 區塊白、淺灰交替；推薦配單、近期出機沒有資料時整段不顯示，顏色照實際顯示的順序排
+  let toneIndex = 0;
+  const nextTone = (): string => (toneIndex++ % 2 === 0 ? 'tile-white' : 'tile-parchment');
+
   return (
     <div className="page home-page">
-      <section className="tile tile-white store-hero">
+      <section className={`tile ${nextTone()} store-hero`}>
         <div className="tile-inner">
           <h1 className="store-hero-title">星辰電腦</h1>
           <p className="store-hero-lead">{siteContent.homeHeroTitle}</p>
@@ -130,7 +132,8 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="tile tile-parchment" id="builds">
+      {builds.length > 0 ? (
+      <section className={`tile ${nextTone()}`} id="builds">
         <div className="tile-inner">
           <header className="tile-head">
             <h2>探索推薦配單</h2>
@@ -160,8 +163,10 @@ const Home: React.FC = () => {
           </Shelf>
         </div>
       </section>
+      ) : null}
 
-      <section className="tile tile-white" id="recent-shipment">
+      {recentOrders.length > 0 ? (
+      <section className={`tile ${nextTone()}`} id="recent-shipment">
         <div className="tile-inner">
           <header className="tile-head tile-head-split">
             <h2>{siteContent.brandHeroTitle || '近期出機'}</h2>
@@ -182,7 +187,7 @@ const Home: React.FC = () => {
                   {order.date}・{order.location}
                 </span>
                 <span className="story-card-title">{order.item}</span>
-                <img src={orderImage(order, index)} alt="" loading="lazy" />
+                <OrderPhoto src={order.images[0]} alt="" />
                 <span className="story-card-plus" aria-hidden="true">
                   <i className="fa-solid fa-plus" />
                 </span>
@@ -191,8 +196,9 @@ const Home: React.FC = () => {
           </Shelf>
         </div>
       </section>
+      ) : null}
 
-      <section className="tile tile-parchment">
+      <section className={`tile ${nextTone()}`}>
         <div className="tile-inner">
           <header className="tile-head">
             <h2>跟星辰買電腦，最好。</h2>
@@ -217,7 +223,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="tile tile-white">
+      <section className={`tile ${nextTone()}`}>
         <div className="tile-inner">
           <header className="tile-head">
             <h2>客戶怎麼說</h2>
@@ -236,7 +242,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="tile tile-parchment" id="contact">
+      <section className={`tile ${nextTone()}`} id="contact">
         <div className="tile-inner">
           <header className="tile-head">
             <h2>聯絡我們</h2>
@@ -284,8 +290,7 @@ const Home: React.FC = () => {
       {activeOrder ? (
         <div className="order-modal-overlay" onClick={() => setActiveOrder(null)}>
           {(() => {
-            const fallbackImages = carouselImages.slice(0, 5);
-            const images = activeOrder.images.length > 0 ? activeOrder.images : fallbackImages;
+            const images = activeOrder.images;
             const safeIndex = Math.min(activeSlideIndex, Math.max(images.length - 1, 0));
             const handlePrev = () =>
               setActiveSlideIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -310,7 +315,7 @@ const Home: React.FC = () => {
                 </div>
 
                 <div className="order-modal-gallery">
-                  <img src={images[safeIndex]} alt={activeOrder.item} className="order-modal-image" />
+                  <OrderPhoto src={images[safeIndex]} alt={activeOrder.item} className="order-modal-image" loading="eager" />
                   {images.length > 1 ? (
                     <div className="order-modal-gallery-controls">
                       <button type="button" onClick={handlePrev} aria-label="上一張">

@@ -16,10 +16,12 @@ const COLLECTIONS = ['builds', 'categories', 'orders', 'blog-posts'] as const;
 
 export const ROUTES: RouteEntry[] = [
   { method: 'GET', path: '/api/health', auth: 'public' },
+  { method: 'HEAD', path: '/api/health', auth: 'public' },
 
   { method: 'GET', path: '/api/public/builds', auth: 'public' },
   { method: 'GET', path: '/api/public/categories', auth: 'public' },
   { method: 'GET', path: '/api/public/orders', auth: 'public' },
+  { method: 'GET', path: '/api/public/orders/:id', auth: 'public' },
   { method: 'GET', path: '/api/public/blog-posts', auth: 'public' },
   { method: 'GET', path: '/api/public/site-content', auth: 'public' },
 
@@ -44,7 +46,9 @@ export const ROUTES: RouteEntry[] = [
   { method: 'HEAD', path: '/media/orders/:ref/:file', auth: 'public' },
 
   { method: 'GET', path: '/robots.txt', auth: 'public' },
+  { method: 'HEAD', path: '/robots.txt', auth: 'public' },
   { method: 'GET', path: '/sitemap.xml', auth: 'public' },
+  { method: 'HEAD', path: '/sitemap.xml', auth: 'public' },
 
   // 前端頁面，回 index.html 前先換分享縮圖和 SEO 的標籤（lib/sharePreview.ts）
   { method: 'GET', path: '/orders/item/:id', auth: 'public' },

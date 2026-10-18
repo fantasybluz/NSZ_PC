@@ -1,17 +1,27 @@
-import { recentOrders as fallbackRecentOrders, type RecentOrder } from '../data/siteData';
 import { getApiBaseUrl } from './adminAuth';
 
 export type PublicOrderStatus = 'pending' | 'shipping' | 'delivered' | 'cancelled';
 
-export interface PublicOrder extends Omit<RecentOrder, 'requirementIntro' | 'youtubeEmbedUrl' | 'tags'> {
+// 公開 API 的出機紀錄（沒有服務費，後端回傳前就拿掉了）
+export interface PublicOrder {
   id: string;
+  date: string;
+  item: string;
+  location: string;
   status: PublicOrderStatus;
   salePrice?: number;
-  serviceFee?: number;
   requirementIntro: string;
   youtubeEmbedUrl?: string;
   tags: string[];
   images: string[];
+  cpu: string;
+  motherboard: string;
+  ram: string;
+  storage: string;
+  gpu: string;
+  psu: string;
+  cooler: string;
+  pcCase: string;
 }
 
 interface PublicOrdersResponse {
@@ -151,7 +161,6 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
   const psu = asString(raw.psu) || '';
   const cooler = asString(raw.cooler) || '';
   const pcCase = asString(raw.pcCase) || '';
-  const serviceFee = Number(raw.serviceFee);
 
   return {
     id,
@@ -165,7 +174,6 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
     location,
     status: asStatus(raw.status),
     salePrice: Number.isFinite(salePrice) && salePrice >= 0 ? Math.trunc(salePrice) : undefined,
-    serviceFee: Number.isFinite(serviceFee) && serviceFee >= 0 ? Math.trunc(serviceFee) : undefined,
     cpu,
     motherboard,
     ram,
@@ -176,32 +184,6 @@ const sanitizeOrder = (value: unknown, index: number): PublicOrder | null => {
     pcCase,
   };
 };
-
-export const fallbackPublicOrders: PublicOrder[] = fallbackRecentOrders.map((order, index) => ({
-  id: `fallback-order-${index + 1}`,
-  status: 'delivered',
-  ...order,
-  images: Array.isArray(order.images) ? order.images : [],
-  motherboard: order.motherboard || '',
-  cooler: order.cooler || '',
-  requirementIntro:
-    order.requirementIntro ||
-    `客戶需求以「${order.item}」為主軸，會先依用途與預算拆解再安排配置重點。`,
-  youtubeEmbedUrl: normalizeYouTubeEmbedUrl(order.youtubeEmbedUrl || '') || undefined,
-  tags:
-    Array.isArray(order.tags) && order.tags.length > 0
-      ? [...new Set(order.tags.map((tag) => tag.trim()).filter(Boolean))]
-      : deriveOrderTags(order.item, [
-          order.cpu,
-          order.motherboard || '',
-          order.ram,
-          order.storage,
-          order.gpu,
-          order.psu,
-          order.cooler || '',
-          order.pcCase,
-        ]),
-}));
 
 export const getOrderDetailPath = (id: string): string => {
   return `/orders/item/${encodeURIComponent(id)}`;
@@ -240,27 +222,55 @@ export const getOrderTagOverviewPath = (tags: string | string[]): string => {
   return `/orders/tags?${params.toString()}`;
 };
 
-export const fetchPublicOrders = async (limit = 20): Promise<PublicOrder[]> => {
-  const safeLimit = Math.max(1, Math.min(Math.trunc(limit) || 20, 100));
+/** 讀不到（網路、伺服器錯誤）時丟這個；頁面要顯示「暫時載入不了」，不能拿範例資料充數 */
+export class PublicOrdersError extends Error {}
 
+/**
+ * 出機紀錄列表。limit 是幾筆（1～100），'all' 是全部（出機標籤頁要全部拿來篩選）。
+ * API 讀不到就丟 PublicOrdersError；沒有紀錄回空陣列。
+ */
+export const fetchPublicOrders = async (limit: number | 'all' = 20): Promise<PublicOrder[]> => {
+  const query = limit === 'all' ? 'all' : String(Math.max(1, Math.min(Math.trunc(limit) || 20, 100)));
+
+  let response: Response;
+  let payload: PublicOrdersResponse;
   try {
-    const response = await fetch(`${getApiBaseUrl()}/api/public/orders?limit=${safeLimit}`);
-    const payload = (await response.json()) as PublicOrdersResponse;
-
-    if (!response.ok || !Array.isArray(payload.data)) {
-      return fallbackPublicOrders;
-    }
-
-    const parsed = payload.data
-      .map((item, index) => sanitizeOrder(item, index))
-      .filter((item): item is PublicOrder => item !== null);
-
-    if (parsed.length === 0) {
-      return fallbackPublicOrders;
-    }
-
-    return parsed;
+    response = await fetch(`${getApiBaseUrl()}/api/public/orders?limit=${query}`);
+    payload = (await response.json()) as PublicOrdersResponse;
   } catch {
-    return fallbackPublicOrders;
+    throw new PublicOrdersError('出機紀錄讀不到');
   }
+
+  if (!response.ok || !Array.isArray(payload.data)) {
+    throw new PublicOrdersError('出機紀錄讀不到');
+  }
+
+  return payload.data
+    .map((item, index) => sanitizeOrder(item, index))
+    .filter((item): item is PublicOrder => item !== null);
+};
+
+/** 一筆出機紀錄（出機詳細頁）。沒有這筆回 null；API 讀不到丟 PublicOrdersError */
+export const fetchPublicOrder = async (id: string): Promise<PublicOrder | null> => {
+  let response: Response;
+  try {
+    response = await fetch(`${getApiBaseUrl()}/api/public/orders/${encodeURIComponent(id)}`);
+  } catch {
+    throw new PublicOrdersError('出機紀錄讀不到');
+  }
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  let payload: PublicOrdersResponse;
+  try {
+    payload = (await response.json()) as PublicOrdersResponse;
+  } catch {
+    throw new PublicOrdersError('出機紀錄讀不到');
+  }
+  if (!response.ok) {
+    throw new PublicOrdersError('出機紀錄讀不到');
+  }
+  return sanitizeOrder(payload.data, 0);
 };

@@ -37,7 +37,7 @@ Cloudflare Worker「nszpc」（backend/src/worker.ts）
 | `backend/src/domain/content/` | `ContentRepository` 介面 |
 | `backend/src/infrastructure/persistence/` | `StoreContentRepository`：用 `lib/store.ts` 實作 |
 | `backend/src/interfaces/http/` | `serviceContainer.ts`：把上面組起來 |
-| `backend/src/lib/` | `store.ts`（D1 讀寫、資料整理、範例內容）、`validation.ts`、`types.ts`、`access.ts`、`http.ts`、`openapi.ts`、`sharePreview.ts`、`sitemap.ts` |
+| `backend/src/lib/` | `store.ts`（D1 讀寫、資料整理、範例內容）、`validation.ts`、`types.ts`、`access.ts`、`http.ts`、`openapi.ts`、`sharePreview.ts`、`sitemap.ts`、`media.ts`（出機照片的 key、刪照片） |
 | `frontend/src/` | React 前端：`pages/`、`components/`、`lib/`（API、SEO、版號）、`styles/`、`data/`（API 失敗時的備用內容） |
 | `migrations/` | D1 資料表（`wrangler d1 migrations`） |
 | `scripts/` | `state.mjs`（資料匯出匯入）、`check-docs.mjs`（文件、版號檢查） |
@@ -63,7 +63,7 @@ Cloudflare Worker「nszpc」（backend/src/worker.ts）
 | `builds` | `BuildRecord[]` | 推薦配單：名稱、簡介、需求說明、價格、成交日期（`YYYY/MM/DD`）、徽章、標籤、圖片、CPU／主機板／RAM／硬碟／GPU／電源／機殼、配件、其他規格、YouTube 網址 |
 | `categories` | `CategoryRecord[]` | 分類：標題、摘要、主／次分類、標籤、重點、介紹、主圖、推薦（拿來對推薦配單）、FAQ |
 | `orders` | `OrderRecord[]` | 出機紀錄：日期、品名、需求說明、地區、售價 `salePrice`、服務費 `serviceFee`（不公開，DPOM 發布的一律 0）、狀態、標籤、照片網址、八項規格、YouTube 網址 |
-| `blogPosts` | `BlogPostRecord[]` | 技術文章：`slug`、標題、摘要、封面、發布／更新日期（`YYYY-MM-DD`）、作者、閱讀分鐘數、標籤、段落（標題、段落、條列）、YouTube 網址 |
+| `blogPosts` | `BlogPostRecord[]` | 技術文章：`slug`（不重複）、標題、摘要、封面、發布／更新日期（`YYYY-MM-DD`，更新日期照後台填的存，其他集合的 `updatedAt` 是寫入時間）、作者、閱讀分鐘數、標籤、段落（標題、段落、條列）、YouTube 網址 |
 | `siteContent` | `SiteContentRecord` | 網站文字：首頁標題、數字、出機標籤庫、服務流程、客戶回饋、聯絡管道、footer 地址和標語……，加上前台已經不顯示的 13 個舊欄位（`RetiredSiteContentKey`，[ADR 0006](decisions/0006-remove-admin-generators.md)） |
 
 - **讀**（`readDb`）：一個 D1 batch 讀出全部的 `app_state` 和 `MAX(version)`，每個集合用 `normalize*` 函式整理（缺的欄位補預設值、
@@ -74,6 +74,9 @@ Cloudflare Worker「nszpc」（backend/src/worker.ts）
 - **單列上限**：D1 一列最多 2MB，程式留到 1,900,000 bytes（`MAX_ROW_BYTES`），某個集合超過就寫入失敗。到時候要把那個集合拆成自己的表
 - **新增**的資料放在陣列最前面（`unshift`），所以公開的出機紀錄「前 N 筆」就是最新的 N 筆；文章讀出來時照 `publishedAt` 新到舊排
 - **id** 是 `crypto.randomUUID()`；文章對外用 `slug`
+- **要跟別筆比對的檢查**（文章 `slug` 不重複）：`CollectionCrudService` 的 `uniquenessGuards`，交給 repository 在同一個 `mutateDb` 裡、用最新的資料跑
+  （`ContentRepository.ts` 的 `EntityGuard`），所以同時寫入也擋得住
+- **網站文字**（`SiteContentService`）：讀出原本的值、合併舊欄位、寫回去都在同一個 `mutateDb` 裡（`updateSiteContent`），不會拿讀到的舊資料蓋掉別人剛存的
 
 加欄位時要一起改：`types.ts` 的型別、`validation.ts` 的檢查、`store.ts` 的 `normalize*`（不然讀出來會被丟掉）、前端的表單和型別。
 加集合還要改 `store.ts` 的 `COLLECTION_KEYS`、`scripts/state.mjs` 的 `KEYS`、`ContentRepository.ts`、`collectionValidators.ts`、`worker.ts` 的 `resolveCollectionName`。
@@ -82,7 +85,11 @@ Cloudflare Worker「nszpc」（backend/src/worker.ts）
 
 R2 bucket `nszpc-media`，binding `MEDIA`。只有 DPOM 透過 RPC 的 `replaceOrderImages` 會寫進來，key 是 `orders/<DPOM 單號>/<時間戳>-<序號>.<副檔名>`，
 官網網址是 `/media/orders/...`（[api.md](api.md#get-mediaordersreffile)）。換照片時先刪掉同一個單號底下的舊檔，新檔名帶時間戳，所以可以快取一年。
-後台手動貼的照片網址（任何 https 圖片）不會進 R2。
+後台手動貼的照片網址（任何 https 圖片）不會進 R2。只收 JPEG、PNG、WebP、GIF（`rpc.ts` 的 `EXT_BY_TYPE`；HEIC 大部分瀏覽器看不到，不收）。
+
+照片什麼時候刪：DPOM 換照片（`replaceOrderImages`）、DPOM 從官網拿掉（`unpublishOrder`，刪整個 `orders/<ref>/`），
+後台刪出機紀錄（`DELETE /api/admin/orders/:id` → `lib/media.ts` 的 `deleteOrderMedia`：只刪這筆 `images` 裡的 R2 照片，別筆還在用的不刪；
+資料夾沒有別筆在用就整個清掉）。
 
 ## DPOM 發布出機紀錄（WebsiteAPI）
 
@@ -145,7 +152,8 @@ LINE、FB、Discord 的爬蟲不跑 JS，搜尋引擎也不一定跑。
   圖片允許 `https:`（後台可以貼任何 https 圖片網址）、`frame-src` 只開 YouTube、youtube-nocookie、Google（地圖）、`frame-ancestors 'none'`。
   `/assets/*` 快取一年；`/admin*` 加 `X-Robots-Tag: noindex`。Worker 改寫過的頁面（`/blog` 等）也有這些標頭（2026-10-17 用 curl 看過正式環境）
 - **body 大小**：寫入的 JSON 最多 1MB（`readJsonObject`）
-- **公開資料不含**服務費、客人資料、進貨成本；公開出機紀錄一次最多 100 筆
+- **公開資料不含**服務費、客人資料、進貨成本（`PublicContentQueryService` 的 `toPublicOrder` 拿掉 `serviceFee`）；
+  公開出機紀錄 `limit` 最多 100，`limit=all` 是全部（整份最多約 1.9MB），出機詳細頁用 `/api/public/orders/:id` 查一筆
 - **套件**：`npm audit` 是 0（2026-10-17）
 - `workers.dev`、預覽網址關掉，只留正式網址
 
@@ -175,7 +183,10 @@ React 19 + TypeScript + Vite + React Router（`frontend/src/App.tsx`）。
 | `/blog`、`/blog/:slug` | `Blog.tsx`、`BlogDetail.tsx`：技術文章 |
 | `/brand`、`/cases/*` | 舊網址，轉到 `/categories`；其他找不到的網址轉到 `/` |
 
-公開資料由 `frontend/src/lib/public*.ts` 打 `/api/public/*`，打不到時用 `frontend/src/data/` 的備用內容（頁面不會空白）。
+公開資料由 `frontend/src/lib/public*.ts` 打 `/api/public/*`。**出機紀錄、推薦配單讀不到時不用假資料**：`fetchPublicOrders`、`fetchPublicOrder`、`fetchPublicBuilds`
+丟錯誤，頁面顯示「暫時載入不了」或整段不顯示，一開始的狀態是空的（不會先閃一下範例資料）（[ADR 0009](decisions/0009-public-order-by-id-and-no-fake-data.md)）。
+網站文字、分類、技術文章打不到時才用 `frontend/src/data/`、`publicSiteContent.ts` 內建的內容。
+出機照片統一用 `components/OrderPhoto.tsx`：沒有照片或照片讀不到時顯示淺灰底＋主機圖示（`.photo-placeholder`）。
 
 **版面（Apple 風格）**：[ADR 0004](decisions/0004-apple-style.md)，規格在 [`DESIGN.md`](../DESIGN.md)。CSS 依序疊三層：
 `App.css`（原本的樣式）→ `styles/apple.css`（DESIGN.md 的顏色、字、按鈕、白卡、毛玻璃頂欄，後台也用）→ `styles/apple-site.css`（前台的 apple.com/tw/mac 版面：

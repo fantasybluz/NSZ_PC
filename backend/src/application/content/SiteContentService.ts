@@ -37,16 +37,15 @@ export class SiteContentService {
       };
     }
 
-    // 沒帶的舊欄位沿用原本的值（types.ts 的 RetiredSiteContentKey）
-    const current = await this.repository.getSiteContent();
+    // 沒帶的舊欄位沿用原本的值（types.ts 的 RetiredSiteContentKey）。
+    // 讀「目前的值」和寫回去在同一個 mutateDb 裡，同時有人存檔也不會蓋掉對方的改動
     const updatedAt = new Date().toISOString();
-    const next: SiteContentRecord = {
+    const next = await this.repository.updateSiteContent((current) => ({
       ...current,
       ...validation.value,
       updatedAt,
-    };
+    }));
 
-    await this.repository.replaceSiteContent(next);
     return { kind: 'ok', data: next };
   }
 }

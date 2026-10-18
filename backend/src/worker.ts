@@ -17,11 +17,12 @@ import {
   readJsonObject,
   withHeaders,
 } from './lib/http.ts';
+import { deleteOrderMedia, ORDER_MEDIA_KEY } from './lib/media.ts';
 import { getOpenApiDocument } from './lib/openapi.ts';
 import { SHARE_PREVIEW_PATHS, withSharePreview } from './lib/sharePreview.ts';
 import { robotsTxt, sitemapXml } from './lib/sitemap.ts';
 import { useDatabase } from './lib/store.ts';
-import type { MutablePayload, PublicUser } from './lib/types.ts';
+import type { MutablePayload, OrderRecord, PublicUser } from './lib/types.ts';
 import { createServiceContainer } from './interfaces/http/serviceContainer.ts';
 
 // DPOM 發布出機紀錄用的內部介面（只有綁定的 Worker 叫得到）
@@ -38,6 +39,13 @@ const APP_VERSION = versionFile.trim();
 
 const services = createServiceContainer();
 
+/** 本機開發的網址（wrangler dev、Vite）：CSRF 的本機例外、DEV_ADMIN_EMAIL 都只在這裡有效 */
+const isLocalhost = (host: string): boolean => host === 'localhost' || host === '127.0.0.1';
+
+/** HEAD 的回應：狀態碼、標頭照舊，不帶 body */
+const withoutBody = (response: Response): Response =>
+  new Response(null, { status: response.status, statusText: response.statusText, headers: response.headers });
+
 /** 會改資料的請求（POST/PUT/PATCH/DELETE），而且來源不是自己網站 */
 const isCrossSiteWrite = (request: Request, url: URL): boolean => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return false;
@@ -48,8 +56,6 @@ const isCrossSiteWrite = (request: Request, url: URL): boolean => {
   return !(isLocalhost(url.hostname) && isLocalhost(new URL(origin).hostname));
 };
 
-const isLocalhost = (host: string): boolean => host === 'localhost' || host === '127.0.0.1';
-
 const now = (): string => new Date().toISOString();
 
 const parseEmails = (value: string | undefined): string[] =>
@@ -57,8 +63,6 @@ const parseEmails = (value: string | undefined): string[] =>
     .split(',')
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
-
-const isLocal = (url: URL): boolean => url.hostname === 'localhost' || url.hostname === '127.0.0.1';
 
 const buildSwaggerHtml = (specUrl: string): string => `<!doctype html>
 <html lang="en">
@@ -93,6 +97,14 @@ const SWAGGER_CSP =
   "default-src 'none'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; " +
   "img-src 'self' data: https://unpkg.com; connect-src 'self'; frame-ancestors 'none'";
 
+const safeDecode = (value: string): string => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
 const resolveCollectionName = (value?: string): ManagedCollection | null => {
   if (!value) {
     return null;
@@ -111,8 +123,19 @@ const resolveCollectionName = (value?: string): ManagedCollection | null => {
   return null;
 };
 
+/** 後台刪掉出機紀錄後，刪掉它在 R2 的照片（lib/media.ts）；刪照片失敗不影響刪紀錄的結果 */
+const removeOrderMedia = async (env: WorkerEnv, removed: OrderRecord): Promise<void> => {
+  try {
+    const remaining = (await services.crudService.list('orders')) as OrderRecord[];
+    await deleteOrderMedia(env.MEDIA, removed, remaining);
+  } catch (error) {
+    console.error('刪除出機照片失敗', removed.id, error);
+  }
+};
+
 const handleCrudCollection = async (
   request: Request,
+  env: WorkerEnv,
   collectionName: string | undefined,
   id: string | undefined,
 ): Promise<Response> => {
@@ -156,14 +179,20 @@ const handleCrudCollection = async (
   }
   if (request.method === 'DELETE') {
     const result = await services.crudService.remove(collection, id);
-    return result.kind === 'not_found' ? notFound() : json(200, { data: result.data });
+    if (result.kind === 'not_found') {
+      return notFound();
+    }
+    if (collection === 'orders') {
+      await removeOrderMedia(env, result.data as OrderRecord);
+    }
+    return json(200, { data: result.data });
   }
   return methodNotAllowed(['GET', 'PUT', 'DELETE']);
 };
 
 /** 後台的登入檢查；通過回傳登入的人，不通過回傳錯誤 Response */
 const requireAdmin = async (request: Request, env: WorkerEnv, url: URL): Promise<PublicUser | Response> => {
-  if (env.DEV_ADMIN_EMAIL && isLocal(url)) {
+  if (env.DEV_ADMIN_EMAIL && isLocalhost(url.hostname)) {
     return adminUser(env.DEV_ADMIN_EMAIL.toLowerCase());
   }
 
@@ -213,7 +242,7 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
       return methodNotAllowed(['GET']);
     }
     const key = decodeURIComponent(url.pathname.slice('/media/'.length));
-    if (!/^orders\/[A-Za-z0-9-]+\/[A-Za-z0-9.-]+$/.test(key)) {
+    if (!ORDER_MEDIA_KEY.test(key)) {
       return notFound();
     }
     const object = await env.MEDIA.get(key);
@@ -231,13 +260,24 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
     return notFound();
   }
 
-  if (parts[1] === 'health' && method === 'GET') {
-    return json(200, { status: 'ok', version: APP_VERSION, timestamp: now() });
+  if (parts[1] === 'health') {
+    // HEAD 給監控用（只看狀態碼），body 在 fetch() 最後拿掉
+    return method === 'GET' || method === 'HEAD'
+      ? json(200, { status: 'ok', version: APP_VERSION, timestamp: now() })
+      : methodNotAllowed(['GET', 'HEAD']);
   }
 
   if (parts[1] === 'public') {
     if (method !== 'GET') {
       return methodNotAllowed(['GET']);
+    }
+    // 一筆出機紀錄：/api/public/orders/:id（出機詳細頁用，不管有幾筆都查得到）
+    if (parts[2] === 'orders' && parts.length === 4) {
+      const order = await services.publicQueryService.getOrder(safeDecode(parts[3]));
+      return order ? json(200, { data: order }) : notFound();
+    }
+    if (parts.length > 3) {
+      return notFound();
     }
     switch (parts[2]) {
       case 'builds':
@@ -245,7 +285,8 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
       case 'categories':
         return json(200, { data: await services.publicQueryService.listCategories() });
       case 'orders': {
-        const limit = Number(url.searchParams.get('limit') || 5);
+        const rawLimit = url.searchParams.get('limit');
+        const limit = rawLimit === 'all' ? 'all' : Number(rawLimit || 5);
         return json(200, { data: await services.publicQueryService.listOrders(limit) });
       }
       case 'blog-posts':
@@ -289,7 +330,7 @@ const route = async (request: Request, env: WorkerEnv, url: URL): Promise<Respon
       return methodNotAllowed(['GET', 'PUT']);
     }
 
-    return handleCrudCollection(request, parts[2], parts[3]);
+    return handleCrudCollection(request, env, parts[2], parts[3]);
   }
 
   return notFound();
@@ -300,12 +341,15 @@ export default {
     const url = new URL(request.url);
     useDatabase(env.DB);
 
-    if (url.pathname === '/robots.txt') {
-      return robotsTxt(url.origin);
-    }
-    if (url.pathname === '/sitemap.xml') {
+    const isRobots = url.pathname === '/robots.txt';
+    const isSitemap = url.pathname === '/sitemap.xml';
+    if (isRobots || isSitemap) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return methodNotAllowed(['GET', 'HEAD']);
+      }
       try {
-        return await sitemapXml(url.origin, services.crudService);
+        const file = isRobots ? robotsTxt(url.origin) : await sitemapXml(url.origin, services.crudService);
+        return request.method === 'HEAD' ? withoutBody(file) : file;
       } catch (error) {
         console.error('sitemap', error);
         return errorResponse(500, 'Internal server error');
@@ -332,6 +376,7 @@ export default {
         response = errorResponse(500, 'Internal server error');
       }
     }
-    return withHeaders(response, API_SECURITY_HEADERS);
+    response = withHeaders(response, API_SECURITY_HEADERS);
+    return request.method === 'HEAD' ? withoutBody(response) : response;
   },
 } satisfies ExportedHandler<WorkerEnv>;

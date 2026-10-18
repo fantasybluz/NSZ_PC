@@ -33,7 +33,11 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 
 ### `GET /api/health`
 
-不用登入。回 `{ status: "ok", version, timestamp }`，`version` 是 repo 根目錄 `VERSION` 的內容。只接受 GET（HEAD 會回 404）。
+不用登入。回 `{ status: "ok", version, timestamp }`，`version` 是 repo 根目錄 `VERSION` 的內容。GET、HEAD 以外回 405。
+
+### `HEAD /api/health`
+
+同上，只回狀態碼和標頭（給監控用）。HEAD 的回應一律不帶 body（`worker.ts` 的 `withoutBody`）。
 
 ### `GET /api/public/builds`
 
@@ -47,9 +51,13 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 
 不用登入。出機紀錄，照存的順序（新增的在最前面）取前 `limit` 筆。
 
-- `?limit=`：預設 5，最小 1、**最多 100**，不是數字就用 5
+- `?limit=`：預設 5，最小 1、最多 100，不是數字就用 5；**`?limit=all` 是全部**（出機紀錄整份存在 D1 的一列，最多約 1.9MB，所以全部也有上限）
 - **不含 `serviceFee`**（服務費不公開，只有售價 `salePrice`）
-- 前端首頁拿 12 筆，出機標籤頁、出機詳細頁拿 100 筆在裡面找（所以第 101 筆以後的出機頁打不開，見 [requirements.md](requirements.md#已知的限制)）
+- 前端首頁拿 12 筆，出機標籤頁拿全部（`limit=all`）在前端篩選；出機詳細頁用下面的 `/api/public/orders/:id`
+
+### `GET /api/public/orders/:id`
+
+不用登入。一筆出機紀錄（出機詳細頁用），**不含 `serviceFee`**，沒有回 404。不管總共幾筆，每一筆的出機頁都打得開（sitemap 也列出全部）。
 
 ### `GET /api/public/blog-posts`
 
@@ -78,6 +86,7 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 - 必填：`homeHeroTitle`、`homeContactSubtitle`、`categoriesHeroSubtitle`、`brandHeroTitle`、`footerAddress`、`footerSlogan`，
   `homeStats`、`categoriesQuickTags`、`shipmentTagCatalog`、`shippingSteps`、`testimonials`、`contactChannels` 至少一筆
 - 舊欄位（`types.ts` 的 `RetiredSiteContentKey`，13 個）不用帶：有帶而且有內容才更新，沒帶就沿用資料庫原本的值
+- 讀出原本的值、合併、寫回去在同一個 `mutateDb` 裡（有版本號檢查），別人同時存了會重讀重做，不會用舊資料蓋掉對方剛存的東西
 
 ### `GET /api/admin/builds`
 
@@ -141,7 +150,13 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 
 ### `DELETE /api/admin/orders/:id`
 
-後台。刪除出機紀錄。**R2 裡的照片不會跟著刪**（DPOM 的「從官網拿掉」走 RPC 的 `unpublishOrder` 才會刪照片）。
+後台。刪除出機紀錄，回被刪掉的那筆，沒有回 404。**R2 裡這筆的照片也會一起刪**（[`backend/src/lib/media.ts`](../backend/src/lib/media.ts) 的 `deleteOrderMedia`），只刪屬於這筆的：
+
+- 只看 `images` 裡 `/media/orders/<ref>/<file>` 這種網址（外部網址不管）
+- 別筆出機紀錄還在用的照片不刪
+- 照片所在的資料夾（`orders/<ref>/`）沒有別筆在用，就整個資料夾清掉（包括沒列在 `images` 的舊檔）
+
+刪照片失敗只記 log，不影響刪紀錄的結果。DPOM 的「從官網拿掉」走 RPC 的 `unpublishOrder`（見下面）。
 
 ### `GET /api/admin/blog-posts`
 
@@ -152,13 +167,18 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 後台。新增文章，回 201。必填：`slug`（小寫英數字和 `-`）、`title`、`summary`、`coverImage`、`publishedAt` 和 `updatedAt`（`YYYY-MM-DD`）、`authorName`、
 `readingMinutes`（正整數）、`tags`（至少一個）、`sections`（`{ heading, paragraphs, bullets }`，至少一段有標題和段落）。
 
+- **`slug` 不能跟別篇重複**（文章網址是 `/blog/<slug>`），重複回 422，`details` 是「Slug「…」已經有別篇文章在用了，請換一個」。
+  檢查跟寫入在同一個 `mutateDb` 裡，兩個請求同時存同一個 slug 也擋得住
+- **`updatedAt` 照送來的存**（後台表單的「更新日」），不會被伺服器改成存檔時間；sitemap 的 `lastmod`、文章頁的 `article:modified_time` 都用它。
+  其他集合的 `updatedAt` 是伺服器寫入的時間（ISO）
+
 ### `GET /api/admin/blog-posts/:id`
 
 後台。一篇文章（用 `id`，不是 `slug`），沒有回 404。
 
 ### `PUT /api/admin/blog-posts/:id`
 
-後台。整篇更新，沒有回 404。
+後台。整篇更新，沒有回 404。檢查跟新增一樣：`slug` 不能跟別篇重複（跟自己一樣沒關係），`updatedAt` 照送來的存。
 
 ### `DELETE /api/admin/blog-posts/:id`
 
@@ -169,7 +189,8 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 ### `GET /openapi.json`
 
 不用登入。OpenAPI 3 文件（[`backend/src/lib/openapi.ts`](../backend/src/lib/openapi.ts)），伺服器網址用目前的網域。
-**目前沒有列技術文章的 API**（`/api/public/blog-posts`、`/api/admin/blog-posts`），以這份文件為準。
+列了 `/api/health`、`/api/auth/me`、`/api/public/*`、`/api/admin/*`（含技術文章）；公開的出機紀錄用 `PublicOrder`（沒有 `serviceFee`）。
+`/media`、`/robots.txt`、`/sitemap.xml`、前端頁面沒有列，以這份文件為準。
 
 ### `GET /api-docs`
 
@@ -199,10 +220,20 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 ### `GET /robots.txt`
 
 不用登入。Worker 產生（[`backend/src/lib/sitemap.ts`](../backend/src/lib/sitemap.ts)）：全部允許，擋 `/admin`、`/api/`、`/api-docs`，最後一行是 sitemap 的網址。快取 1 小時。
+GET、HEAD 以外回 405。
+
+### `HEAD /robots.txt`
+
+同上，只回標頭。
 
 ### `GET /sitemap.xml`
 
-不用登入。從資料庫產生：`/`、`/blog`、`/categories`、`/orders/tags`，以及每一篇文章、分類、推薦配單、出機紀錄的網址，`lastmod` 是更新日期。快取 1 小時。
+不用登入。從資料庫產生：`/`、`/blog`、`/categories`、`/orders/tags`，以及每一篇文章、分類、推薦配單、出機紀錄（全部，不限筆數）的網址，
+`lastmod` 是更新日期（文章用後台填的「更新日」）。快取 1 小時。GET、HEAD 以外回 405。
+
+### `HEAD /sitemap.xml`
+
+同上，只回標頭。
 
 ## 前端頁面（改寫分享縮圖和 SEO）
 
@@ -237,7 +268,7 @@ DPOM 呼叫的 `WebsiteAPI` 不是 HTTP 路由，寫在最下面的「[內部 RP
 
 | 方法 | 做什麼 |
 |---|---|
-| `replaceOrderImages(ref, images)` | 先刪掉 R2 裡 `orders/<ref>/` 的舊照片，再存新的，回傳官網網址陣列（`/media/orders/<ref>/<時間戳>-<序號>.<副檔名>`）。一次最多 10 張、每張最大 10MB，格式只收 jpeg、png、webp、gif、heic；不符合直接丟錯誤 |
+| `replaceOrderImages(ref, images)` | 先刪掉 R2 裡 `orders/<ref>/` 的舊照片，再存新的，回傳官網網址陣列（`/media/orders/<ref>/<時間戳>-<序號>.<副檔名>`）。一次最多 10 張、每張最大 10MB，格式只收 jpeg、png、webp、gif（瀏覽器都能顯示的；**HEIC 不收**，大部分瀏覽器看不到）；不符合直接丟錯誤，訊息是中文、寫出是哪張照片（例如「照片「IMG_1234.HEIC」是 HEIC 格式，多數瀏覽器看不到，請先轉成 JPEG 再發布」） |
 | `publishOrder(orderId, input, images)` | 新增或更新一筆出機紀錄：`orderId` 有給而且還在就更新，不然新增。**`serviceFee` 一律存 0**（售價不含服務費、不帶客人資料）。回 `{ ok: true, id, path: "/orders/item/<id>" }` 或 `{ ok: false, errors }` |
 | `unpublishOrder(orderId, ref)` | 刪掉出機紀錄和 R2 裡 `orders/<ref>/` 的照片 |
 | `orderTags()` | 官網出機紀錄用過的標籤，用得多的排前面（DPOM 發布時給選） |

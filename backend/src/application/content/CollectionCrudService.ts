@@ -1,5 +1,6 @@
 import type {
   ContentRepository,
+  EntityGuard,
   ManagedCollection,
   ManagedEntity,
 } from '../../domain/content/ContentRepository.ts';
@@ -15,6 +16,29 @@ export type CrudWriteResult =
   | { kind: 'ok'; data: ManagedEntity }
   | { kind: 'not_found' }
   | { kind: 'validation_failed'; errors: string[] };
+
+/**
+ * 寫入前要跟同集合其他資料比對的規則（在 mutateDb 裡跑，見 ContentRepository 的 EntityGuard）。
+ * selfId：更新時是自己的 id（不跟自己比），新增時是 null。
+ */
+const uniquenessGuards: Partial<
+  Record<ManagedCollection, (value: Record<string, unknown>, selfId: string | null) => EntityGuard>
+> = {
+  // 文章網址是 /blog/<slug>，重複的話其中一篇會打不開
+  blogPosts: (value, selfId) => (list) => {
+    const slug = String(value.slug ?? '');
+    const taken = list.some((item) => item.id !== selfId && 'slug' in item && item.slug === slug);
+    return taken ? [`Slug「${slug}」已經有別篇文章在用了，請換一個`] : [];
+  },
+};
+
+/**
+ * 更新時間：一般集合用寫入的時間（ISO）。
+ * 文章的 updatedAt 是後台表單填的「更新日」（YYYY-MM-DD，validateBlogPostInput 檢查過），
+ * sitemap 的 lastmod、文章頁的 article:modified_time 都用它，所以照填的存，不要蓋掉。
+ */
+const resolveUpdatedAt = (value: Record<string, unknown>, timestamp: string): string =>
+  typeof value.updatedAt === 'string' && value.updatedAt ? value.updatedAt : timestamp;
 
 export class CollectionCrudService {
   private readonly repository: ContentRepository;
@@ -55,11 +79,18 @@ export class CollectionCrudService {
       id: crypto.randomUUID(),
       ...validation.value,
       createdAt: timestamp,
-      updatedAt: timestamp,
+      updatedAt: resolveUpdatedAt(validation.value, timestamp),
     } as ManagedEntity;
 
-    await this.repository.createManagedEntity(collection, created);
-    return { kind: 'ok', data: created };
+    const result = await this.repository.createManagedEntity(
+      collection,
+      created,
+      uniquenessGuards[collection]?.(validation.value, null),
+    );
+    if (result.kind === 'conflict') {
+      return { kind: 'validation_failed', errors: result.errors };
+    }
+    return result;
   }
 
   async update(
@@ -75,19 +106,17 @@ export class CollectionCrudService {
       };
     }
 
-    const updatedAt = new Date().toISOString();
-    const updated = await this.repository.updateManagedEntity(
+    const result = await this.repository.updateManagedEntity(
       collection,
       entityId,
       validation.value,
-      updatedAt,
+      resolveUpdatedAt(validation.value, new Date().toISOString()),
+      uniquenessGuards[collection]?.(validation.value, entityId),
     );
-
-    if (!updated) {
-      return { kind: 'not_found' };
+    if (result.kind === 'conflict') {
+      return { kind: 'validation_failed', errors: result.errors };
     }
-
-    return { kind: 'ok', data: updated };
+    return result;
   }
 
   async remove(collection: ManagedCollection, entityId: string): Promise<CrudReadResult> {

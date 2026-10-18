@@ -1,4 +1,3 @@
-import { featuredBuilds } from '../data/siteData';
 import { getApiBaseUrl } from './adminAuth';
 
 export interface PublicBuild {
@@ -152,43 +151,23 @@ const sanitizeBuild = (value: unknown): PublicBuild | null => {
   };
 };
 
-export const fallbackPublicBuilds: PublicBuild[] = featuredBuilds.map((build, index) => {
-  const embedUrl = normalizeYouTubeEmbedUrl(build.youtubeEmbedUrl || '');
-
-  return {
-    id: `fallback-build-${index + 1}`,
-    ...build,
-    tags: build.tags || [],
-    accessories: build.accessories || [],
-    detailIntro: build.detailIntro || build.description,
-    requirementIntro: build.requirementIntro || '此配單會先依用途與預算拆解需求，再安排升級路線。',
-    youtubeEmbedUrl: embedUrl || undefined,
-  };
-});
-
 export const getBuildDetailPath = (id: string): string => {
   return `/builds/item/${encodeURIComponent(id)}`;
 };
 
+/**
+ * 推薦配單列表。API 讀不到就丟錯誤（頁面顯示「暫時載入不了」或整段不顯示），
+ * 不拿範例配單充數（客人會以為真的有這些配單和價格）；沒有配單回空陣列。
+ */
 export const fetchPublicBuilds = async (): Promise<PublicBuild[]> => {
-  try {
-    const response = await fetch(`${getApiBaseUrl()}/api/public/builds`);
-    const payload = (await response.json()) as PublicBuildsResponse;
+  const response = await fetch(`${getApiBaseUrl()}/api/public/builds`);
+  const payload = (await response.json()) as PublicBuildsResponse;
 
-    if (!response.ok || !Array.isArray(payload.data)) {
-      return fallbackPublicBuilds;
-    }
-
-    const parsed = payload.data
-      .map((item) => sanitizeBuild(item))
-      .filter((item): item is PublicBuild => item !== null);
-
-    if (parsed.length === 0) {
-      return fallbackPublicBuilds;
-    }
-
-    return parsed;
-  } catch {
-    return fallbackPublicBuilds;
+  if (!response.ok || !Array.isArray(payload.data)) {
+    throw new Error('推薦配單讀不到');
   }
+
+  return payload.data
+    .map((item) => sanitizeBuild(item))
+    .filter((item): item is PublicBuild => item !== null);
 };

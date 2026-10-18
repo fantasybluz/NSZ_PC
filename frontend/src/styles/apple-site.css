@@ -419,6 +419,37 @@ body {
   height: 66%;
   object-fit: cover;
 }
+/* 區塊是淺灰底時（推薦配單沒資料、近期出機往上遞補），淺色卡片改白底 */
+.tile-parchment .story-card:not(.story-card-dark) {
+  background: #fff;
+}
+
+/* 出機紀錄沒有照片：淺灰底＋主機圖示（components/OrderPhoto.tsx），不拿別台的照片充數 */
+.photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--apple-hairline-soft);
+  color: var(--apple-ink-3);
+  font-size: 44px;
+}
+.story-card .photo-placeholder {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 66%;
+  font-size: 64px;
+}
+.story-card-dark .photo-placeholder {
+  background: #1d1d1f;
+  color: #6e6e73;
+}
+.order-modal-gallery .photo-placeholder {
+  height: 220px;
+}
+
 .story-card-plus {
   position: absolute;
   right: 20px;
@@ -902,4 +933,40 @@ body {
   .hero-actions .ghost-btn {
     width: auto;
   }
+}
+
+/* 出機紀錄頁（pages/OrderDetail.tsx）：右邊是第一張照片，沒有照片是淺灰的空白格 */
+.order-detail-facts {
+  margin-top: 24px;
+}
+.category-detail-media .photo-placeholder {
+  aspect-ratio: 16 / 10;
+}
+.order-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.order-photo-grid img,
+.order-photo-grid .photo-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+/* 出機標籤頁（pages/OrderTagOverview.tsx）的卡片照片 */
+.shipment-item-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+/* App.css 的 .shipment-item span 會蓋掉字級、顏色，這裡要寫回來 */
+.shipment-item .photo-placeholder.shipment-item-photo {
+  display: flex;
+  font-size: 44px;
+  color: var(--apple-ink-3);
 }

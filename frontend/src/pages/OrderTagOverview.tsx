@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import OrderPhoto from '../components/OrderPhoto';
 import {
-  fallbackPublicOrders,
   fetchPublicOrders,
   getOrderDetailPath,
   getOrderTagOverviewPath,
@@ -54,9 +54,9 @@ const OrderTagOverview: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [orders, setOrders] = React.useState<PublicOrder[]>(fallbackPublicOrders);
+  const [orders, setOrders] = React.useState<PublicOrder[]>([]);
   const [siteContent, setSiteContent] = React.useState(defaultPublicSiteContent);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [loadState, setLoadState] = React.useState<'loading' | 'ok' | 'error'>('loading');
 
   React.useEffect(() => {
     const loadSiteContent = async () => {
@@ -70,14 +70,16 @@ const OrderTagOverview: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    // 全部的出機紀錄（不只最近 100 筆），篩選在這裡做
     const loadOrders = async () => {
-      const next = await fetchPublicOrders(100);
+      const next = await fetchPublicOrders('all');
       setOrders(next);
-      setIsLoading(false);
+      setLoadState('ok');
     };
 
     loadOrders().catch(() => {
-      setIsLoading(false);
+      // 讀不到就說讀不到，不拿範例資料充數
+      setLoadState('error');
     });
   }, []);
 
@@ -184,13 +186,18 @@ const OrderTagOverview: React.FC = () => {
 
       <section className="section-card reveal">
         <div className="section-head">
-          <h2 className="section-title">符合標籤的主機 ({visibleOrders.length})</h2>
+          <h2 className="section-title">
+            符合標籤的主機{loadState === 'ok' ? ` (${visibleOrders.length})` : ''}
+          </h2>
         </div>
 
         {visibleOrders.length > 0 ? (
           <div className="shipment-list order-tag-result-list">
             {visibleOrders.map((order) => (
               <article key={order.id} className="shipment-item">
+                <Link to={getOrderDetailPath(order.id)} tabIndex={-1} aria-hidden="true">
+                  <OrderPhoto src={order.images[0]} alt="" className="shipment-item-photo" />
+                </Link>
                 <strong>{order.date}</strong>
                 <p>需求：{order.item}</p>
                 {order.tags.length > 0 ? (
@@ -223,16 +230,16 @@ const OrderTagOverview: React.FC = () => {
               </article>
             ))}
           </div>
+        ) : loadState === 'loading' ? (
+          <p className="admin-note">讀取出機紀錄中...</p>
+        ) : loadState === 'error' ? (
+          <p className="admin-note">出機紀錄暫時載入不了，請稍後重新整理頁面。</p>
+        ) : orders.length === 0 ? (
+          <p className="admin-note">目前還沒有出機紀錄。</p>
         ) : (
           <p className="admin-note">目前沒有同時符合這組標籤的出機紀錄，請移除部分標籤再試一次。</p>
         )}
       </section>
-
-      {isLoading ? (
-        <section className="section-card reveal">
-          <p className="admin-note">正在同步最新出機紀錄...</p>
-        </section>
-      ) : null}
     </div>
   );
 };

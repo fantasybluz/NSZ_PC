@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import {
-  fallbackPublicBuilds,
   fetchPublicBuilds,
   normalizeYouTubeEmbedUrl,
   type PublicBuild,
@@ -23,18 +22,19 @@ const BuildDetail: React.FC = () => {
     }
   }, [id]);
 
-  const [builds, setBuilds] = React.useState<PublicBuild[]>(fallbackPublicBuilds);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [builds, setBuilds] = React.useState<PublicBuild[]>([]);
+  const [loadState, setLoadState] = React.useState<'loading' | 'ok' | 'error'>('loading');
 
   React.useEffect(() => {
     const loadBuilds = async () => {
       const next = await fetchPublicBuilds();
       setBuilds(next);
-      setIsLoading(false);
+      setLoadState('ok');
     };
 
     loadBuilds().catch(() => {
-      setIsLoading(false);
+      // 讀不到就說讀不到，不拿範例配單充數
+      setLoadState('error');
     });
   }, []);
 
@@ -44,7 +44,7 @@ const BuildDetail: React.FC = () => {
 
   const build = builds.find((item) => item.id === decodedId);
 
-  if (!build && !isLoading) {
+  if (!build && loadState === 'ok') {
     return <Navigate to="/" replace />;
   }
 
@@ -52,7 +52,19 @@ const BuildDetail: React.FC = () => {
     return (
       <div className="page build-detail-page">
         <section className="section-card reveal">
-          <p className="admin-note">讀取配單內容中...</p>
+          {loadState === 'error' ? (
+            <>
+              <h1 className="section-title">配單內容暫時載入不了</h1>
+              <p className="section-sub">請稍後重新整理頁面。</p>
+              <div className="hero-actions">
+                <Link to="/" className="solid-btn">
+                  回首頁
+                </Link>
+              </div>
+            </>
+          ) : (
+            <p className="admin-note">讀取配單內容中...</p>
+          )}
         </section>
       </div>
     );

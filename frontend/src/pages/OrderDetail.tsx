@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 
+import OrderPhoto from '../components/OrderPhoto';
 import {
-  fallbackPublicOrders,
-  fetchPublicOrders,
+  fetchPublicOrder,
   getOrderTagOverviewPath,
   normalizeYouTubeEmbedUrl,
   type PublicOrder,
@@ -15,6 +15,12 @@ const orderStatusLabelMap = {
   delivered: '已送達',
   cancelled: '已取消',
 } as const;
+
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'ok'; order: PublicOrder }
+  | { kind: 'not_found' }
+  | { kind: 'error' };
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,41 +37,70 @@ const OrderDetail: React.FC = () => {
     }
   }, [id]);
 
-  const [orders, setOrders] = React.useState<PublicOrder[]>(fallbackPublicOrders);
-  const [isLoading, setIsLoading] = React.useState(true);
+  // 直接用 id 查一筆（/api/public/orders/:id），不管有幾筆出機紀錄都打得開
+  const [state, setState] = React.useState<LoadState>({ kind: 'loading' });
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   React.useEffect(() => {
-    const loadOrders = async () => {
-      const next = await fetchPublicOrders(100);
-      setOrders(next);
-      setIsLoading(false);
+    if (!decodedId) {
+      return undefined;
+    }
+    let cancelled = false;
+    setState({ kind: 'loading' });
+    fetchPublicOrder(decodedId)
+      .then((order) => {
+        if (!cancelled) setState(order ? { kind: 'ok', order } : { kind: 'not_found' });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ kind: 'error' });
+      });
+    return () => {
+      cancelled = true;
     };
-
-    loadOrders().catch(() => {
-      setIsLoading(false);
-    });
-  }, []);
+  }, [decodedId, reloadKey]);
 
   if (!decodedId) {
     return <Navigate to="/" replace />;
   }
 
-  const order = orders.find((item) => item.id === decodedId);
-
-  if (!order && !isLoading) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!order) {
+  if (state.kind !== 'ok') {
     return (
       <div className="page order-detail-page">
         <section className="section-card reveal">
-          <p className="admin-note">讀取出機紀錄中...</p>
+          {state.kind === 'loading' ? <p className="admin-note">讀取出機紀錄中...</p> : null}
+          {state.kind === 'not_found' ? (
+            <>
+              <h1 className="section-title">找不到這筆出機紀錄</h1>
+              <p className="section-sub">這筆紀錄可能已經下架了，可以看看其他出機紀錄。</p>
+            </>
+          ) : null}
+          {state.kind === 'error' ? (
+            <>
+              <h1 className="section-title">出機紀錄暫時載入不了</h1>
+              <p className="section-sub">請稍後再試一次。</p>
+            </>
+          ) : null}
+          {state.kind !== 'loading' ? (
+            <div className="hero-actions">
+              {state.kind === 'error' ? (
+                <button type="button" className="solid-btn" onClick={() => setReloadKey((key) => key + 1)}>
+                  重新載入
+                </button>
+              ) : null}
+              <Link to="/orders/tags" className={state.kind === 'error' ? 'ghost-btn' : 'solid-btn'}>
+                看全部出機紀錄
+              </Link>
+              <Link to="/" className="ghost-btn">
+                回首頁
+              </Link>
+            </div>
+          ) : null}
         </section>
       </div>
     );
   }
 
+  const { order } = state;
   const embedUrl = normalizeYouTubeEmbedUrl(order.youtubeEmbedUrl || '');
 
   return (
@@ -87,6 +122,15 @@ const OrderDetail: React.FC = () => {
               ))}
             </div>
           ) : null}
+          <div className="detail-card-item order-detail-facts">
+            <i className="fa-solid fa-truck-fast" aria-hidden="true" />
+            <div>
+              <p>出貨日期：{order.date}</p>
+              <p>交機地區：{order.location}</p>
+              <p>狀態：{orderStatusLabelMap[order.status]}</p>
+              {typeof order.salePrice === 'number' && order.salePrice > 0 ? <p>成交金額：NT$ {order.salePrice.toLocaleString('zh-TW')}</p> : null}
+            </div>
+          </div>
           <div className="hero-actions">
             <Link to="/" className="solid-btn">
               回首頁
@@ -97,16 +141,23 @@ const OrderDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="detail-card-item">
-          <i className="fa-solid fa-truck-fast" aria-hidden="true" />
-          <div>
-            <p>出貨日期：{order.date}</p>
-            <p>交機地區：{order.location}</p>
-            <p>狀態：{orderStatusLabelMap[order.status]}</p>
-            {typeof order.salePrice === 'number' && order.salePrice > 0 ? <p>成交金額：NT$ {order.salePrice.toLocaleString('zh-TW')}</p> : null}
-          </div>
+        <div className="category-detail-media order-detail-media">
+          <OrderPhoto src={order.images[0]} alt={order.item} loading="eager" />
         </div>
       </section>
+
+      {order.images.length > 1 ? (
+        <section className="section-card reveal">
+          <div className="section-head">
+            <h2 className="section-title">更多照片</h2>
+          </div>
+          <div className="order-photo-grid">
+            {order.images.slice(1).map((src, index) => (
+              <OrderPhoto key={src} src={src} alt={`${order.item} 照片 ${index + 2}`} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section-card reveal">
         <div className="section-head">

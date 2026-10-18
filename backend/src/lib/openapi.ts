@@ -50,13 +50,75 @@ const authSecurity = [{ CloudflareAccess: [] }];
 // 網站文字裡前台已經不顯示的舊欄位
 const RETIRED_FIELD = '舊欄位，前台不顯示、不必填；沒帶就沿用原本的值';
 
+// 出機紀錄的欄位：後台（Order）有 serviceFee，公開 API（PublicOrder）拿掉
+const ORDER_PROPERTIES: Record<string, unknown> = {
+  id: { type: 'string', format: 'uuid' },
+  date: { type: 'string' },
+  item: { type: 'string' },
+  requirementIntro: { type: 'string' },
+  youtubeEmbedUrl: { type: 'string', description: 'Optional YouTube embed/watch/share URL' },
+  tags: {
+    type: 'array',
+    items: { type: 'string' },
+    minItems: 1,
+  },
+  images: {
+    type: 'array',
+    items: { type: 'string' },
+  },
+  location: { type: 'string' },
+  salePrice: { type: 'number', minimum: 0, example: 53900 },
+  serviceFee: { type: 'number', minimum: 0, example: 1500 },
+  status: {
+    type: 'string',
+    enum: ['pending', 'shipping', 'delivered', 'cancelled'],
+  },
+  cpu: { type: 'string', example: 'Ryzen 7 7800X3D' },
+  motherboard: { type: 'string', example: 'MSI B650 Tomahawk' },
+  ram: { type: 'string', example: 'DDR5 32GB' },
+  storage: { type: 'string', example: '2TB Gen4 SSD' },
+  gpu: { type: 'string', example: 'RTX 4070 Super' },
+  psu: { type: 'string', example: '750W 80+ Gold' },
+  cooler: { type: 'string', example: 'Thermalright Peerless Assassin 120' },
+  pcCase: { type: 'string', example: 'Darkflash DY470 White' },
+  createdAt: { type: 'string', format: 'date-time' },
+  updatedAt: { type: 'string', format: 'date-time' },
+};
+
+const ORDER_REQUIRED = [
+  'id',
+  'date',
+  'item',
+  'requirementIntro',
+  'tags',
+  'location',
+  'salePrice',
+  'serviceFee',
+  'status',
+  'cpu',
+  'motherboard',
+  'ram',
+  'storage',
+  'gpu',
+  'psu',
+  'cooler',
+  'pcCase',
+  'createdAt',
+  'updatedAt',
+];
+
+const withoutServiceFee = <T extends Record<string, unknown>>(properties: T): Omit<T, 'serviceFee'> => {
+  const { serviceFee: _serviceFee, ...rest } = properties;
+  return rest;
+};
+
 export const getOpenApiDocument = (origin: string): OpenApiObject => ({
   openapi: '3.0.3',
   info: {
     title: 'NSZPC Backend API',
     version: '1.1.0',
     description:
-      'NSZPC 後台 API 文件，包含登入、公開資料讀取與管理端 CRUD（builds/categories/orders/blog-posts）。',
+      'NSZPC 官網 API：公開資料讀取（推薦配單、分類、出機紀錄、技術文章、網站文字）與後台 CRUD（builds/categories/orders/blog-posts、網站文字）。後台 API 要先通過 Cloudflare Access。',
   },
   servers: [
     {
@@ -87,6 +149,13 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
               required: ['status', 'timestamp'],
             }),
           },
+        },
+      },
+      head: {
+        tags: ['Health'],
+        summary: 'Health check (status code only)',
+        responses: {
+          200: { description: 'Service is healthy' },
         },
       },
     },
@@ -145,12 +214,19 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
       get: {
         tags: ['Public'],
         summary: 'List recent orders',
+        description: '新增的在最前面。不含 serviceFee。',
         parameters: [
           {
             name: 'limit',
             in: 'query',
             required: false,
-            schema: { type: 'integer', minimum: 1, maximum: 100, default: 5 },
+            description: '1～100 筆（預設 5）；`all` 是全部',
+            schema: {
+              oneOf: [
+                { type: 'integer', minimum: 1, maximum: 100, default: 5 },
+                { type: 'string', enum: ['all'] },
+              ],
+            },
           },
         ],
         responses: {
@@ -159,7 +235,43 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
             content: jsonContent(
               dataEnvelope({
                 type: 'array',
-                items: { $ref: '#/components/schemas/Order' },
+                items: { $ref: '#/components/schemas/PublicOrder' },
+              }),
+            ),
+          },
+        },
+      },
+    },
+    '/api/public/orders/{id}': {
+      parameters: [idPathParam],
+      get: {
+        tags: ['Public'],
+        summary: 'Get order by id',
+        description: '出機詳細頁用。不含 serviceFee。',
+        responses: {
+          200: {
+            description: 'Order',
+            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/PublicOrder' })),
+          },
+          404: {
+            description: 'Not found',
+            content: jsonContent(errorEnvelope),
+          },
+        },
+      },
+    },
+    '/api/public/blog-posts': {
+      get: {
+        tags: ['Public'],
+        summary: 'List blog posts',
+        description: '發布日新的在前面。',
+        responses: {
+          200: {
+            description: 'Blog post list',
+            content: jsonContent(
+              dataEnvelope({
+                type: 'array',
+                items: { $ref: '#/components/schemas/BlogPost' },
               }),
             ),
           },
@@ -476,11 +588,107 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
       delete: {
         tags: ['Admin'],
         summary: 'Delete order',
+        description: '也會刪掉這筆照片在 R2 的檔案（/media/orders/...，別筆還在用的不刪）。',
         security: authSecurity,
         responses: {
           200: {
             description: 'Deleted order',
             content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/Order' })),
+          },
+          404: {
+            description: 'Not found',
+            content: jsonContent(errorEnvelope),
+          },
+        },
+      },
+    },
+    '/api/admin/blog-posts': {
+      get: {
+        tags: ['Admin'],
+        summary: 'List blog posts',
+        security: authSecurity,
+        responses: {
+          200: {
+            description: 'Blog post list',
+            content: jsonContent(
+              dataEnvelope({
+                type: 'array',
+                items: { $ref: '#/components/schemas/BlogPost' },
+              }),
+            ),
+          },
+        },
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Create blog post',
+        description: 'slug 不能跟別篇重複（重複回 422）。',
+        security: authSecurity,
+        requestBody: {
+          required: true,
+          content: jsonContent({ $ref: '#/components/schemas/BlogPostCreateRequest' }),
+        },
+        responses: {
+          201: {
+            description: 'Blog post created',
+            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/BlogPost' })),
+          },
+          422: {
+            description: 'Validation failed (including duplicate slug)',
+            content: jsonContent(errorEnvelope),
+          },
+        },
+      },
+    },
+    '/api/admin/blog-posts/{id}': {
+      parameters: [idPathParam],
+      get: {
+        tags: ['Admin'],
+        summary: 'Get blog post by id',
+        security: authSecurity,
+        responses: {
+          200: {
+            description: 'Blog post',
+            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/BlogPost' })),
+          },
+          404: {
+            description: 'Not found',
+            content: jsonContent(errorEnvelope),
+          },
+        },
+      },
+      put: {
+        tags: ['Admin'],
+        summary: 'Update blog post',
+        description: 'updatedAt 照送來的存（後台的「更新日」）。slug 不能跟別篇重複（重複回 422）。',
+        security: authSecurity,
+        requestBody: {
+          required: true,
+          content: jsonContent({ $ref: '#/components/schemas/BlogPostCreateRequest' }),
+        },
+        responses: {
+          200: {
+            description: 'Blog post updated',
+            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/BlogPost' })),
+          },
+          404: {
+            description: 'Not found',
+            content: jsonContent(errorEnvelope),
+          },
+          422: {
+            description: 'Validation failed (including duplicate slug)',
+            content: jsonContent(errorEnvelope),
+          },
+        },
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Delete blog post',
+        security: authSecurity,
+        responses: {
+          200: {
+            description: 'Deleted blog post',
+            content: jsonContent(dataEnvelope({ $ref: '#/components/schemas/BlogPost' })),
           },
           404: {
             description: 'Not found',
@@ -721,59 +929,83 @@ export const getOpenApiDocument = (origin: string): OpenApiObject => ({
       },
       Order: {
         type: 'object',
+        properties: ORDER_PROPERTIES,
+        required: ORDER_REQUIRED,
+      },
+      PublicOrder: {
+        type: 'object',
+        description: '公開 API 的出機紀錄：沒有 serviceFee',
+        properties: withoutServiceFee(ORDER_PROPERTIES),
+        required: ORDER_REQUIRED.filter((key) => key !== 'serviceFee'),
+      },
+      BlogSection: {
+        type: 'object',
+        properties: {
+          heading: { type: 'string' },
+          paragraphs: { type: 'array', items: { type: 'string' }, minItems: 1 },
+          bullets: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['heading', 'paragraphs', 'bullets'],
+      },
+      BlogPost: {
+        type: 'object',
         properties: {
           id: { type: 'string', format: 'uuid' },
-          date: { type: 'string' },
-          item: { type: 'string' },
-          requirementIntro: { type: 'string' },
-          youtubeEmbedUrl: { type: 'string', description: 'Optional YouTube embed/watch/share URL' },
-          tags: {
-            type: 'array',
-            items: { type: 'string' },
-            minItems: 1,
-          },
-          images: {
-            type: 'array',
-            items: { type: 'string' },
-          },
-          location: { type: 'string' },
-          salePrice: { type: 'number', minimum: 0, example: 53900 },
-          serviceFee: { type: 'number', minimum: 0, example: 1500 },
-          status: {
-            type: 'string',
-            enum: ['pending', 'shipping', 'delivered', 'cancelled'],
-          },
-          cpu: { type: 'string', example: 'Ryzen 7 7800X3D' },
-          motherboard: { type: 'string', example: 'MSI B650 Tomahawk' },
-          ram: { type: 'string', example: 'DDR5 32GB' },
-          storage: { type: 'string', example: '2TB Gen4 SSD' },
-          gpu: { type: 'string', example: 'RTX 4070 Super' },
-          psu: { type: 'string', example: '750W 80+ Gold' },
-          cooler: { type: 'string', example: 'Thermalright Peerless Assassin 120' },
-          pcCase: { type: 'string', example: 'Darkflash DY470 White' },
+          slug: { type: 'string', example: 'gaming-pc-budget', description: '文章網址 /blog/<slug>，不會重複' },
+          title: { type: 'string' },
+          summary: { type: 'string' },
+          coverImage: { type: 'string' },
+          publishedAt: { type: 'string', example: '2026-02-20', description: 'YYYY-MM-DD' },
+          updatedAt: { type: 'string', example: '2026-03-01', description: 'YYYY-MM-DD（後台填的更新日）' },
+          authorName: { type: 'string' },
+          readingMinutes: { type: 'integer', minimum: 1 },
+          tags: { type: 'array', items: { type: 'string' }, minItems: 1 },
+          youtubeEmbedUrl: { type: 'string' },
+          sections: { type: 'array', items: { $ref: '#/components/schemas/BlogSection' }, minItems: 1 },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' },
         },
         required: [
           'id',
-          'date',
-          'item',
-          'requirementIntro',
-          'tags',
-          'location',
-          'salePrice',
-          'serviceFee',
-          'status',
-          'cpu',
-          'motherboard',
-          'ram',
-          'storage',
-          'gpu',
-          'psu',
-          'cooler',
-          'pcCase',
-          'createdAt',
+          'slug',
+          'title',
+          'summary',
+          'coverImage',
+          'publishedAt',
           'updatedAt',
+          'authorName',
+          'readingMinutes',
+          'tags',
+          'youtubeEmbedUrl',
+          'sections',
+          'createdAt',
+        ],
+      },
+      BlogPostCreateRequest: {
+        type: 'object',
+        properties: {
+          slug: { type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', description: '不能跟別篇重複' },
+          title: { type: 'string' },
+          summary: { type: 'string' },
+          coverImage: { type: 'string' },
+          publishedAt: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          updatedAt: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          authorName: { type: 'string' },
+          readingMinutes: { type: 'integer', minimum: 1 },
+          tags: { type: 'array', items: { type: 'string' }, minItems: 1 },
+          youtubeEmbedUrl: { type: 'string' },
+          sections: { type: 'array', items: { $ref: '#/components/schemas/BlogSection' }, minItems: 1 },
+        },
+        required: [
+          'slug',
+          'title',
+          'summary',
+          'coverImage',
+          'publishedAt',
+          'updatedAt',
+          'authorName',
+          'readingMinutes',
+          'tags',
+          'sections',
         ],
       },
       OrderCreateRequest: {

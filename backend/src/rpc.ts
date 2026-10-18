@@ -7,11 +7,9 @@
 import { WorkerEntrypoint } from 'cloudflare:workers';
 
 import { createServiceContainer } from './interfaces/http/serviceContainer.ts';
+import { MEDIA_URL_PREFIX } from './lib/media.ts';
 import { useDatabase } from './lib/store.ts';
 import type { MutablePayload } from './lib/types.ts';
-
-/** 出機照片：存在 R2（MEDIA），網址是 /media/<key>（worker.ts 提供） */
-export const MEDIA_PREFIX = '/media/';
 
 export interface PublishImage {
   name: string;
@@ -44,12 +42,20 @@ export type PublishResult =
 
 const MAX_IMAGES = 10;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+// 只收瀏覽器都能顯示的格式。iPhone 的 HEIC 多數瀏覽器（Chrome、Firefox、Edge）看不到，不收，要先轉成 JPEG
 const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
   'image/gif': 'gif',
-  'image/heic': 'heic',
+};
+
+const unsupportedImageMessage = (image: PublishImage): string => {
+  const label = image.name ? `「${image.name}」` : '';
+  if (/heic|heif/i.test(image.type) || /\.(heic|heif)$/i.test(image.name)) {
+    return `照片${label}是 HEIC 格式，多數瀏覽器看不到，請先轉成 JPEG 再發布`;
+  }
+  return `照片${label}的格式（${image.type || '不明'}）不支援，只收 JPEG、PNG、WebP、GIF`;
 };
 
 const services = createServiceContainer();
@@ -70,8 +76,8 @@ export class WebsiteAPI extends WorkerEntrypoint<Env> {
       throw new Error(`一次最多 ${MAX_IMAGES} 張`);
     }
     for (const image of images) {
-      if (!EXT_BY_TYPE[image.type]) {
-        throw new Error(`不支援的圖片格式：${image.type}`);
+      if (!Object.hasOwn(EXT_BY_TYPE, image.type)) {
+        throw new Error(unsupportedImageMessage(image));
       }
       if (image.data.byteLength > MAX_IMAGE_BYTES) {
         throw new Error('每張圖片最大 10MB');
@@ -88,7 +94,7 @@ export class WebsiteAPI extends WorkerEntrypoint<Env> {
     for (const [i, image] of images.entries()) {
       const key = `${prefix}${stamp}-${i + 1}.${EXT_BY_TYPE[image.type]}`;
       await this.env.MEDIA.put(key, image.data, { httpMetadata: { contentType: image.type } });
-      urls.push(`${MEDIA_PREFIX}${key}`);
+      urls.push(`${MEDIA_URL_PREFIX}${key}`);
     }
     return urls;
   }
